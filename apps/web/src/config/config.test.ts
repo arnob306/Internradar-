@@ -40,6 +40,14 @@ describe("loadConfig", () => {
     expect(() => loadConfig(env)).toThrow(/RESUME_KEK_V1/);
   });
 
+  it("rejects base64 whose final character is not canonical for 32 bytes", () => {
+    // 'B' is not a valid last character: the 2 unused low bits must be zero.
+    const nonCanonical = `${KEK.slice(0, 42)}B=`;
+    const env = validEnv({ RESUME_KEK_V1: nonCanonical });
+
+    expect(() => loadConfig(env)).toThrow(/RESUME_KEK_V1/);
+  });
+
   it("never echoes a rejected secret value in the error message", () => {
     const badSecret = "definitely-not-base64-secret-value";
     const env = validEnv({ RESUME_KEK_V1: badSecret });

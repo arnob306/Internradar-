@@ -1,8 +1,12 @@
 import { z } from "zod";
 import { Secret } from "./secret";
 
-/** Base64 for exactly 32 bytes: 43 characters plus one '=' pad. */
-const BASE64_32_BYTES = /^[A-Za-z0-9+/]{43}=$/;
+/**
+ * Canonical base64 for exactly 32 bytes: 42 free characters, then a final
+ * character whose 2 unused low bits are zero (A E I M Q U Y c g k o s w 0 4 8),
+ * then one '=' pad.
+ */
+const BASE64_32_BYTES = /^[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$/;
 
 const envSchema = z.object({
   SUPABASE_URL: z.url(),
