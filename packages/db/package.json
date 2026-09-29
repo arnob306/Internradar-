@@ -1,0 +1,11 @@
+{
+  "name": "@internradar/db",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "db:start": "supabase start --workdir . -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,postgres-meta,supavisor",
+    "db:stop": "supabase stop --workdir .",
+    "db:reset": "supabase db reset --workdir .",
+    "test:db": "supabase test db --workdir ."
+  }
+}
