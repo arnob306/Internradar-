@@ -28,6 +28,16 @@ describe("domain clock guard", () => {
     expect(messages.map((m) => m.ruleId)).toContain("no-restricted-syntax");
   });
 
+  it.each([
+    ["computed member access", 'export const t = Date["now"]();\n'],
+    ["destructuring", "export const { now } = Date;\n"],
+    ["performance.now()", "export const t = performance.now();\n"],
+  ])("rejects a clock read through %s", async (_label, code) => {
+    const messages = await lint(code, domainFile);
+
+    expect(messages.map((m) => m.ruleId)).toContain("no-restricted-syntax");
+  });
+
   it("allows new Date(value) with an explicit argument", async () => {
     const messages = await lint(
       "export const d = (iso: string) => new Date(iso);\n",
@@ -59,6 +69,15 @@ describe("service-role key guard", () => {
   it("rejects the key when read through bracket access", async () => {
     const messages = await lint(
       'export const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];\n',
+      "apps/web/src/lib/db.ts",
+    );
+
+    expect(messages.map((m) => m.ruleId)).toContain("no-restricted-syntax");
+  });
+
+  it("rejects the key when read through a template literal", async () => {
+    const messages = await lint(
+      "export const key = process.env[`SUPABASE_SERVICE_ROLE_KEY`];\n",
       "apps/web/src/lib/db.ts",
     );
 
