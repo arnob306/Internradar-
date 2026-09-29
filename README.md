@@ -24,8 +24,8 @@ I'm starting small: the first release covers about 10 to 15 hand-verified progra
 - A small domain library with an injectable clock and a standard API response shape.
 - Environment config that fails clearly when something's missing and never prints secrets.
 - Guards, each with its own test, that stop me breaking my own rules later (see [Rules the tooling enforces](#rules-the-tooling-enforces)).
-- A GitHub Actions workflow that runs all of it. I've run every step locally, but the workflow itself hasn't run on GitHub yet, because the repo has no remote.
-- 39 tests (9 domain, 12 web, 7 guard, 11 Python), all passing.
+- A GitHub Actions workflow that runs all of it, passing on the first pull request. It caught a real mistake on its first run: one action I'd pinned to a version tag that doesn't exist.
+- 44 tests (9 domain, 13 web, 11 guard, 11 Python), all passing.
 
 ## What isn't built yet
 
