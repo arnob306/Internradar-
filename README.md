@@ -16,7 +16,7 @@ Sites like [Prepped](https://preppedstudent.com) already cover a lot: hundreds o
 
 On top of that sits an application tracker that also records which resume version I sent to which employer, so I can eventually see which version gets more interviews.
 
-The first cycle covers 50 to 100 tech and data programs for Melbourne students, such as CBA, NAB, ANZ, Westpac, the Big 4, Atlassian, Canva, Amazon, Optiver and IMC.
+I'm starting small: the first release covers about 10 to 15 hand-verified programs for Melbourne students, spread across tech, consulting, engineering, commerce and research. Once eligibility, review and alerts work, I'll grow the list in waves toward broad STEM and commerce coverage, using only allowed sources. Verified data matters more to me than a big number (decision D15).
 
 ## What works today
 
