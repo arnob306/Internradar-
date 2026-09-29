@@ -1,0 +1,16 @@
+[project]
+name = "internradar-monitor"
+version = "0.0.0"
+description = "Daily page-change monitor and LLM extraction"
+requires-python = ">=3.13"
+dependencies = ["internradar-common"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/internradar_monitor"]
+
+[tool.uv.sources]
+internradar-common = { workspace = true }
