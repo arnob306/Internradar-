@@ -16,8 +16,8 @@ env:
   NODE_VERSION: "24"
   PYTHON_VERSION: "3.13"
 
-# Jobs added by later phases: db (Phase 1), schema-contract (Phase 2),
-# e2e (Phase 4), eval-smoke (Phase 6). Every job runs on every change for now;
+# Jobs added by later phases: schema-contract (Phase 2), e2e (Phase 4),
+# eval-smoke (Phase 6). Every job runs on every change for now;
 # path filters come later, once the required-check names are stable.
 jobs:
   workflows:
@@ -45,6 +45,22 @@ jobs:
       - run: pnpm test:coverage
       - name: Guard tests (lint rules)
         run: pnpm --filter @internradar/guards test
+
+  database:
+    name: Database (schema, RLS, pgTAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start local Supabase (applies every migration)
+        run: pnpm --filter @internradar/db db:start
+      - name: Run pgTAP tests
+        run: pnpm --filter @internradar/db test:db
 
   python:
     name: Python (lint, types, tests)

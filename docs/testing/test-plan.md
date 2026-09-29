@@ -73,6 +73,8 @@ The full extraction eval (`eval.yml`) is manual only, to control LLM cost (§6).
 - the seed-employer ATS audit. **Done**: see [ats-audit.md](../architecture/ats-audit.md). Phase 3 is now the seed loader plus a Greenhouse adapter only, so the Lever adapter tests in Phase 3 move to a later phase.
 
 ### Phase 1: Data model and RLS
+**Phase 1 status:** done, with 100 pgTAP tests in `packages/db/supabase/tests/database/`. The seed-script idempotency test (item 14) moves to Phase 3, where the seed loader is built. Generated TypeScript types and the schema-drift check (ADR-014) wait for Phase 4, when the web app first reads the schema. Monitoring, alert and extraction tables are created in Phase 5.
+
 pgTAP and migration tests, written before the migrations:
 1. `migrations apply cleanly from empty and survive db reset`
 2. `every table in public has RLS enabled` (meta test; fails for any new table without RLS)
