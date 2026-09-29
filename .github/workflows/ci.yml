@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  PYTHON_VERSION: "3.13"
+
+# Jobs added by later phases: db (Phase 1), schema-contract (Phase 2),
+# e2e (Phase 4), eval-smoke (Phase 6). Every job runs on every change for now;
+# path filters come later, once the required-check names are stable.
+jobs:
+  workflows:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install actionlint
+        run: pip install actionlint-py==1.7.12.25
+      - run: actionlint
+
+  typescript:
+    name: TypeScript (lint, types, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      - name: Guard tests (lint rules)
+        run: pnpm --filter @internradar/guards test
+
+  python:
+    name: Python (lint, types, tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: workers/uv.lock
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy common/src ingest/src monitor/src
+      - name: Tests with coverage
+        run: >
+          uv run pytest
+          --cov=internradar_common --cov=internradar_ingest --cov=internradar_monitor
+          --cov-branch --cov-fail-under=90
