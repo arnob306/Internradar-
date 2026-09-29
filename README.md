@@ -83,16 +83,16 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 - **Library versions moving under me.** The newest TypeScript (7.0) isn't supported by the linter yet, and the mocking library renamed the option I was using. I pinned TypeScript to 6.0 and recorded why (decision D14).
 - **My own doc contradicted itself.** The design defined "semesters remaining" one way and its worked example needed another. I found it while turning the definition into test cases and fixed the doc.
 - **The plan assumed the wrong tool versions.** I planned for Node 22 and Python 3.12, but my machine had Node 24 and Python 3.13. I switched the plan to match what I actually run.
-- **Guessing at scale doesn't work.** The review pointed out that most of my target employers (banks, Big 4, government) probably use their own career sites rather than Greenhouse or Lever. That's why Phase 3 leads with a hand-curated list of programs, and why I'm auditing which employers use which system before sizing it.
+- **My assumption about scrapers was wrong.** The review warned that most of my target employers probably use their own career sites rather than Greenhouse or Lever. I checked: of 16 employers, only Optiver, IMC and KPMG had a public board under the obvious names (details in [the audit](docs/architecture/ats-audit.md)). So Phase 3 shrinks to a hand-curated program list plus one Greenhouse adapter, and page monitoring in Phase 5 carries most of the load. The audit only tried guessed names, so it shows I can't rely on the ATS route, not which system each employer uses.
 
 ## Roadmap
 
 | Phase | What | Status |
 |---|---|---|
-| 0 | Foundations: monorepo, CI, guards, policy | Done, apart from the four setup spikes |
+| 0 | Foundations: monorepo, CI, guards, policy | Done, apart from three setup spikes that need Supabase |
 | 1 | Data model and row-level security | Next |
 | 2 | Eligibility engine, test-first | |
-| 3 | Ingestion: a curated program list, then Greenhouse and Lever | |
+| 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | |
 | 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | |
 | 5 | Monitoring and email alerts, with human review | |
 | 6 | Measuring extraction accuracy on hand-labelled listings | |

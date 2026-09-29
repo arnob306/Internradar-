@@ -70,7 +70,7 @@ The full extraction eval (`eval.yml`) is manual only, to control LLM cost (§6).
 - a custom Postgres role connecting from a GitHub-hosted runner through the pooler;
 - Storage RLS with an upload using the user's JWT;
 - `supabase start` plus pgTAP running in CI in acceptable time;
-- the seed-employer ATS audit.
+- the seed-employer ATS audit. **Done**: see [ats-audit.md](../architecture/ats-audit.md). Phase 3 is now the seed loader plus a Greenhouse adapter only, so the Lever adapter tests in Phase 3 move to a later phase.
 
 ### Phase 1: Data model and RLS
 pgTAP and migration tests, written before the migrations:
