@@ -3,7 +3,11 @@ name = "internradar-common"
 version = "0.0.0"
 description = "Shared worker code: clock, polite fetcher, logging"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+    "protego>=0.7.0",
+    "tzdata>=2026.4",
+]
 
 [build-system]
 requires = ["hatchling"]
