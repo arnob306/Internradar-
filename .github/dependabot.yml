@@ -12,6 +12,11 @@ updates:
     groups:
       dev-tooling:
         dependency-type: development
+    ignore:
+      # typescript-eslint supports TypeScript below 6.1 only (decision D14). Remove this
+      # rule once a typescript-eslint release supports TypeScript 7.
+      - dependency-name: typescript
+        versions: [">=6.1.0"]
   - package-ecosystem: uv
     directory: /workers
     schedule:
