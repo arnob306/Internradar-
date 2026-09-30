@@ -1,16 +1,11 @@
 import type { YearMonth } from "../academic-calendar/semesters";
+import { monthPosition } from "../academic-calendar/year-month";
 import type { CriterionResult } from "./types";
 
 /** Both ends are optional and inclusive, at month precision. */
 export interface GraduationWindowRule {
   readonly earliest?: YearMonth;
   readonly latest?: YearMonth;
-}
-
-const MONTHS_PER_YEAR = 12;
-
-function position(value: YearMonth): number {
-  return value.year * MONTHS_PER_YEAR + value.month;
 }
 
 export function evaluateGraduationWindow(
@@ -26,8 +21,10 @@ export function evaluateGraduationWindow(
     };
   }
 
-  const tooEarly = rule.earliest !== undefined && position(graduation) < position(rule.earliest);
-  const tooLate = rule.latest !== undefined && position(graduation) > position(rule.latest);
+  const tooEarly =
+    rule.earliest !== undefined && monthPosition(graduation) < monthPosition(rule.earliest);
+  const tooLate =
+    rule.latest !== undefined && monthPosition(graduation) > monthPosition(rule.latest);
 
   return tooEarly || tooLate
     ? {

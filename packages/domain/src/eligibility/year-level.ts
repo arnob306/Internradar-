@@ -1,4 +1,5 @@
 import { semestersRemaining, type YearMonth } from "../academic-calendar/semesters";
+import { monthPosition } from "../academic-calendar/year-month";
 import { resolveProgramDates, type ProgramWindow } from "./program-dates";
 import type { CriterionResult, ReasonCode, ReasonParams, Verdict } from "./types";
 
@@ -71,12 +72,6 @@ function classifyBounds(
   const aboveMin = min === undefined || semesters >= min;
   const belowMax = max === undefined || semesters <= max;
   return aboveMin && belowMax ? OK : OUT_OF_RANGE;
-}
-
-const MONTHS_PER_YEAR = 12;
-
-function monthPosition(value: YearMonth): number {
-  return value.year * MONTHS_PER_YEAR + value.month;
 }
 
 function result(verdict: Verdict, code: ReasonCode, params: ReasonParams): CriterionResult {

@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
 import type { Month, YearMonth } from "./semesters";
-import { addMonths } from "./year-month";
+import { addMonths, monthPosition } from "./year-month";
+
+describe("monthPosition", () => {
+  it("rises by one for each following month, across a year boundary", () => {
+    expect(monthPosition({ year: 2027, month: 1 }) - monthPosition({ year: 2026, month: 12 })).toBe(1);
+  });
+
+  it("orders months chronologically", () => {
+    const earlier = monthPosition({ year: 2026, month: 12 });
+    const later = monthPosition({ year: 2027, month: 1 });
+
+    expect(earlier).toBeLessThan(later);
+  });
+
+  it("gives equal months the same position", () => {
+    expect(monthPosition({ year: 2027, month: 6 })).toBe(monthPosition({ year: 2027, month: 6 }));
+  });
+});
 
 const ym = (year: number, month: Month): YearMonth => ({ year, month });
 

@@ -3,7 +3,6 @@ export type Verdict = "eligible" | "ineligible" | "unknown";
 
 export type Criterion =
   | "rules"
-  | "profile"
   | "year_level"
   | "graduation_window"
   | "citizenship"
