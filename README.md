@@ -26,7 +26,8 @@ I'm starting small: the first release covers about 10 to 15 hand-verified progra
 - Guards, each with its own test, that stop me breaking my own rules later (see [Rules the tooling enforces](#rules-the-tooling-enforces)).
 - A GitHub Actions workflow that runs all of it, passing on the first pull request. It caught a real mistake on its first run: one action I'd pinned to a version tag that doesn't exist.
 - A Postgres schema on Supabase with row-level security: the program catalog, user data (profiles, follows, resumes, applications), ingestion tables, metrics, and a restricted database role for the ingest worker. Users can only ever read and write their own rows.
-- 172 tests (44 in TypeScript and Python, 128 in the database), all passing in CI. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
+- 378 tests (250 in TypeScript and Python, 128 in the database), all passing in CI as of the last merge.
+- An eligibility engine that answers "am I eligible?" with eligible, ineligible or unknown, and a reason for each. It's pure code with no database or clock, and it's on a branch in review. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
 
 ## What isn't built yet
 
@@ -92,7 +93,7 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 |---|---|---|
 | 0 | Foundations: monorepo, CI, guards, policy | Done, apart from three setup spikes that need Supabase |
 | 1 | Data model and row-level security | Done |
-| 2 | Eligibility engine, test-first | Next |
+| 2 | Eligibility engine, test-first | Built, in review |
 | 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | |
 | 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | |
 | 5 | Monitoring and email alerts, with human review | |
