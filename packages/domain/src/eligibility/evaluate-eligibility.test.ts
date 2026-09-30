@@ -141,14 +141,23 @@ describe("unverified rules", () => {
     const result = evaluateEligibility(RULES, STUDENT, UNVERIFIED);
 
     expect(result.verdict).toBe("unknown");
-    expect(result.reasons[0]).toMatchObject({ criterion: "rules", code: "RULES_UNVERIFIED" });
+    expect(result.reasons).toEqual([
+      { criterion: "rules", verdict: "unknown", code: "RULES_UNVERIFIED", params: {} },
+    ]);
   });
 
-  it("gives unknown even when a criterion fails, because the rules cannot be trusted", () => {
+  // Review finding L1: reasons from unchecked rules must not be shown as if they were true.
+  it("gives unknown even when a criterion would fail, and shows no reason but the unverified one", () => {
     const result = evaluateEligibility(RULES, { ...STUDENT, citizenship: "other" }, UNVERIFIED);
 
     expect(result.verdict).toBe("unknown");
-    expect(codes(result)).toContain("CITIZENSHIP_NOT_ALLOWED");
+    expect(codes(result)).toEqual(["RULES_UNVERIFIED"]);
+  });
+
+  it("does not evaluate unverified rules at all, so a malformed one cannot crash it", () => {
+    const malformed = { schemaVersion: 1, citizenship: {} } as unknown as EligibilityRules;
+
+    expect(evaluateEligibility(malformed, STUDENT, UNVERIFIED).verdict).toBe("unknown");
   });
 
   it("gives unknown for empty rules too, since nothing has been checked", () => {
