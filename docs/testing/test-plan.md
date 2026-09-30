@@ -93,6 +93,8 @@ pgTAP and migration tests, written before the migrations:
 15. the RLS matrix in §5
 
 ### Phase 2: Eligibility engine (pure TS)
+**Phase 2 status:** built, with 201 domain tests at 100% coverage. Two rows below changed after the code review (decision D16): a graduate is now `ALREADY_GRADUATED`, not "0 semesters left" (3B rows 7 and 14), and an unverified program shows only `RULES_UNVERIFIED` (3G). Evidence, including RED and GREEN commits for each fix: [phase-2-eligibility.tdd.md](phase-2-eligibility.tdd.md). Still to do: run Python validation against the generated JSON Schema (Phase 3) and the Stryker mutation run.
+
 In this order, each group red before its implementation:
 1. `semestersRemaining and evaluateEligibility never read the system clock` (a spy on `Date` that throws)
 2. The semester table (§3A)
