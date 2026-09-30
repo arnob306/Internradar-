@@ -143,7 +143,7 @@ In this order, each group red before its implementation:
 
 **Tracker (D9)**
 - `POST /api/v1/applications creates a saved application; saving again returns the existing row`
-- `each forward move writes an application_events row`
+- `each forward move writes an application_events row` (the database trigger writes it; the API must not, and clients cannot. Also test that the API's transition table and the database's agree, decision D9a)
 - `skipping online_assessment is allowed`
 - `rejected is reachable from every state except offer`
 - `a backward move other than undo returns 409`

@@ -17,7 +17,9 @@ select is(
    where schemaname = 'public'
      and tablename in ('profiles', 'program_follows', 'resumes', 'applications',
                        'application_events', 'alerts')
-     and (qual is null or qual in ('true', '(true)'))),
+     -- INSERT policies have no USING clause, so judge those on WITH CHECK instead
+     and coalesce(case when cmd = 'INSERT' then with_check else qual end, 'true')
+         in ('true', '(true)')),
   '',
   'no policy on a user table uses USING (true)');
 

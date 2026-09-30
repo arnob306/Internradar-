@@ -40,7 +40,7 @@ insert into public.program_follows (user_id, program_id) values
 insert into public.resumes (id, user_id, label, version, storage_path, mime_type, size_bytes, sha256,
                             wrapped_dek, iv, kek_version) values
   ('00000000-0000-0000-0000-00000000e0b1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'B v1', 1,
-   'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/e0b1.bin', 'application/pdf', 1000, repeat('0', 64),
+   'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/00000000-0000-0000-0000-00000000e0b1.bin', 'application/pdf', 1000, repeat('0', 64),
    '\x00', '\x00', 1);
 
 insert into public.applications (id, user_id, program_id, cycle_year, resume_id, status, applied_at) values
@@ -62,24 +62,27 @@ select lives_ok(
   'a profile can be created with every optional field empty (citizenship is optional)');
 
 select throws_ok(
-  $$insert into public.resumes (user_id, label, version, storage_path, mime_type, size_bytes, sha256,
+  $$insert into public.resumes (id, user_id, label, version, storage_path, mime_type, size_bytes, sha256,
                                 wrapped_dek, iv, kek_version)
-    values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'big', 2, 'x/big.bin', 'application/pdf',
+    values ('00000000-0000-0000-0000-00000000e0b2', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'big', 2,
+            'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/00000000-0000-0000-0000-00000000e0b2.bin', 'application/pdf',
             2097153, repeat('0', 64), '\x00', '\x00', 1)$$,
   '23514', null, 'a resume over 2 MB is rejected');
 
 select throws_ok(
-  $$insert into public.resumes (user_id, label, version, storage_path, mime_type, size_bytes, sha256,
+  $$insert into public.resumes (id, user_id, label, version, storage_path, mime_type, size_bytes, sha256,
                                 wrapped_dek, iv, kek_version)
-    values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'dup', 1, 'x/dup.bin', 'application/pdf',
+    values ('00000000-0000-0000-0000-00000000e0b3', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'dup', 1,
+            'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/00000000-0000-0000-0000-00000000e0b3.bin', 'application/pdf',
             10, repeat('0', 64), '\x00', '\x00', 1)$$,
   '23505', null, 'resume versions are unique per user');
 
 select throws_ok(
-  $$insert into public.resumes (user_id, label, version, storage_path, mime_type, size_bytes, sha256,
+  $$insert into public.resumes (id, user_id, label, version, storage_path, mime_type, size_bytes, sha256,
                                 wrapped_dek, iv, kek_version)
-    values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'exe', 3, 'x/exe.bin', 'application/x-msdownload',
-            10, repeat('0', 64), '\x00', '\x00', 1)$$,
+    values ('00000000-0000-0000-0000-00000000e0b4', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'exe', 3,
+            'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/00000000-0000-0000-0000-00000000e0b4.bin',
+            'application/x-msdownload', 10, repeat('0', 64), '\x00', '\x00', 1)$$,
   '23514', null, 'only PDF and DOCX resumes are accepted');
 
 select throws_ok(
@@ -169,7 +172,7 @@ select lives_ok(
 select throws_ok(
   $$insert into public.application_events (application_id, user_id, to_status)
     values ('00000000-0000-0000-0000-0000000000f1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'interview')$$,
-  '23503', null, 'A cannot add an event to B''s application');
+  '42501', null, 'clients cannot write application events at all (only the tracker trigger does)');
 
 select throws_ok($$select * from public.app_admins$$, '42501', null,
   'clients cannot read app_admins');
