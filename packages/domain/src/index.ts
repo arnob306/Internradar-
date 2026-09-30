@@ -35,6 +35,9 @@ export { evaluateYearLevel } from "./eligibility/year-level";
 export type { EligibilityResult } from "./eligibility/evaluate-eligibility";
 export { ENGINE_VERSION, evaluateEligibility } from "./eligibility/evaluate-eligibility";
 export type { EligibilityRules, StudentProfile, WindowContext } from "./eligibility/rules";
+export { evaluateStoredEligibility } from "./eligibility/evaluate-stored-eligibility";
+export type { ParsedRules } from "./eligibility/rules.schema";
+export { eligibilityRulesSchema, parseEligibilityRules } from "./eligibility/rules.schema";
 export type { GraduationWindowRule } from "./eligibility/graduation-window";
 export { evaluateGraduationWindow } from "./eligibility/graduation-window";
 export type {

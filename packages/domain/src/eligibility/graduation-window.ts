@@ -4,8 +4,8 @@ import type { CriterionResult } from "./types";
 
 /** Both ends are optional and inclusive, at month precision. */
 export interface GraduationWindowRule {
-  readonly earliest?: YearMonth;
-  readonly latest?: YearMonth;
+  readonly earliest?: YearMonth | undefined;
+  readonly latest?: YearMonth | undefined;
 }
 
 export function evaluateGraduationWindow(

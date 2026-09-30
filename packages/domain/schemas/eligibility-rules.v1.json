@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "yearLevel": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "preset": {
+              "type": "string",
+              "enum": [
+                "penultimate",
+                "pre_penultimate",
+                "final_year"
+              ]
+            }
+          },
+          "required": [
+            "preset"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "minSemestersRemaining": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "maxSemestersRemaining": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "measuredAt": {
+              "type": "string",
+              "enum": [
+                "program_start",
+                "program_end"
+              ]
+            }
+          },
+          "required": [
+            "measuredAt"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "graduationWindow": {
+      "type": "object",
+      "properties": {
+        "earliest": {
+          "type": "object",
+          "properties": {
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "month": {
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            }
+          },
+          "required": [
+            "year",
+            "month"
+          ],
+          "additionalProperties": false
+        },
+        "latest": {
+          "type": "object",
+          "properties": {
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100
+            },
+            "month": {
+              "type": "number",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            }
+          },
+          "required": [
+            "year",
+            "month"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "citizenship": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "au_citizen",
+              "au_pr",
+              "nz_citizen",
+              "intl_student",
+              "other"
+            ]
+          }
+        }
+      },
+      "required": [
+        "allowed"
+      ],
+      "additionalProperties": false
+    },
+    "disciplines": {
+      "type": "object",
+      "properties": {
+        "anyOf": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "computer_science",
+              "software_engineering",
+              "information_systems",
+              "data_science",
+              "mathematics_statistics",
+              "physics",
+              "engineering_electrical",
+              "engineering_mechanical",
+              "engineering_civil",
+              "engineering_other",
+              "science_other",
+              "commerce_finance",
+              "accounting",
+              "economics",
+              "business_management",
+              "law",
+              "stem_any"
+            ]
+          }
+        }
+      },
+      "required": [
+        "anyOf"
+      ],
+      "additionalProperties": false
+    },
+    "degreeLevels": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "undergraduate",
+              "honours",
+              "masters_coursework",
+              "masters_research",
+              "phd"
+            ]
+          }
+        }
+      },
+      "required": [
+        "allowed"
+      ],
+      "additionalProperties": false
+    },
+    "acceptsMidYearGraduates": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schemaVersion"
+  ],
+  "additionalProperties": false
+}

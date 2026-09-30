@@ -1,13 +1,16 @@
 /** Matches the citizenship enum in the database. Optional on a profile (decision D3). */
-export type Citizenship = "au_citizen" | "au_pr" | "nz_citizen" | "intl_student" | "other";
+export const CITIZENSHIPS = ["au_citizen", "au_pr", "nz_citizen", "intl_student", "other"] as const;
+export type Citizenship = (typeof CITIZENSHIPS)[number];
 
 /** Matches the degree_level enum in the database. */
-export type DegreeLevel =
-  | "undergraduate"
-  | "honours"
-  | "masters_coursework"
-  | "masters_research"
-  | "phd";
+export const DEGREE_LEVELS = [
+  "undergraduate",
+  "honours",
+  "masters_coursework",
+  "masters_research",
+  "phd",
+] as const;
+export type DegreeLevel = (typeof DEGREE_LEVELS)[number];
 
 /**
  * The frozen discipline vocabulary (decision D2). A rule names disciplines from this list,

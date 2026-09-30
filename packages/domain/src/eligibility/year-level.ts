@@ -10,8 +10,8 @@ export type MeasuredAt = "program_start" | "program_end";
 export type YearLevelRule =
   | { readonly preset: YearLevelPreset }
   | {
-      readonly minSemestersRemaining?: number;
-      readonly maxSemestersRemaining?: number;
+      readonly minSemestersRemaining?: number | undefined;
+      readonly maxSemestersRemaining?: number | undefined;
       readonly measuredAt: MeasuredAt;
     };
 

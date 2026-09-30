@@ -221,6 +221,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.3
       '@vitest/coverage-v8':
         specifier: ^5.0.2
         version: 5.0.2(vitest@5.0.2)
@@ -2341,6 +2344,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
+    optional: true
 
   msw@3.0.0(@types/node@26.6.3)(typescript@6.0.3)(vite@8.3.1(@types/node@26.6.3)):
     dependencies:

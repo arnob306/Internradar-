@@ -11,13 +11,13 @@ import type { YearLevelRule } from "./year-level";
  */
 export interface EligibilityRules {
   readonly schemaVersion: 1;
-  readonly yearLevel?: YearLevelRule;
-  readonly graduationWindow?: GraduationWindowRule;
-  readonly citizenship?: CitizenshipRule;
-  readonly disciplines?: DisciplineRule;
-  readonly degreeLevels?: DegreeLevelRule;
+  readonly yearLevel?: YearLevelRule | undefined;
+  readonly graduationWindow?: GraduationWindowRule | undefined;
+  readonly citizenship?: CitizenshipRule | undefined;
+  readonly disciplines?: DisciplineRule | undefined;
+  readonly degreeLevels?: DegreeLevelRule | undefined;
   /** Resolves the "one semester left" case for presets that count semesters. */
-  readonly acceptsMidYearGraduates?: boolean;
+  readonly acceptsMidYearGraduates?: boolean | undefined;
 }
 
 /** What we know about a student. A null or empty field means they have not told us. */
