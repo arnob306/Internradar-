@@ -73,6 +73,12 @@ function classifyBounds(
   return aboveMin && belowMax ? OK : OUT_OF_RANGE;
 }
 
+const MONTHS_PER_YEAR = 12;
+
+function monthPosition(value: YearMonth): number {
+  return value.year * MONTHS_PER_YEAR + value.month;
+}
+
 function result(verdict: Verdict, code: ReasonCode, params: ReasonParams): CriterionResult {
   return { criterion: "year_level", verdict, code, params };
 }
@@ -91,14 +97,22 @@ export function evaluateYearLevel(input: YearLevelInput): CriterionResult {
   }
 
   const semesters = semestersRemaining(measuredFrom, input.expectedGraduation);
+  const params = {
+    semesters,
+    measuredAt,
+    ...(dates.assumed ? { assumedProgramDates: true } : {}),
+  };
+
+  // "0 semesters left" also describes someone who finished years ago, so it cannot tell
+  // them apart from someone finishing now. A year-level rule never counts a graduate.
+  if (monthPosition(input.expectedGraduation) < monthPosition(measuredFrom)) {
+    return result("ineligible", "ALREADY_GRADUATED", params);
+  }
+
   const { verdict, code } =
     "preset" in rule
       ? classifyPreset(rule.preset, semesters, input.acceptsMidYearGraduates)
       : classifyBounds(semesters, rule.minSemestersRemaining, rule.maxSemestersRemaining);
 
-  return result(verdict, code, {
-    semesters,
-    measuredAt,
-    ...(dates.assumed ? { assumedProgramDates: true } : {}),
-  });
+  return result(verdict, code, params);
 }
