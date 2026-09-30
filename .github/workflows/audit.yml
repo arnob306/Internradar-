@@ -1,0 +1,46 @@
+name: Dependency audit
+
+# Kept out of the pull-request workflow on purpose: a newly published advisory should
+# not block an unrelated change. It runs weekly and on demand, and a failure is a
+# reminder to update a dependency.
+on:
+  schedule:
+    - cron: "0 20 * * 0" # Sunday 20:00 UTC, Monday morning in Melbourne
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  javascript:
+    name: pnpm audit (high and above)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level high
+
+  python:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Export the locked dependencies
+        run: uv export --no-hashes --quiet | grep -E '^[A-Za-z0-9_.-]+==' > requirements.audit.txt
+      - name: Audit them
+        run: uv run --with pip-audit pip-audit -r requirements.audit.txt --no-deps --disable-pip

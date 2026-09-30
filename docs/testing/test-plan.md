@@ -27,7 +27,7 @@ It builds on the [architecture overview](../architecture/overview.md) and the [d
 | Python DB tests | pytest against the same local Postgres via psycopg, connecting as the real worker roles (ADR-005) | Idempotency needs the real unique constraints and grants. |
 | E2E | **Playwright**: Chromium on PRs, all browsers nightly | Runs against `next build && next start` with local Supabase and a seeded user. |
 | Mutation testing | **Stryker** on `packages/domain` | Reported nightly first, gated in Phase 8. |
-| Clock lint | ESLint rule banning `Date.now()` and argument-less `new Date()` in `packages/domain`; ruff `DTZ` rules plus a test that fails on `datetime.now(` in `workers/` | Makes time injection mechanical. |
+| Clock lint | ESLint rule banning `Date.now()` and argument-less `new Date()` in `packages/domain`; ruff banned-API rule `TID251` on `datetime.now`, `utcnow`, `today`, `date.today`, `time.time` and `time.time_ns` everywhere except `clock.py`, tested by running the real ruff on aliased and indirect forms | Makes time injection mechanical. `DTZ` rules alone are not enough: they allow `datetime.now(UTC)` anywhere. |
 
 ### GitHub Actions jobs
 

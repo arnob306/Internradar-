@@ -1,0 +1,18 @@
+# Weekly update pull requests. Security alerts are separate and always on for public repos.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-tooling:
+        dependency-type: development
+  - package-ecosystem: uv
+    directory: /workers
+    schedule:
+      interval: weekly
