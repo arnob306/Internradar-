@@ -6,7 +6,7 @@ It builds on the [architecture overview](../architecture/overview.md) and the [d
 
 **Fixed assumptions:**
 - pnpm workspaces and a uv workspace, no Turborepo (ADR-001).
-- Node 22 and Python 3.12.
+- Node 24, Python 3.13 and TypeScript 6.0.x (decision D14).
 - Local Postgres through the Supabase CLI.
 - "Now" is always injected, never read from the system clock.
 - Calendar dates are Melbourne dates (`Australia/Melbourne`) and timestamps are UTC (ADR-015).
@@ -64,11 +64,13 @@ The full extraction eval (`eval.yml`) is manual only, to control LLM cost (§6).
 10. `API envelope helpers produce {success, data, error, meta}`
 11. `importing the service-role module outside apps/web/src/server/admin/ fails lint` (ADR-005, §6 of the overview)
 
+**Phase 0 status:** items 1–10 are done. Item 11 is enforced by the ESLint guard in `tests/guards`. The msw guard uses msw 3's `onUnhandledFrame: "error"` option, and its test checks msw's own error rather than any rejection.
+
 **Phase 0 spikes** (not TDD, each at most half a day; D13 and overview §10):
 - a custom Postgres role connecting from a GitHub-hosted runner through the pooler;
 - Storage RLS with an upload using the user's JWT;
 - `supabase start` plus pgTAP running in CI in acceptable time;
-- the seed-employer ATS audit.
+- the seed-employer ATS audit. **Done**: see [ats-audit.md](../architecture/ats-audit.md). Phase 3 is now the seed loader plus a Greenhouse adapter only, so the Lever adapter tests in Phase 3 move to a later phase.
 
 ### Phase 1: Data model and RLS
 pgTAP and migration tests, written before the migrations:
