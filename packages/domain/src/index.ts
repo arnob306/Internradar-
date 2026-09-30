@@ -32,3 +32,28 @@ export type {
   YearLevelRule,
 } from "./eligibility/year-level";
 export { evaluateYearLevel } from "./eligibility/year-level";
+export type { GraduationWindowRule } from "./eligibility/graduation-window";
+export { evaluateGraduationWindow } from "./eligibility/graduation-window";
+export type {
+  CitizenshipRule,
+  DegreeLevelRule,
+  DisciplineRule,
+} from "./eligibility/profile-criteria";
+export {
+  evaluateCitizenship,
+  evaluateDegreeLevel,
+  evaluateDiscipline,
+} from "./eligibility/profile-criteria";
+export type {
+  Citizenship,
+  DegreeLevel,
+  Discipline,
+  DisciplineGroup,
+  DisciplineTerm,
+} from "./eligibility/vocabulary";
+export {
+  DISCIPLINE_GROUPS,
+  DISCIPLINES,
+  expandDisciplines,
+  isDiscipline,
+} from "./eligibility/vocabulary";
