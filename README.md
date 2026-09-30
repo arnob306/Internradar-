@@ -26,7 +26,7 @@ I'm starting small: the first release covers about 10 to 15 hand-verified progra
 - Guards, each with its own test, that stop me breaking my own rules later (see [Rules the tooling enforces](#rules-the-tooling-enforces)).
 - A GitHub Actions workflow that runs all of it, passing on the first pull request. It caught a real mistake on its first run: one action I'd pinned to a version tag that doesn't exist.
 - A Postgres schema on Supabase with row-level security: the program catalog, user data (profiles, follows, resumes, applications), ingestion tables, metrics, and a restricted database role for the ingest worker. Users can only ever read and write their own rows.
-- 144 tests (44 in TypeScript and Python, 100 in the database), all passing in CI. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
+- 172 tests (44 in TypeScript and Python, 128 in the database), all passing in CI. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
 
 ## What isn't built yet
 
