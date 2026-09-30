@@ -35,6 +35,14 @@ describe("addMonths", () => {
     expect(addMonths(start, months)).toEqual(expected);
   });
 
+  // Review finding M2: a cast hid that 1.5 months gave {month: 12.5}, which is not a month.
+  it.each([1.5, -0.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "refuses %s months, which cannot give a valid month",
+    (months) => {
+      expect(() => addMonths(ym(2026, 11), months)).toThrow(RangeError);
+    },
+  );
+
   it("does not change its input", () => {
     const start = Object.freeze(ym(2026, 11));
 
