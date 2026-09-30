@@ -9,7 +9,7 @@ export const ENGINE_VERSION = "1";
 
 export interface EligibilityResult {
   readonly verdict: Verdict;
-  /** One entry per criterion the rules name, in a fixed order, plus RULES_UNVERIFIED if it applies. */
+  /** One entry per criterion the rules name, in a fixed order. Only RULES_UNVERIFIED if unverified. */
   readonly reasons: readonly CriterionResult[];
   readonly rulesVersion: number;
   readonly engineVersion: string;
@@ -70,10 +70,19 @@ export function evaluateEligibility(
   profile: StudentProfile,
   context: WindowContext,
 ): EligibilityResult {
-  const criteria = evaluateCriteria(rules, profile, context);
-  const reasons = context.rulesVerified ? criteria : [RULES_UNVERIFIED, ...criteria];
+  if (!context.rulesVerified) {
+    // Nobody has checked these rules, so nothing they say may be shown as a reason. They
+    // are not even evaluated, which also means a malformed unverified rule cannot crash us.
+    return {
+      verdict: "unknown",
+      reasons: [RULES_UNVERIFIED],
+      rulesVersion: context.rulesVersion,
+      engineVersion: ENGINE_VERSION,
+    };
+  }
+  const reasons = evaluateCriteria(rules, profile, context);
   return {
-    verdict: context.rulesVerified ? combine(criteria) : "unknown",
+    verdict: combine(reasons),
     reasons,
     rulesVersion: context.rulesVersion,
     engineVersion: ENGINE_VERSION,
