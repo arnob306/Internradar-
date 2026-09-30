@@ -41,7 +41,7 @@ describe("penultimate preset (measured at program end)", () => {
     ["mid-year graduate accepted by the program", ym(2027, 6), true, "eligible", "YEAR_LEVEL_OK", 1],
     ["three semesters left is off-cycle", ym(2028, 6), false, "unknown", "OFF_CYCLE_GRADUATION_CHECK_EMPLOYER", 3],
     ["four semesters left is too early", ym(2028, 11), false, "ineligible", "SEMESTERS_REMAINING_OUT_OF_RANGE", 4],
-    ["already finished is too late", ym(2026, 11), false, "ineligible", "SEMESTERS_REMAINING_OUT_OF_RANGE", 0],
+    ["already graduated before the program ends", ym(2026, 11), false, "ineligible", "ALREADY_GRADUATED", 0],
   ] as const)("%s", (_label, graduation, acceptsMidYear, verdict, code, semesters) => {
     const result = evaluateYearLevel(
       input({ rule: PENULTIMATE, expectedGraduation: graduation, acceptsMidYearGraduates: acceptsMidYear }),
@@ -68,7 +68,7 @@ describe("pre_penultimate preset (discovery programs, measured at program end)",
 describe("final_year preset (measured at program start)", () => {
   it.each([
     ["one semester left", ym(2027, 6), "eligible", "YEAR_LEVEL_OK", 1],
-    ["nothing left", ym(2026, 11), "eligible", "YEAR_LEVEL_OK", 0],
+    ["already graduated before the program starts", ym(2026, 11), "ineligible", "ALREADY_GRADUATED", 0],
     ["two semesters left", ym(2027, 11), "ineligible", "SEMESTERS_REMAINING_OUT_OF_RANGE", 2],
   ] as const)("%s", (_label, graduation, verdict, code, semesters) => {
     const result = evaluateYearLevel(
@@ -80,6 +80,58 @@ describe("final_year preset (measured at program start)", () => {
       code,
       params: { semesters, measuredAt: "program_start" },
     });
+  });
+});
+
+// Policy (Phase 2 review, finding H1): "final year" means not yet graduated. Someone whose
+// graduation is before the month the rule is measured has finished, so a year-level rule
+// never counts them. Programs that take recent graduates say so with a graduation window.
+// Without this, a stale profile date from years ago counted as "0 semesters left" and
+// was shown as eligible.
+describe("already graduated", () => {
+  it.each([
+    ["final_year", FINAL_YEAR, GRADUATE_PROGRAM],
+    ["penultimate", PENULTIMATE, SUMMER_INTERNSHIP],
+    ["pre_penultimate", PRE_PENULTIMATE, SUMMER_INTERNSHIP],
+  ] as const)("%s is ineligible for someone who graduated years ago", (_name, rule, window) => {
+    const result = evaluateYearLevel(input({ rule, expectedGraduation: ym(2015, 11), window }));
+
+    expect(result).toMatchObject({ verdict: "ineligible", code: "ALREADY_GRADUATED" });
+  });
+
+  it("applies to explicit bounds too", () => {
+    const rule: YearLevelRule = { maxSemestersRemaining: 1, measuredAt: "program_start" };
+
+    const result = evaluateYearLevel(
+      input({ rule, expectedGraduation: ym(2015, 11), window: GRADUATE_PROGRAM }),
+    );
+
+    expect(result).toMatchObject({ verdict: "ineligible", code: "ALREADY_GRADUATED" });
+  });
+
+  it("does not count someone graduating in the very month the program starts", () => {
+    const window: ProgramWindow = { ...GRADUATE_PROGRAM, programStart: ym(2027, 6) };
+    const rule: YearLevelRule = { maxSemestersRemaining: 0, measuredAt: "program_start" };
+
+    const result = evaluateYearLevel(input({ rule, expectedGraduation: ym(2027, 6), window }));
+
+    expect(result).toMatchObject({ verdict: "eligible", params: { semesters: 0 } });
+  });
+
+  it("does not count someone graduating the month after the program starts", () => {
+    const result = evaluateYearLevel(
+      input({ rule: FINAL_YEAR, expectedGraduation: ym(2027, 3), window: GRADUATE_PROGRAM }),
+    );
+
+    expect(result.verdict).toBe("eligible");
+  });
+
+  it("reports the number of semesters it measured, for the reason text", () => {
+    const result = evaluateYearLevel(
+      input({ rule: FINAL_YEAR, expectedGraduation: ym(2015, 11), window: GRADUATE_PROGRAM }),
+    );
+
+    expect(result.params).toMatchObject({ semesters: 0, measuredAt: "program_start" });
   });
 });
 
