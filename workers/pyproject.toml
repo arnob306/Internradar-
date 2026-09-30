@@ -36,17 +36,30 @@ internradar-monitor = { workspace = true }
 addopts = "--import-mode=importlib --disable-socket --allow-unix-socket -m 'not db'"
 testpaths = ["common/tests", "ingest/tests", "monitor/tests"]
 markers = ["db: needs the local Supabase Postgres"]
+# The network-guard tests trigger pytest-socket's warning on purpose. Hide only that one.
+filterwarnings = ["ignore:A test tried to use socket.*:UserWarning"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py313"
 
 [tool.ruff.lint]
-# DTZ: no naive datetimes or direct clock reads (test plan §1).
-select = ["E", "F", "I", "UP", "B", "DTZ", "S", "SIM"]
+# DTZ: no naive datetimes. TID: banned APIs, used below to keep wall-clock reads in one place.
+select = ["E", "F", "I", "UP", "B", "DTZ", "S", "SIM", "TID"]
+
+# Only SystemClock (clock.py) may read the wall clock (test plan §1). Everything else takes a
+# Clock, so it can be tested with a FixedClock. time.monotonic() is allowed: it measures gaps.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"datetime.datetime.now".msg = "Take a Clock and call clock.now(); only SystemClock reads the clock."
+"datetime.datetime.utcnow".msg = "Take a Clock and call clock.now(); only SystemClock reads the clock."
+"datetime.datetime.today".msg = "Take a Clock and call clock.now(); only SystemClock reads the clock."
+"datetime.date.today".msg = "Take a Clock and call clock.now().date(); only SystemClock reads the clock."
+"time.time".msg = "Take a Clock and call clock.now(); only SystemClock reads the clock."
+"time.time_ns".msg = "Take a Clock and call clock.now(); only SystemClock reads the clock."
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101"]
+"common/src/internradar_common/clock.py" = ["TID251"]
 
 [tool.mypy]
 strict = true

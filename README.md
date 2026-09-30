@@ -2,7 +2,7 @@
 
 A web app for Australian university students applying for internships and graduate programs. I'm building it as a student project, and this README is where I record what I'm building, what I decided, and why.
 
-**Status: Phase 0 of 8 is done.** The design, the test plan and the tooling are in place and tested. There's no product yet: no database, no scrapers, no UI. I've tried to keep this README honest about which is which.
+**Status: Phases 0 and 1 of 8 are done.** The design, the test plan, the tooling and the database schema are in place and tested. There's no product yet: no scrapers, no eligibility engine, no UI. I've tried to keep this README honest about which is which.
 
 ## Why I'm building this
 
@@ -25,11 +25,12 @@ I'm starting small: the first release covers about 10 to 15 hand-verified progra
 - Environment config that fails clearly when something's missing and never prints secrets.
 - Guards, each with its own test, that stop me breaking my own rules later (see [Rules the tooling enforces](#rules-the-tooling-enforces)).
 - A GitHub Actions workflow that runs all of it, passing on the first pull request. It caught a real mistake on its first run: one action I'd pinned to a version tag that doesn't exist.
-- 44 tests (9 domain, 13 web, 11 guard, 11 Python), all passing.
+- A Postgres schema on Supabase with row-level security: the program catalog, user data (profiles, follows, resumes, applications), ingestion tables, metrics, and a restricted database role for the ingest worker. Users can only ever read and write their own rows.
+- 172 tests (44 in TypeScript and Python, 128 in the database), all passing in CI. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
 
 ## What isn't built yet
 
-Everything a user would see: the database, the eligibility engine, the scrapers, the web pages, the alerts. The roadmap is below.
+Everything a user would see: the eligibility engine, the scrapers, the web pages, the alerts. The roadmap is below.
 
 ## How I'm building it
 
@@ -90,8 +91,8 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 | Phase | What | Status |
 |---|---|---|
 | 0 | Foundations: monorepo, CI, guards, policy | Done, apart from three setup spikes that need Supabase |
-| 1 | Data model and row-level security | Next |
-| 2 | Eligibility engine, test-first | |
+| 1 | Data model and row-level security | Done |
+| 2 | Eligibility engine, test-first | Next |
 | 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | |
 | 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | |
 | 5 | Monitoring and email alerts, with human review | |

@@ -27,7 +27,7 @@ It builds on the [architecture overview](../architecture/overview.md) and the [d
 | Python DB tests | pytest against the same local Postgres via psycopg, connecting as the real worker roles (ADR-005) | Idempotency needs the real unique constraints and grants. |
 | E2E | **Playwright**: Chromium on PRs, all browsers nightly | Runs against `next build && next start` with local Supabase and a seeded user. |
 | Mutation testing | **Stryker** on `packages/domain` | Reported nightly first, gated in Phase 8. |
-| Clock lint | ESLint rule banning `Date.now()` and argument-less `new Date()` in `packages/domain`; ruff `DTZ` rules plus a test that fails on `datetime.now(` in `workers/` | Makes time injection mechanical. |
+| Clock lint | ESLint rule banning `Date.now()` and argument-less `new Date()` in `packages/domain`; ruff banned-API rule `TID251` on `datetime.now`, `utcnow`, `today`, `date.today`, `time.time` and `time.time_ns` everywhere except `clock.py`, tested by running the real ruff on aliased and indirect forms | Makes time injection mechanical. `DTZ` rules alone are not enough: they allow `datetime.now(UTC)` anywhere. |
 
 ### GitHub Actions jobs
 
@@ -73,6 +73,8 @@ The full extraction eval (`eval.yml`) is manual only, to control LLM cost (§6).
 - the seed-employer ATS audit. **Done**: see [ats-audit.md](../architecture/ats-audit.md). Phase 3 is now the seed loader plus a Greenhouse adapter only, so the Lever adapter tests in Phase 3 move to a later phase.
 
 ### Phase 1: Data model and RLS
+**Phase 1 status:** done, with 100 pgTAP tests in `packages/db/supabase/tests/database/`. The seed-script idempotency test (item 14) moves to Phase 3, where the seed loader is built. Generated TypeScript types and the schema-drift check (ADR-014) wait for Phase 4, when the web app first reads the schema. Monitoring, alert and extraction tables are created in Phase 5.
+
 pgTAP and migration tests, written before the migrations:
 1. `migrations apply cleanly from empty and survive db reset`
 2. `every table in public has RLS enabled` (meta test; fails for any new table without RLS)
@@ -141,7 +143,7 @@ In this order, each group red before its implementation:
 
 **Tracker (D9)**
 - `POST /api/v1/applications creates a saved application; saving again returns the existing row`
-- `each forward move writes an application_events row`
+- `each forward move writes an application_events row` (the database trigger writes it; the API must not, and clients cannot. Also test that the API's transition table and the database's agree, decision D9a)
 - `skipping online_assessment is allowed`
 - `rejected is reachable from every state except offer`
 - `a backward move other than undo returns 409`

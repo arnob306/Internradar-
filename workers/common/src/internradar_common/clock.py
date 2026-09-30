@@ -18,7 +18,9 @@ class FixedClock:
     """A clock frozen at one instant, for tests and reproducible runs."""
 
     def __init__(self, instant: datetime) -> None:
-        if instant.tzinfo is None:
+        # Aware means a timezone that can report its offset. A tzinfo whose utcoffset()
+        # is None is treated as naive by Python, and astimezone() would guess local time.
+        if instant.utcoffset() is None:
             msg = "instant must carry a timezone"
             raise ValueError(msg)
         self._instant = instant.astimezone(UTC)
