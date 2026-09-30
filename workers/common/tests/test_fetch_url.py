@@ -66,6 +66,7 @@ def test_lookalike_hosts_are_not_mistaken_for_aggregators(url: str) -> None:
         ("https://[::1]/careers", "address"),
         ("https://localhost/careers", "address"),
         ("", "https"),
+        ("https://[::1/careers", "malformed"),
     ],
 )
 def test_unsafe_or_malformed_urls_are_refused(url: str, reason: str) -> None:
