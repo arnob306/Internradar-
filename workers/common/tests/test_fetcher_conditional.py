@@ -92,9 +92,7 @@ def test_a_200_returns_the_new_validators(fetcher: PoliteFetcher, httpx_mock: HT
 
     result = fetcher.fetch(PAGE, Validators(etag=ETAG))
 
-    assert result == Fetched(
-        status=200, body="new", etag='"v2-def"', last_modified=LAST_MODIFIED
-    )
+    assert result == Fetched(status=200, body="new", etag='"v2-def"', last_modified=LAST_MODIFIED)
 
 
 def test_a_200_without_validator_headers_returns_none_for_both(

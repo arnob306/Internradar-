@@ -21,9 +21,24 @@ ROBOTS_AGENT = "InternRadar"
 
 
 @dataclass(frozen=True)
+class Validators:
+    """What the server told us about a page last time, so we can ask "has it changed?"."""
+
+    etag: str | None = None
+    last_modified: str | None = None
+
+
+@dataclass(frozen=True)
 class Fetched:
     status: int
     body: str
+    etag: str | None = None
+    last_modified: str | None = None
+
+
+@dataclass(frozen=True)
+class NotModified:
+    """The server answered 304: the page is unchanged since the validators were stored."""
 
 
 @dataclass(frozen=True)
@@ -43,7 +58,18 @@ class DisallowedByRobots:
     """robots.txt forbids the path, or we could not learn what the host's owner wants."""
 
 
-FetchResult = Fetched | AlreadyFetchedToday | Rejected | DisallowedByRobots
+FetchResult = Fetched | NotModified | AlreadyFetchedToday | Rejected | DisallowedByRobots
+
+
+def _conditional_headers(validators: Validators | None) -> dict[str, str]:
+    if validators is None:
+        return {}
+    headers: dict[str, str] = {}
+    if validators.etag is not None:
+        headers["If-None-Match"] = validators.etag
+    if validators.last_modified is not None:
+        headers["If-Modified-Since"] = validators.last_modified
+    return headers
 
 
 class PoliteFetcher:
@@ -56,7 +82,7 @@ class PoliteFetcher:
         self._claims = claims
         self._robots: dict[str, RobotsPolicy] = {}
 
-    def fetch(self, url: str) -> FetchResult:
+    def fetch(self, url: str, validators: Validators | None = None) -> FetchResult:
         try:
             validate_fetch_url(url)
         except RejectedUrlError as error:
@@ -68,8 +94,15 @@ class PoliteFetcher:
         if not self._claims.claim(url, day):
             return AlreadyFetchedToday()
         self._spacer.wait_turn(urlsplit(url).netloc, policy.crawl_delay)
-        response = self._client.get(url)
-        return Fetched(status=response.status_code, body=response.text)
+        response = self._client.get(url, headers=_conditional_headers(validators))
+        if response.status_code == httpx.codes.NOT_MODIFIED:
+            return NotModified()
+        return Fetched(
+            status=response.status_code,
+            body=response.text,
+            etag=response.headers.get("etag"),
+            last_modified=response.headers.get("last-modified"),
+        )
 
     def _robots_policy(self, url: str, day: date) -> RobotsPolicy:
         """The host's policy, fetched at most once per run."""
