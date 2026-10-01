@@ -24,9 +24,7 @@ def claims() -> InMemoryClaimStore:
 
 
 @pytest.fixture
-def fetcher(
-    claims: InMemoryClaimStore, clock: ManualClock, sleeper: FakeSleeper
-) -> PoliteFetcher:
+def fetcher(claims: InMemoryClaimStore, clock: ManualClock, sleeper: FakeSleeper) -> PoliteFetcher:
     return PoliteFetcher(client=httpx.Client(), clock=clock, sleeper=sleeper, claims=claims)
 
 
@@ -79,6 +77,7 @@ def test_the_page_can_be_fetched_again_on_the_next_melbourne_day(
     fetcher: PoliteFetcher, clock: ManualClock, httpx_mock: HTTPXMock
 ) -> None:
     httpx_mock.add_response(url=PAGE, text="<html>graduates</html>")
+    httpx_mock.add_response(url=PAGE, text="<html>graduates</html>")
 
     fetcher.fetch(PAGE)
     clock.advance(SECONDS_PER_DAY)
@@ -91,9 +90,11 @@ def test_the_page_can_be_fetched_again_on_the_next_melbourne_day(
 def test_the_day_rolls_over_at_melbourne_midnight_not_utc_midnight(
     fetcher: PoliteFetcher, clock: ManualClock, httpx_mock: HTTPXMock
 ) -> None:
-    # The manual clock starts at 01:00 UTC, which is 12:00 on 1 October in Melbourne.
-    # Advancing 13 hours reaches 14:00 UTC, which is 01:00 on 2 October in Melbourne,
-    # although the UTC date is still 1 October.
+    # The manual clock starts at 01:00 UTC, which is 11:00 on 1 October in Melbourne
+    # (UTC+10 until daylight saving starts on the 4th). Advancing 13 hours reaches
+    # 14:00 UTC, which is midnight on 2 October in Melbourne, although the UTC date is
+    # still 1 October.
+    httpx_mock.add_response(url=PAGE, text="<html>graduates</html>")
     httpx_mock.add_response(url=PAGE, text="<html>graduates</html>")
 
     fetcher.fetch(PAGE)
