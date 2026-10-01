@@ -53,7 +53,9 @@ def test_the_minimum_spacing_is_five_seconds() -> None:
     assert MIN_SPACING_SECONDS == 5
 
 
-def test_the_first_request_to_a_host_does_not_wait(spacer: HostSpacer, sleeper: FakeSleeper) -> None:
+def test_the_first_request_to_a_host_does_not_wait(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
     spacer.wait_turn("careers.example.com")
 
     assert sleeper.sleeps == []
