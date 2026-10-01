@@ -35,3 +35,12 @@
 - The **Lever adapter is deferred**, since it would serve one employer that isn't verified.
 - Most programs (the banks, Big 4, Atlassian, Canva and the rest) will be tracked through **page monitoring in Phase 5**, which is now where most of the product's value sits.
 - The seed list itself stays at 50 to 100 programs. This audit changes how listings get in, not which programs are tracked.
+
+## Addendum, 2026-10-02: what the first real recording found
+
+When I recorded the Greenhouse fixtures (one polite request per board, through the production fetcher), two of the points above got answers:
+
+- **Optiver's Greenhouse board is empty.** `boards-api.greenhouse.io/v1/boards/optiver/jobs` returned 200 with 0 jobs. The audit's "found" only meant the slug resolves, so the claim above that Greenhouse "covers Optiver and IMC" was wrong for Optiver. In practice the Greenhouse adapter serves **IMC only** (169 jobs, mostly European and APAC), and Optiver joins the page-monitoring group. The empty board stays as a fixture, because "a board with no jobs" is a case the adapter must handle.
+- **The identification gap is closed.** Every request now sends `InternRadar/0.1 (+https://github.com/arnob306/Internradar-)`, including `robots.txt`.
+
+Still unverified: whether IMC lists any Australian roles. The recorded sample had one APAC expression-of-interest posting and no Australian graduate roles.
