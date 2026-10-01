@@ -19,10 +19,13 @@ Allow: /private/public-note
 Crawl-delay: 12
 """
 
-ROBOTS = WILDCARD_GROUP + """
+ROBOTS = (
+    WILDCARD_GROUP
+    + """
 User-agent: InternRadar
 Disallow: /internal/
 """
+)
 
 
 def parse(body: str) -> RobotsPolicy:
@@ -76,6 +79,11 @@ def test_an_unreachable_robots_file_forbids_everything(status: int | None) -> No
 
     assert not policy.can_fetch(f"{HOST}/anything")
     assert not policy.can_fetch(f"{HOST}/")
+
+
+@pytest.mark.parametrize("status", [404, 503, None])
+def test_there_is_no_crawl_delay_without_a_robots_file(status: int | None) -> None:
+    assert policy_from_response(status, None, AGENT).crawl_delay is None
 
 
 def test_an_unresolved_redirect_forbids_everything() -> None:
