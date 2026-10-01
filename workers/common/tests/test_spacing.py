@@ -5,43 +5,9 @@ each other down. Time is injected: the fake sleeper advances a manual clock, so 
 tests never really wait.
 """
 
-from datetime import UTC, datetime, timedelta
-
 import pytest
 from internradar_common.spacing import MIN_SPACING_SECONDS, HostSpacer, SystemSleeper
-
-START = datetime(2026, 10, 1, 1, 0, 0, tzinfo=UTC)
-
-
-class ManualClock:
-    def __init__(self) -> None:
-        self._now = START
-
-    def now(self) -> datetime:
-        return self._now
-
-    def advance(self, seconds: float) -> None:
-        self._now += timedelta(seconds=seconds)
-
-
-class FakeSleeper:
-    def __init__(self, clock: ManualClock) -> None:
-        self._clock = clock
-        self.sleeps: list[float] = []
-
-    def sleep(self, seconds: float) -> None:
-        self.sleeps.append(seconds)
-        self._clock.advance(seconds)
-
-
-@pytest.fixture
-def clock() -> ManualClock:
-    return ManualClock()
-
-
-@pytest.fixture
-def sleeper(clock: ManualClock) -> FakeSleeper:
-    return FakeSleeper(clock)
+from internradar_common.testing import FakeSleeper, ManualClock
 
 
 @pytest.fixture
