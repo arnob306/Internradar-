@@ -119,6 +119,19 @@ def test_a_robots_file_over_the_cap_forbids_the_host(
     assert small_fetcher.fetch(PAGE) == DisallowedByRobots()
 
 
+def test_an_unknown_declared_charset_falls_back_to_utf8_instead_of_crashing(
+    fetcher: PoliteFetcher, httpx_mock: HTTPXMock
+) -> None:
+    httpx_mock.add_response(url=ROBOTS, status_code=404)
+    httpx_mock.add_response(
+        url=PAGE,
+        content="café".encode(),
+        headers={"Content-Type": "text/html; charset=not-a-real-charset"},
+    )
+
+    assert fetcher.fetch(PAGE) == Fetched(status=200, body="café")
+
+
 def test_the_body_is_decoded_with_the_charset_the_server_declared(
     fetcher: PoliteFetcher, httpx_mock: HTTPXMock
 ) -> None:
