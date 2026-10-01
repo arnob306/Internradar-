@@ -14,7 +14,7 @@ from internradar_common.clock import Clock
 from internradar_common.fetch_url import RejectedUrlError, validate_fetch_url
 from internradar_common.melbourne import melbourne_day
 from internradar_common.robots import RobotsPolicy, policy_from_response
-from internradar_common.spacing import Sleeper
+from internradar_common.spacing import HostSpacer, Sleeper
 
 # The product token robots.txt groups are matched against.
 ROBOTS_AGENT = "InternRadar"
@@ -52,7 +52,7 @@ class PoliteFetcher:
     ) -> None:
         self._client = client
         self._clock = clock
-        self._sleeper = sleeper
+        self._spacer = HostSpacer(clock, sleeper)
         self._claims = claims
         self._robots: dict[str, RobotsPolicy] = {}
 
@@ -62,10 +62,12 @@ class PoliteFetcher:
         except RejectedUrlError as error:
             return Rejected(str(error))
         day = melbourne_day(self._clock.now())
-        if not self._robots_policy(url, day).can_fetch(url):
+        policy = self._robots_policy(url, day)
+        if not policy.can_fetch(url):
             return DisallowedByRobots()
         if not self._claims.claim(url, day):
             return AlreadyFetchedToday()
+        self._spacer.wait_turn(urlsplit(url).netloc, policy.crawl_delay)
         response = self._client.get(url)
         return Fetched(status=response.status_code, body=response.text)
 
@@ -81,6 +83,7 @@ class PoliteFetcher:
         # we never saw its answer, we cannot know what the owner wants, so fail closed.
         if not self._claims.claim(robots_url, day):
             return policy_from_response(None, None, ROBOTS_AGENT)
+        self._spacer.wait_turn(urlsplit(robots_url).netloc)
         try:
             response = self._client.get(robots_url)
         except httpx.TransportError:
