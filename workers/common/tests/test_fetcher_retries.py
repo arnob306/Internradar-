@@ -8,7 +8,6 @@ is never retried. The day's claim is used up either way (ADR-015).
 import httpx
 import pytest
 from internradar_common.fetcher import (
-    MAX_ATTEMPTS,
     AlreadyFetchedToday,
     Fetched,
     HttpError,
@@ -31,10 +30,6 @@ def _robots(robots_missing: None) -> None:
 
 def page_requests(httpx_mock: HTTPXMock) -> list[httpx.Request]:
     return [r for r in httpx_mock.get_requests() if r.url.path == "/graduates"]
-
-
-def test_at_most_three_attempts_are_made_in_total() -> None:
-    assert MAX_ATTEMPTS == 3
 
 
 @pytest.mark.parametrize(

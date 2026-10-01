@@ -9,7 +9,13 @@ from datetime import date
 import httpx
 import pytest
 from internradar_common.claims import InMemoryClaimStore
-from internradar_common.fetcher import AlreadyFetchedToday, Fetched, PoliteFetcher, Rejected
+from internradar_common.fetcher import (
+    MAX_ATTEMPTS,
+    AlreadyFetchedToday,
+    Fetched,
+    PoliteFetcher,
+    Rejected,
+)
 from internradar_common.testing import ManualClock
 from pytest_httpx import HTTPXMock
 
@@ -20,6 +26,10 @@ SECONDS_PER_DAY = 24 * 60 * 60
 
 def page_requests(httpx_mock: HTTPXMock) -> list[httpx.Request]:
     return [r for r in httpx_mock.get_requests() if r.url.path != "/robots.txt"]
+
+
+def test_at_most_three_attempts_are_made_in_total() -> None:
+    assert MAX_ATTEMPTS == 3
 
 
 @pytest.mark.parametrize(

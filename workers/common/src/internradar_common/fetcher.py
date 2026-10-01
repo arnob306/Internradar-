@@ -58,7 +58,32 @@ class DisallowedByRobots:
     """robots.txt forbids the path, or we could not learn what the host's owner wants."""
 
 
-FetchResult = Fetched | NotModified | AlreadyFetchedToday | Rejected | DisallowedByRobots
+@dataclass(frozen=True)
+class HttpError:
+    """The host answered with something other than success; never retried."""
+
+    status: int
+
+
+@dataclass(frozen=True)
+class NoResponse:
+    """Every attempt failed before any HTTP response (timeout, connection error)."""
+
+    attempts: int
+
+
+FetchResult = (
+    Fetched
+    | NotModified
+    | AlreadyFetchedToday
+    | Rejected
+    | DisallowedByRobots
+    | HttpError
+    | NoResponse
+)
+
+# Total attempts per claimed page, counting the first. Only no-response failures retry.
+MAX_ATTEMPTS = 3
 
 
 def _conditional_headers(validators: Validators | None) -> dict[str, str]:
@@ -70,6 +95,19 @@ def _conditional_headers(validators: Validators | None) -> dict[str, str]:
     if validators.last_modified is not None:
         headers["If-Modified-Since"] = validators.last_modified
     return headers
+
+
+def _result_from(response: httpx.Response) -> Fetched | NotModified | HttpError:
+    if response.status_code == httpx.codes.NOT_MODIFIED:
+        return NotModified()
+    if not response.is_success:
+        return HttpError(status=response.status_code)
+    return Fetched(
+        status=response.status_code,
+        body=response.text,
+        etag=response.headers.get("etag"),
+        last_modified=response.headers.get("last-modified"),
+    )
 
 
 class PoliteFetcher:
@@ -93,16 +131,23 @@ class PoliteFetcher:
             return DisallowedByRobots()
         if not self._claims.claim(url, day):
             return AlreadyFetchedToday()
-        self._spacer.wait_turn(urlsplit(url).netloc, policy.crawl_delay)
-        response = self._client.get(url, headers=_conditional_headers(validators))
-        if response.status_code == httpx.codes.NOT_MODIFIED:
-            return NotModified()
-        return Fetched(
-            status=response.status_code,
-            body=response.text,
-            etag=response.headers.get("etag"),
-            last_modified=response.headers.get("last-modified"),
-        )
+        response = self._get_page(url, _conditional_headers(validators), policy.crawl_delay)
+        if isinstance(response, NoResponse):
+            return response
+        return _result_from(response)
+
+    def _get_page(
+        self, url: str, headers: dict[str, str], crawl_delay: float | None
+    ) -> httpx.Response | NoResponse:
+        """GET the page, retrying only when no response came back at all."""
+        host = urlsplit(url).netloc
+        for _ in range(MAX_ATTEMPTS):
+            self._spacer.wait_turn(host, crawl_delay)
+            try:
+                return self._client.get(url, headers=headers)
+            except httpx.TransportError:
+                continue
+        return NoResponse(attempts=MAX_ATTEMPTS)
 
     def _robots_policy(self, url: str, day: date) -> RobotsPolicy:
         """The host's policy, fetched at most once per run."""
