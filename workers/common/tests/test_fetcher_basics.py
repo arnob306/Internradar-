@@ -10,7 +10,7 @@ import httpx
 import pytest
 from internradar_common.claims import InMemoryClaimStore
 from internradar_common.fetcher import AlreadyFetchedToday, Fetched, PoliteFetcher, Rejected
-from internradar_common.testing import FakeSleeper, ManualClock
+from internradar_common.testing import ManualClock
 from pytest_httpx import HTTPXMock
 
 PAGE = "https://careers.example.com/graduates"
@@ -18,14 +18,8 @@ DAY = date(2026, 10, 1)
 SECONDS_PER_DAY = 24 * 60 * 60
 
 
-@pytest.fixture
-def claims() -> InMemoryClaimStore:
-    return InMemoryClaimStore()
-
-
-@pytest.fixture
-def fetcher(claims: InMemoryClaimStore, clock: ManualClock, sleeper: FakeSleeper) -> PoliteFetcher:
-    return PoliteFetcher(client=httpx.Client(), clock=clock, sleeper=sleeper, claims=claims)
+def page_requests(httpx_mock: HTTPXMock) -> list[httpx.Request]:
+    return [r for r in httpx_mock.get_requests() if r.url.path != "/robots.txt"]
 
 
 @pytest.mark.parametrize(
@@ -50,6 +44,7 @@ def test_a_rejected_url_makes_no_request_and_takes_no_claim(
     assert claims.claim(url, DAY) is True
 
 
+@pytest.mark.usefixtures("robots_missing")
 def test_a_plain_fetch_returns_the_status_and_body(
     fetcher: PoliteFetcher, httpx_mock: HTTPXMock
 ) -> None:
@@ -60,6 +55,7 @@ def test_a_plain_fetch_returns_the_status_and_body(
     assert result == Fetched(status=200, body="<html>graduates</html>")
 
 
+@pytest.mark.usefixtures("robots_missing")
 def test_a_page_already_fetched_today_is_not_fetched_again(
     fetcher: PoliteFetcher, httpx_mock: HTTPXMock
 ) -> None:
@@ -70,9 +66,10 @@ def test_a_page_already_fetched_today_is_not_fetched_again(
 
     assert isinstance(first, Fetched)
     assert second == AlreadyFetchedToday()
-    assert len(httpx_mock.get_requests()) == 1
+    assert len(page_requests(httpx_mock)) == 1
 
 
+@pytest.mark.usefixtures("robots_missing")
 def test_the_page_can_be_fetched_again_on_the_next_melbourne_day(
     fetcher: PoliteFetcher, clock: ManualClock, httpx_mock: HTTPXMock
 ) -> None:
@@ -84,9 +81,10 @@ def test_the_page_can_be_fetched_again_on_the_next_melbourne_day(
     second = fetcher.fetch(PAGE)
 
     assert isinstance(second, Fetched)
-    assert len(httpx_mock.get_requests()) == 2
+    assert len(page_requests(httpx_mock)) == 2
 
 
+@pytest.mark.usefixtures("robots_missing")
 def test_the_day_rolls_over_at_melbourne_midnight_not_utc_midnight(
     fetcher: PoliteFetcher, clock: ManualClock, httpx_mock: HTTPXMock
 ) -> None:
@@ -102,4 +100,4 @@ def test_the_day_rolls_over_at_melbourne_midnight_not_utc_midnight(
     second = fetcher.fetch(PAGE)
 
     assert isinstance(second, Fetched)
-    assert len(httpx_mock.get_requests()) == 2
+    assert len(page_requests(httpx_mock)) == 2
