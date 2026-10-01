@@ -64,7 +64,8 @@ def test_simultaneous_runs_cannot_both_take_the_same_claim(
     worker_db: psycopg.Connection,
 ) -> None:
     runs = 8
-    barrier = Barrier(runs)
+    # The timeout turns a thread that dies early into an error instead of a hang.
+    barrier = Barrier(runs, timeout=15)
 
     def attempt() -> bool:
         with worker_connection() as connection:
@@ -79,9 +80,11 @@ def test_simultaneous_runs_cannot_both_take_the_same_claim(
 
 def test_a_connection_that_is_not_autocommit_is_refused() -> None:
     # A claim must be durable the moment it is taken, even if the run later fails.
-    with worker_connection(autocommit=False) as connection:
-        with pytest.raises(ValueError, match="autocommit"):
-            PostgresClaimStore(connection)
+    with (
+        worker_connection(autocommit=False) as connection,
+        pytest.raises(ValueError, match="autocommit"),
+    ):
+        PostgresClaimStore(connection)
 
 
 def test_a_second_run_the_same_day_cannot_refetch_and_fails_closed_on_robots(
