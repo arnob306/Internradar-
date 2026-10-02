@@ -192,10 +192,18 @@ def _date(raw: Mapping[str, Any], key: str, where: str, ctx: _Context) -> date |
     return None
 
 
-def _strings(
-    raw: Mapping[str, Any], key: str, allowed: frozenset[str] | None, where: str, ctx: _Context
+def _strings(  # noqa: PLR0913 - one small validator shared by cities and disciplines
+    raw: Mapping[str, Any],
+    key: str,
+    allowed: frozenset[str] | None,
+    where: str,
+    ctx: _Context,
+    *,
+    may_be_empty: bool = False,
 ) -> tuple[str, ...]:
     value = raw.get(key)
+    if may_be_empty and value in (None, []):
+        return ()
     if not isinstance(value, list) or not value or not all(isinstance(v, str) for v in value):
         ctx.fail(where, f"{key} must be a non-empty list of strings")
         return ()
@@ -295,7 +303,8 @@ def _program(raw: object, where: str, ctx: _Context) -> SeedProgram:
         name=_text(data, "name", where, ctx),
         program_type=_choice(data, "program_type", _PROGRAM_TYPES, where, ctx) or "graduate",
         cities=_strings(data, "cities", None, where, ctx),
-        disciplines=_strings(data, "disciplines", ctx.disciplines, where, ctx),
+        # No tags means the program is open to any degree.
+        disciplines=_strings(data, "disciplines", ctx.disciplines, where, ctx, may_be_empty=True),
         source_url=_url(data, "source_url", where, ctx),
         eligibility_rules=_rules(data, where, ctx),
         verified_on=verified_on,
