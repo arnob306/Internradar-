@@ -32,6 +32,17 @@ def test_every_program_and_window_cites_the_employers_own_page() -> None:
                 assert window.source_url, (company.slug, program.slug, window.cycle_year)
 
 
+def test_graduate_programs_use_a_graduation_window_not_a_year_level() -> None:
+    """D16: a year-level rule counts someone who already graduated as ineligible, but graduate
+    programs take recent graduates, so they must say so with a graduation window."""
+    catalog = parse_catalog(CATALOG.read_text(encoding="utf-8"), rules_schema=RULES_SCHEMA)
+
+    for company in catalog.companies:
+        for program in company.programs:
+            if program.program_type == "graduate":
+                assert "yearLevel" not in program.eligibility_rules, (company.slug, program.slug)
+
+
 def test_nothing_is_published_without_a_verification_date() -> None:
     catalog = parse_catalog(CATALOG.read_text(encoding="utf-8"), rules_schema=RULES_SCHEMA)
 
