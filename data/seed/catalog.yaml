@@ -14,10 +14,12 @@
 #     uses "estimated".
 #   - Facts gathered 2026-10-03 with one polite request per page (robots.txt allowed it).
 #
-# Known modelling gaps, so the eligibility rules below are deliberately partial:
-#   - "Completed studies within the last 24 months" (or 3 or 4 years) is not expressible with
-#     the final_year preset alone; graduationWindow needs absolute dates per cycle.
-#   - Minimum WAM/GPA is not modelled yet (decision D15), so CommBank's "65 WAM" is a note.
+# Eligibility rules (decision D16): graduate programs use a graduationWindow, not a year-level
+# preset, because they take recent graduates and a preset would call them ineligible. The window
+# is absolute dates for ONE intake, derived from the page's wording ("within 24 months of
+# applying", etc.) and the month applications open, so it must be re-derived each cycle and
+# checked when verifying.
+# Known gap: minimum WAM/GPA is not modelled yet (decision D15), so CommBank's "65 WAM" is a note.
 
 companies:
   - slug: commbank
@@ -34,7 +36,10 @@ companies:
         # and Cyber Security); AU/NZ citizen or AU PR (not bridging or 820 visas).
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year, or completed within 24 months of applying (March 2026): graduating Mar 2024 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2024, month: 3}
+            latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
         windows:
           # Page: "Applications open March and August", program starts mid-February after.
@@ -77,7 +82,10 @@ companies:
         # students accepted (except Canberra, which needs citizenship), so no citizenship rule.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Completing in 2026, or within 24 months of applying (July 2026): graduating Jul 2024 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2024, month: 7}
+            latest: {year: 2026, month: 12}
         windows:
           # Page: "We open Program applications twice a year: in February/March and in July".
           - cycle_year: 2027
@@ -98,7 +106,9 @@ companies:
         # Page: final year or recently graduated; no citizenship rule stated.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year or recently graduated: how recent is not stated, so only the latest end is set.
+          graduationWindow:
+            latest: {year: 2026, month: 12}
         windows:
           # Page, Australia and NZ: "Recruiting Period: February - June", program starts
           # in February.
@@ -124,7 +134,10 @@ companies:
         # no visa sponsorship.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year or completed 2023 to 2026: graduating Jan 2023 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2023, month: 1}
+            latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
         windows:
           # Page shows "Applications closed" (2026-10-03); start generally January or February.
@@ -146,7 +159,10 @@ companies:
         # Page: final year or within 24 months of graduating; AU/NZ citizen or AU PR.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year, or within 24 months of graduating when applying (Oct 2026): graduating Oct 2024 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2024, month: 10}
+            latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
         windows:
           # Page: "Our 2027 Graduate Program is open for applications"; reviewed on a rolling
@@ -169,7 +185,10 @@ companies:
         # January 2028 (for the 2028 program); AU/NZ citizen or AU PR; no temporary visas.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Completed 2025 to 2027, or due to finish by the end of January 2028 (2028 intake): as the page states.
+          graduationWindow:
+            earliest: {year: 2025, month: 1}
+            latest: {year: 2028, month: 1}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
         windows:
           # Page, 2028 program: "Applications open: February 2027; close: March 2027". The
@@ -198,7 +217,10 @@ companies:
         # there is no window yet.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year or graduated in the last three years (applying about Oct 2026): graduating Oct 2023 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2023, month: 10}
+            latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
 
   - slug: westpac
@@ -215,7 +237,10 @@ companies:
         # Page: final year or completed within the past three years; AU/NZ citizen or AU PR.
         eligibility_rules:
           schemaVersion: 1
-          yearLevel: {preset: final_year}
+          # Final year or completed within three years of applying (July 2026): graduating Jul 2023 to Dec 2026.
+          graduationWindow:
+            earliest: {year: 2023, month: 7}
+            latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
         windows:
           # Page: graduate applications open July, close August, assessment centres
