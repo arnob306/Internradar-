@@ -2,7 +2,7 @@
 
 A web app for Australian university students applying for internships and graduate programs. I'm building it as a student project, and this README is where I record what I'm building, what I decided, and why.
 
-**Status: Phases 0 and 1 of 8 are done.** The design, the test plan, the tooling and the database schema are in place and tested. There's no product yet: no scrapers, no eligibility engine, no UI. I've tried to keep this README honest about which is which.
+**Status: Phases 0 to 2 of 8 are done, and Phase 3 (ingestion) is in progress.** The design, the test plan, the tooling, the database schema, the eligibility engine and most of the ingestion pipeline are in place and tested. There's no product yet: the seed catalog is a first draft of 9 unverified programs and there's no web app. I've tried to keep this README honest about which is which.
 
 ## Why I'm building this
 
@@ -26,12 +26,12 @@ I'm starting small: the first release covers about 10 to 15 hand-verified progra
 - Guards, each with its own test, that stop me breaking my own rules later (see [Rules the tooling enforces](#rules-the-tooling-enforces)).
 - A GitHub Actions workflow that runs all of it, passing on the first pull request. It caught a real mistake on its first run: one action I'd pinned to a version tag that doesn't exist.
 - A Postgres schema on Supabase with row-level security: the program catalog, user data (profiles, follows, resumes, applications), ingestion tables, metrics, and a restricted database role for the ingest worker. Users can only ever read and write their own rows.
-- 378 tests (250 in TypeScript and Python, 128 in the database), all passing in CI as of the last merge.
-- An eligibility engine that answers "am I eligible?" with eligible, ineligible or unknown, and a reason for each. It's pure code with no database or clock, and it's on a branch in review. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
+- Tests, all passing in CI at the last check: the TypeScript suite, 153 database (pgTAP) tests, and 484 Python worker tests at 99.76% branch coverage (see the [Phase 3 evidence report](docs/testing/phase-3-ingestion.tdd.md)).
+- An eligibility engine that answers "am I eligible?" with eligible, ineligible or unknown, and a reason for each. It's pure code with no database or clock. The database tests are written before each migration, and they include checks that fail the build if a new table has no row-level security.
 
 ## What isn't built yet
 
-Everything a user would see: the eligibility engine, the scrapers, the web pages, the alerts. The roadmap is below.
+Everything a user would see: the web pages, the alerts, and the verified catalog (the seed loader and a 9-program draft exist, but nothing is verified or published yet). The roadmap is below.
 
 ## How I'm building it
 
@@ -93,8 +93,8 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 |---|---|---|
 | 0 | Foundations: monorepo, CI, guards, policy | Done, apart from three setup spikes that need Supabase |
 | 1 | Data model and row-level security | Done |
-| 2 | Eligibility engine, test-first | Built, in review |
-| 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | |
+| 2 | Eligibility engine, test-first | Done |
+| 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | In progress: polite fetcher, Greenhouse ingest, seed loader and daily workflow are built; the 9-program seed draft awaits verification |
 | 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | |
 | 5 | Monitoring and email alerts, with human review | |
 | 6 | Measuring extraction accuracy on hand-labelled listings | |

@@ -1,0 +1,52 @@
+name: Ingest
+
+# Runs the Greenhouse ingest once a day. 20:00 UTC is early morning in Melbourne, so the
+# run belongs to the new Melbourne day (a board is fetched at most once per Melbourne day, so
+# a second run on the same day is harmless). It can also be started by hand.
+#
+# Until the hosted database exists there is no INGEST_DATABASE_URL secret. The job then says
+# so and passes, instead of failing every day. Add the secret (the restricted ingest_worker
+# connection string, through the pooler) to switch ingestion on. GitHub pauses scheduled
+# workflows on a repository with no activity for 60 days; re-enable it in the Actions tab.
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never run two at once, and never cancel a run part way through a board.
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  ingest:
+    name: Ingest Greenhouse boards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: workers
+    env:
+      INGEST_DATABASE_URL: ${{ secrets.INGEST_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+      # setup-uv publishes no floating major tag, so pin the exact release.
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: workers/uv.lock
+      - run: uv sync --locked
+      - name: Run the ingest
+        run: |
+          if [ -z "$INGEST_DATABASE_URL" ]; then
+            echo "INGEST_DATABASE_URL secret is not set; skipping ingestion."
+            exit 0
+          fi
+          uv run python -m internradar_ingest.cli

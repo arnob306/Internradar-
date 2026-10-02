@@ -70,3 +70,35 @@ def make_source(admin_db: Connection) -> Callable[[str], UUID]:
 @pytest.fixture
 def source(make_source: Callable[[str], UUID]) -> UUID:
     return make_source("imc")
+
+
+@pytest.fixture
+def make_source_with(admin_db: Connection) -> Callable[..., UUID]:
+    """Like make_source, but with the kind, the active flag and the careers URL chosen."""
+
+    def make(
+        slug: str,
+        *,
+        kind: str = "greenhouse",
+        active: bool = True,
+        careers_url: str | None = None,
+    ) -> UUID:
+        company = admin_db.execute(
+            "insert into public.companies (slug, name, careers_url) "
+            "values (%s, %s, %s) returning id",
+            (
+                f"{TEST_SLUG_PREFIX}{slug}",
+                slug.upper(),
+                careers_url or f"https://careers.{slug}.example",
+            ),
+        ).fetchone()
+        assert company is not None
+        row = admin_db.execute(
+            "insert into public.ats_sources (company_id, kind, board_key, is_active) "
+            "values (%s, %s, %s, %s) returning id",
+            (company[0], kind, slug, active),
+        ).fetchone()
+        assert row is not None
+        return row[0]
+
+    return make

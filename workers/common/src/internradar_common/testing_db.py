@@ -41,6 +41,14 @@ def clean_test_data(connection: psycopg.Connection[tuple[Any, ...]]) -> None:
     programs.company_id is ON DELETE RESTRICT, so its programs are deleted first.
     """
     pattern = f"{TEST_SLUG_PREFIX}%"
+    # Test pipeline runs carry the same prefix in gh_run_id. Their metrics events go first,
+    # otherwise deleting the run would only null the event's run_id and leave it behind.
+    connection.execute(
+        "delete from public.metrics_events where run_id in "
+        "(select id from public.pipeline_runs where gh_run_id like %s)",
+        (pattern,),
+    )
+    connection.execute("delete from public.pipeline_runs where gh_run_id like %s", (pattern,))
     connection.execute(
         "delete from public.programs "
         "where company_id in (select id from public.companies where slug like %s)",
