@@ -283,3 +283,43 @@ def test_ats_kind_and_board_key_are_checked() -> None:
 
     assert problems_for(catalog(bad_kind))
     assert problems_for(catalog(bad_key))
+
+
+def test_a_program_without_windows_is_allowed() -> None:
+    raw = company()
+    del raw["programs"][0]["windows"]
+
+    (co,) = parse_catalog(catalog(raw), rules_schema=RULES_SCHEMA).companies
+
+    assert co.programs[0].windows == ()
+
+
+@pytest.mark.parametrize(
+    ("where", "key", "value", "message"),
+    [
+        ("company", "programs", "nope", "programs must be a list"),
+        ("program", "windows", "nope", "windows must be a list"),
+        ("program", "windows", ["nope"], "must be a mapping"),
+        ("program", "eligibility_rules", ["nope"], "eligibility_rules must be a mapping"),
+        ("program", "is_published", "yes", "is_published must be true or false"),
+        ("program", "verified_on", "last week", "must be a date"),
+        ("window", "window_seq", 10, "window_seq"),
+        ("window", "opens_on", "March", "must be a date"),
+    ],
+)
+def test_wrongly_shaped_values_are_reported_not_crashed_on(
+    where: str, key: str, value: object, message: str
+) -> None:
+    raw = company()
+    target = {
+        "company": raw,
+        "program": raw["programs"][0],
+        "window": raw["programs"][0]["windows"][0],
+    }[where]
+    target[key] = value
+
+    assert any(message in p for p in problems_for(catalog(raw)))
+
+
+def test_a_company_that_is_not_a_mapping_is_reported() -> None:
+    assert any("must be a mapping" in p for p in problems_for("companies:\n  - just text\n"))
