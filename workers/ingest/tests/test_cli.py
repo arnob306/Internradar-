@@ -13,7 +13,8 @@ from internradar_ingest.cli import main
 from internradar_ingest.ingest import BoardOutcome
 from internradar_ingest.run import RunResult, RunStatus, summarise_run
 
-SECRET_URL = "postgresql://ingest_worker:s3cr3t-pa55@db.example.supabase.co:6543/postgres"
+# A made-up credential: the tests prove it is never printed.
+SECRET_URL = "postgresql://ingest_worker:s3cr3t-pa55@db.example.supabase.co:6543/postgres"  # noqa: S105
 RUN_ID = UUID(int=42)
 
 
