@@ -23,6 +23,8 @@ dev = [
   "internradar-common",
   "internradar-ingest",
   "internradar-monitor",
+  "types-pyyaml>=6.0.12.20260906",
+  "types-jsonschema>=4.26.0.20260518",
 ]
 
 [tool.uv.sources]
