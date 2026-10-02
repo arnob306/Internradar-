@@ -7,7 +7,7 @@ recorded in ats_fetches and returned as an outcome. Select with `-m db`.
 
 import json
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -514,6 +514,28 @@ def test_a_keyboard_interrupt_is_not_swallowed_and_leaves_the_row_in_progress(
 
     (row,) = fetch_rows(admin_db, source)
     assert row["error"] == IN_PROGRESS
+
+
+def test_a_run_that_crosses_melbourne_midnight_leaves_one_row_dated_the_day_it_started(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    # 23:59:58 in Melbourne on 1 Oct 2020 (UTC+10): the fetch takes 5 seconds, crossing
+    # midnight. The in-progress row and the final row must be the same row, otherwise the
+    # first one is left "in progress" forever and monitoring raises a false alarm.
+    crossing_clock = ManualClock(datetime(2020, 10, 1, 13, 59, 58, tzinfo=UTC))
+
+    class SlowAcrossMidnight:
+        def fetch(self, _url: str) -> FetchResult:
+            crossing_clock.advance(5)
+            return Fetched(status=200, body=board_body(job(1)))
+
+    outcome = run(worker_db, SlowAcrossMidnight(), source, crossing_clock)  # type: ignore[arg-type]
+
+    assert outcome.kind == "ingested"
+    (row,) = fetch_rows(admin_db, source)
+    assert row["fetch_day"] == date(2020, 10, 1)
+    assert row["error"] is None
+    assert row["is_complete"] is True
 
 
 @pytest.mark.usefixtures("robots_ok")
