@@ -15,6 +15,7 @@ from internradar_common.fetcher import (
     AlreadyFetchedToday,
     DisallowedByRobots,
     Fetched,
+    HttpError,
     PoliteFetcher,
     TooLarge,
 )
@@ -71,6 +72,24 @@ def test_every_request_has_a_timeout(fetcher: PoliteFetcher, httpx_mock: HTTPXMo
         "pool": REQUEST_TIMEOUT_SECONDS,
     }
     assert [r.extensions["timeout"] for r in httpx_mock.get_requests()] == [expected, expected]
+
+
+def test_a_redirect_is_never_followed_even_if_the_client_would_follow_it(
+    claims: InMemoryClaimStore, clock: ManualClock, sleeper: FakeSleeper, httpx_mock: HTTPXMock
+) -> None:
+    # Following a redirect would skip the aggregator check, robots.txt, the claim and the
+    # spacing for the new host, so no client setting may switch it on.
+    httpx_mock.add_response(url=ROBOTS, status_code=404)
+    httpx_mock.add_response(
+        url=PAGE, status_code=301, headers={"Location": "https://www.seek.com.au/job/1"}
+    )
+    client = httpx.Client(follow_redirects=True)
+    fetcher = PoliteFetcher(client=client, clock=clock, sleeper=sleeper, claims=claims)
+
+    result = fetcher.fetch(PAGE)
+
+    assert result == HttpError(status=301)
+    assert [r.url.host for r in httpx_mock.get_requests()] == ["careers.example.com"] * 2
 
 
 def test_the_default_limits_are_ten_seconds_and_five_mebibytes() -> None:
