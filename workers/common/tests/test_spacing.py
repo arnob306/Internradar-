@@ -1,0 +1,123 @@
+"""At least 5 seconds between requests to the same host (docs/ethics-policy.md).
+
+A host's Crawl-delay raises that floor but never lowers it. Different hosts do not slow
+each other down. Time is injected: the fake sleeper advances a manual clock, so these
+tests never really wait.
+"""
+
+import pytest
+from internradar_common.spacing import MIN_SPACING_SECONDS, HostSpacer, SystemSleeper
+from internradar_common.testing import FakeSleeper, ManualClock
+
+
+@pytest.fixture
+def spacer(clock: ManualClock, sleeper: FakeSleeper) -> HostSpacer:
+    return HostSpacer(clock, sleeper)
+
+
+def test_the_minimum_spacing_is_five_seconds() -> None:
+    assert MIN_SPACING_SECONDS == 5
+
+
+def test_the_first_request_to_a_host_does_not_wait(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com")
+
+    assert sleeper.sleeps == []
+
+
+def test_a_second_immediate_request_waits_the_full_spacing(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com")
+    spacer.wait_turn("careers.example.com")
+
+    assert sleeper.sleeps == [5]
+
+
+def test_only_the_remaining_time_is_waited(
+    spacer: HostSpacer, clock: ManualClock, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com")
+    clock.advance(3)
+    spacer.wait_turn("careers.example.com")
+
+    assert sleeper.sleeps == [2]
+
+
+def test_no_wait_when_enough_time_has_already_passed(
+    spacer: HostSpacer, clock: ManualClock, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com")
+    clock.advance(5)
+    spacer.wait_turn("careers.example.com")
+    clock.advance(60)
+    spacer.wait_turn("careers.example.com")
+
+    assert sleeper.sleeps == []
+
+
+def test_the_spacing_runs_from_the_last_request_not_the_first(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    for _ in range(4):
+        spacer.wait_turn("careers.example.com")
+
+    assert sleeper.sleeps == [5, 5, 5]
+
+
+def test_different_hosts_do_not_wait_for_each_other(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com")
+    spacer.wait_turn("boards-api.greenhouse.io")
+
+    assert sleeper.sleeps == []
+
+
+def test_host_names_are_compared_case_insensitively(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("Careers.Example.com")
+    spacer.wait_turn("careers.example.COM")
+
+    assert sleeper.sleeps == [5]
+
+
+def test_a_longer_crawl_delay_raises_the_spacing(spacer: HostSpacer, sleeper: FakeSleeper) -> None:
+    spacer.wait_turn("careers.example.com", crawl_delay=12)
+    spacer.wait_turn("careers.example.com", crawl_delay=12)
+
+    assert sleeper.sleeps == [12]
+
+
+def test_a_shorter_crawl_delay_never_lowers_the_spacing(
+    spacer: HostSpacer, sleeper: FakeSleeper
+) -> None:
+    spacer.wait_turn("careers.example.com", crawl_delay=1)
+    spacer.wait_turn("careers.example.com", crawl_delay=1)
+    spacer.wait_turn("careers.example.com", crawl_delay=0)
+
+    assert sleeper.sleeps == [5, 5]
+
+
+@pytest.mark.parametrize(("crawl_delay", "expected"), [(None, 5), (12, 12)])
+def test_a_clock_that_steps_backwards_never_makes_it_wait_longer_than_the_spacing(
+    spacer: HostSpacer,
+    clock: ManualClock,
+    sleeper: FakeSleeper,
+    crawl_delay: float | None,
+    expected: float,
+) -> None:
+    # The wall clock can be corrected backwards (an NTP step). Without a ceiling the wait
+    # would be spacing plus the whole jump, which could stall a daily job for an hour.
+    spacer.wait_turn("careers.example.com", crawl_delay=crawl_delay)
+    clock.advance(-3600)
+    spacer.wait_turn("careers.example.com", crawl_delay=crawl_delay)
+
+    assert sleeper.sleeps == [expected]
+
+
+def test_the_system_sleeper_really_sleeps_for_the_given_time() -> None:
+    SystemSleeper().sleep(0)

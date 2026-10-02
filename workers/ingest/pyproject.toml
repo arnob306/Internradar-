@@ -3,7 +3,10 @@ name = "internradar-ingest"
 version = "0.0.0"
 description = "Seed loader and ATS ingestion (Greenhouse, Lever)"
 requires-python = ">=3.13"
-dependencies = ["internradar-common"]
+dependencies = [
+    "internradar-common",
+    "psycopg[binary]>=3.2",
+]
 
 [build-system]
 requires = ["hatchling"]
