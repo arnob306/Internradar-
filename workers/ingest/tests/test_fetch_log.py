@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 
 import psycopg
 import pytest
-from internradar_ingest.fetch_log import ERROR_MAX_LENGTH, record_fetch
+from internradar_ingest.fetch_log import ERROR_MAX_LENGTH, IN_PROGRESS, record_fetch, start_fetch
 from psycopg.rows import dict_row
 
 pytestmark = pytest.mark.db
@@ -90,6 +90,59 @@ def test_a_rerun_the_same_day_overwrites_the_row_instead_of_adding_one(
     assert row["is_complete"] is True
     assert row["error"] is None
     assert row["fetched_at"] == NOW + timedelta(hours=1)
+
+
+def test_starting_a_fetch_records_it_as_in_progress(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    run = uuid4()
+
+    start_fetch(worker_db, ats_source_id=source, fetch_day=DAY, run_id=run, now=NOW)
+
+    assert log(admin_db, source) == [
+        {
+            "fetch_day": DAY,
+            "run_id": run,
+            "http_status": None,
+            "is_complete": False,
+            "error": IN_PROGRESS,
+            "fetched_at": NOW,
+        }
+    ]
+
+
+def test_starting_never_overwrites_a_row_that_already_exists_for_the_day(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    first = uuid4()
+    record(worker_db, source, run_id=first)
+
+    start_fetch(
+        worker_db,
+        ats_source_id=source,
+        fetch_day=DAY,
+        run_id=uuid4(),
+        now=NOW + timedelta(hours=1),
+    )
+
+    (row,) = log(admin_db, source)
+    assert row["run_id"] == first
+    assert row["http_status"] == 200
+    assert row["error"] is None
+
+
+def test_finishing_a_started_fetch_replaces_the_in_progress_row(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    start_fetch(worker_db, ats_source_id=source, fetch_day=DAY, run_id=uuid4(), now=NOW)
+    finished = uuid4()
+
+    record(worker_db, source, run_id=finished)
+
+    (row,) = log(admin_db, source)
+    assert row["run_id"] == finished
+    assert row["error"] is None
+    assert row["is_complete"] is True
 
 
 def test_each_day_and_each_source_has_its_own_row(

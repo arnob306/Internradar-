@@ -6,6 +6,7 @@ recorded in ats_fetches and returned as an outcome. Select with `-m db`.
 """
 
 import json
+from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,8 @@ import httpx
 import psycopg
 import pytest
 from internradar_common.fetcher import (
+    AlreadyFetchedToday,
+    Fetched,
     FetchResult,
     NotModified,
     PoliteFetcher,
@@ -26,6 +29,7 @@ from internradar_common.melbourne import melbourne_day
 from internradar_common.postgres_claims import PostgresClaimStore
 from internradar_common.testing import FakeSleeper, ManualClock
 from internradar_ingest import ingest as ingest_module
+from internradar_ingest.fetch_log import IN_PROGRESS, start_fetch
 from internradar_ingest.ingest import BoardOutcome, BoardSource, ingest_board
 from internradar_ingest.upsert import UpsertSummary
 from psycopg.rows import dict_row
@@ -424,6 +428,92 @@ def test_every_other_fetch_failure_is_recorded_with_a_clear_message(
     assert outcome.error == error
     (row,) = fetch_rows(admin_db, source)
     assert (row["http_status"], row["is_complete"], row["error"]) == (None, False, error)
+
+
+class ProbeFetcher:
+    """Runs a probe in the middle of the fetch, then returns a fixed result."""
+
+    def __init__(self, probe: Callable[[], None], result: FetchResult) -> None:
+        self._probe = probe
+        self._result = result
+
+    def fetch(self, _url: str) -> FetchResult:
+        self._probe()
+        return self._result
+
+
+class ExplodingFetcher:
+    def __init__(self, error: BaseException) -> None:
+        self._error = error
+
+    def fetch(self, _url: str) -> FetchResult:
+        raise self._error
+
+
+def test_the_fetch_is_visible_as_in_progress_while_it_runs_and_replaced_when_done(
+    worker_db: Connection, admin_db: Connection, source: UUID, clock: ManualClock
+) -> None:
+    during: list[list[dict[str, Any]]] = []
+    probe = ProbeFetcher(
+        lambda: during.append(fetch_rows(admin_db, source)),
+        Fetched(status=200, body=board_body(job(1))),
+    )
+
+    outcome = run(worker_db, probe, source, clock)  # type: ignore[arg-type]
+
+    assert outcome.kind == "ingested"
+    (rows_during,) = during
+    (mid,) = rows_during
+    assert (mid["error"], mid["http_status"], mid["is_complete"]) == (IN_PROGRESS, None, False)
+    (after,) = fetch_rows(admin_db, source)
+    assert (after["error"], after["is_complete"]) == (None, True)
+    assert after["run_id"] == mid["run_id"]
+
+
+def test_a_row_left_in_progress_by_a_crashed_run_stays_visible_on_the_next_attempt(
+    worker_db: Connection, admin_db: Connection, source: UUID, clock: ManualClock
+) -> None:
+    crashed_run = uuid4()
+    start_fetch(
+        worker_db,
+        ats_source_id=source,
+        fetch_day=melbourne_day(clock.now()),
+        run_id=crashed_run,
+        now=clock.now(),
+    )
+
+    outcome = run(worker_db, StubFetcher(AlreadyFetchedToday()), source, clock)  # type: ignore[arg-type]
+
+    assert outcome.kind == "already_fetched"
+    (row,) = fetch_rows(admin_db, source)
+    assert row["error"] == IN_PROGRESS
+    assert row["run_id"] == crashed_run
+
+
+def test_an_unexpected_exception_is_recorded_without_its_message_and_not_raised(
+    worker_db: Connection, admin_db: Connection, source: UUID, clock: ManualClock
+) -> None:
+    exploding = ExplodingFetcher(RuntimeError("boom with some internal detail"))
+
+    outcome = run(worker_db, exploding, source, clock)  # type: ignore[arg-type]
+
+    assert outcome.kind == "unexpected_error"
+    assert outcome.error == "unexpected error: RuntimeError"
+    (row,) = fetch_rows(admin_db, source)
+    assert row["error"] == "unexpected error: RuntimeError"
+    assert row["is_complete"] is False
+
+
+def test_a_keyboard_interrupt_is_not_swallowed_and_leaves_the_row_in_progress(
+    worker_db: Connection, admin_db: Connection, source: UUID, clock: ManualClock
+) -> None:
+    interrupted = ExplodingFetcher(KeyboardInterrupt())
+
+    with pytest.raises(KeyboardInterrupt):
+        run(worker_db, interrupted, source, clock)  # type: ignore[arg-type]
+
+    (row,) = fetch_rows(admin_db, source)
+    assert row["error"] == IN_PROGRESS
 
 
 @pytest.mark.usefixtures("robots_ok")
