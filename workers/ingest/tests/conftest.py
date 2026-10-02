@@ -4,9 +4,20 @@ from uuid import UUID
 
 import psycopg
 import pytest
+from internradar_common.testing import FakeSleeper, ManualClock
 from internradar_common.testing_db import admin_connection, worker_connection
 
 Connection = psycopg.Connection[tuple[Any, ...]]
+
+
+@pytest.fixture
+def clock() -> ManualClock:
+    return ManualClock()
+
+
+@pytest.fixture
+def sleeper(clock: ManualClock) -> FakeSleeper:
+    return FakeSleeper(clock)
 
 
 @pytest.fixture
@@ -15,7 +26,7 @@ def admin_db() -> Iterator[Connection]:
     with admin_connection() as connection:
         connection.execute(
             "truncate public.listings, public.ats_fetches, public.ats_sources, "
-            "public.programs, public.companies cascade"
+            "public.programs, public.companies, public.fetch_claims cascade"
         )
         yield connection
 
