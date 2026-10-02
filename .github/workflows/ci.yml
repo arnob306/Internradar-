@@ -47,7 +47,7 @@ jobs:
         run: pnpm --filter @internradar/guards test
 
   database:
-    name: Database (schema, RLS, pgTAP)
+    name: Database (schema, RLS, pgTAP, worker tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -61,6 +61,24 @@ jobs:
         run: pnpm --filter @internradar/db db:start
       - name: Run pgTAP tests
         run: pnpm --filter @internradar/db test:db
+      # setup-uv publishes no floating major tag, so pin the exact release.
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: workers/uv.lock
+      - name: Install worker dependencies
+        working-directory: workers
+        run: uv sync --locked
+      # The worker code that talks to Postgres (claims, upsert, status rows) is only
+      # exercised by tests marked "db", so the coverage gate lives here, on the full run
+      # (-m "db or not db" overrides the default that deselects them).
+      - name: Worker tests against the database, with the coverage gate
+        working-directory: workers
+        run: >
+          uv run pytest -m "db or not db"
+          --cov=internradar_common --cov=internradar_ingest --cov=internradar_monitor
+          --cov-branch --cov-fail-under=90
 
   python:
     name: Python (lint, types, tests)
@@ -80,8 +98,7 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy common/src ingest/src monitor/src
-      - name: Tests with coverage
-        run: >
-          uv run pytest
-          --cov=internradar_common --cov=internradar_ingest --cov=internradar_monitor
-          --cov-branch --cov-fail-under=90
+      # Tests that need Postgres are deselected here (the "db" marker) and run in the
+      # database job, which also enforces the coverage gate on the combined run.
+      - name: Tests (no database)
+        run: uv run pytest
