@@ -44,10 +44,16 @@ def trim(payload: dict[str, Any]) -> dict[str, Any]:
         }
         for j in relevant + others
     ]
-    return {"jobs": kept, "meta": {"total": len(jobs)}}
+    result: dict[str, Any] = {"jobs": kept}
+    # Pass Greenhouse's own meta through untouched, or leave it out. Never invent it: the
+    # parser's is_complete depends on meta.total, so a synthesised one would look real.
+    if "meta" in payload:
+        result["meta"] = payload["meta"]
+    result["_trimmed"] = {"kept": len(kept), "of": len(jobs)}
+    return result
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover - the live recording, run by hand
     clock = SystemClock()
     fetcher = PoliteFetcher(
         client=httpx.Client(),
@@ -72,7 +78,7 @@ def main() -> None:
             **trim(json.loads(result.body)),
         }
         target.write_text(json.dumps(recorded, indent=2) + "\n", encoding="utf-8")
-        shown, total = len(recorded["jobs"]), recorded["meta"]["total"]
+        shown, total = recorded["_trimmed"]["kept"], recorded["_trimmed"]["of"]
         print(f"{slug}: wrote {target.name} with {shown} of {total} jobs")
 
 

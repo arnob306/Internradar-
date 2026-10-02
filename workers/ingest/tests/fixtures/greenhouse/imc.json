@@ -3,6 +3,7 @@
     "url": "https://boards-api.greenhouse.io/v1/boards/imc/jobs",
     "melbourne_day": "2026-10-02"
   },
+  "_note": "meta.total in this fixture was computed by an earlier version of the recorder from the number of jobs, not received from Greenhouse (their docs say the real response has it). Re-record on a later day to capture the real meta.",
   "jobs": [
     {
       "id": 4940448101,
