@@ -1,0 +1,229 @@
+# Curated seed catalog: programs and their application windows.
+#
+# Check it:  cd workers && uv run python -m internradar_ingest.seed_cli --check ../data/seed/catalog.yaml
+# Load it:   SEED_DATABASE_URL=... uv run python -m internradar_ingest.seed_cli ../data/seed/catalog.yaml
+#
+# Rules for this file (see docs/ethics-policy.md):
+#   - Key facts only, each taken from the employer's OWN page, never an aggregator. Every
+#     program and window carries the page it came from in source_url.
+#   - Every program below is UNVERIFIED and UNPUBLISHED. A person must open the source page,
+#     check the facts, then add `verified_on: YYYY-MM-DD` and `is_published: true`. The parser
+#     refuses is_published without verified_on.
+#   - cycle_year is the year the program STARTS (decision D1). Dates with only a month use
+#     precision "month" (the first of that month); a pattern the page states without a year
+#     uses "estimated".
+#   - Facts gathered 2026-10-03 with one polite request per page (robots.txt allowed it).
+#
+# Known modelling gaps, so the eligibility rules below are deliberately partial:
+#   - "Completed studies within the last 24 months" (or 3 or 4 years) is not expressible with
+#     the final_year preset alone; graduationWindow needs absolute dates per cycle.
+#   - Minimum WAM/GPA is not modelled yet (decision D15), so CommBank's "65 WAM" is a note.
+
+companies:
+  - slug: commbank
+    name: Commonwealth Bank
+    careers_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
+    programs:
+      - slug: graduate-program
+        name: CommBank Graduate Program
+        program_type: graduate
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
+        # Page: final year or completed within 24 months; 65 WAM (70 Technology: Engineering
+        # and Cyber Security); AU/NZ citizen or AU PR (not bridging or 820 visas).
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page: "Applications open March and August", program starts mid-February after.
+          - cycle_year: 2027
+            status: unknown
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
+      - slug: summer-intern-program
+        name: CommBank Summer Intern Program
+        program_type: vacationer
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: penultimate}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page: "Applications open 12 August to 8 September, 2026"; program November 2026
+          # to January 2027.
+          - cycle_year: 2026
+            opens_on: 2026-08-12
+            opens_precision: day
+            closes_on: 2026-09-08
+            closes_precision: day
+            status: closed
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
+
+  - slug: deloitte-australia
+    name: Deloitte Australia
+    careers_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
+    programs:
+      - slug: graduate-program
+        name: Deloitte Graduate Program
+        program_type: graduate
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
+        # Page: completing studies in 2026 or completed within 24 months; international
+        # students accepted (except Canberra, which needs citizenship), so no citizenship rule.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+        windows:
+          # Page: "We open Program applications twice a year: in February/March and in July".
+          - cycle_year: 2027
+            status: unknown
+            source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
+
+  - slug: atlassian
+    name: Atlassian
+    careers_url: https://www.atlassian.com/company/careers/earlycareers
+    programs:
+      - slug: graduate-program
+        name: Atlassian Graduate Program
+        program_type: graduate
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: [computer_science, software_engineering]
+        source_url: https://www.atlassian.com/company/careers/earlycareers
+        # Page: final year or recently graduated; no citizenship rule stated.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+        windows:
+          # Page, Australia and NZ: "Recruiting Period: February - June", program starts
+          # in February.
+          - cycle_year: 2027
+            opens_on: 2026-02-01
+            opens_precision: estimated
+            closes_on: 2026-06-30
+            closes_precision: estimated
+            status: unknown
+            source_url: https://www.atlassian.com/company/careers/earlycareers
+
+  - slug: pwc-australia
+    name: PwC Australia
+    careers_url: https://jobs-au.pwc.com/au/en/graduate-program
+    programs:
+      - slug: graduate-program
+        name: PwC Graduate Program
+        program_type: graduate
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://jobs-au.pwc.com/au/en/graduate-program
+        # Page: final year or completed within the last four years; AU/NZ citizen or AU PR;
+        # no visa sponsorship.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page shows "Applications closed" (2026-10-03); start generally January or February.
+          - cycle_year: 2027
+            status: closed
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+
+  - slug: ey-australia
+    name: EY Australia
+    careers_url: https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities
+    programs:
+      - slug: graduate-program
+        name: EY Graduate Program
+        program_type: graduate
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities
+        # Page: final year or within 24 months of graduating; AU/NZ citizen or AU PR.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page: "Our 2027 Graduate Program is open for applications"; reviewed on a rolling
+          # basis and roles may close once filled, so no closing date.
+          - cycle_year: 2027
+            status: open
+            source_url: https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities
+
+  - slug: nab
+    name: NAB
+    careers_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
+    programs:
+      - slug: graduate-program
+        name: NAB Graduate Program
+        program_type: graduate
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
+        # Page: completed a degree in the past three years or due to complete by the end of
+        # January 2028 (for the 2028 program); AU/NZ citizen or AU PR; no temporary visas.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page, 2028 program: "Applications open: February 2027; close: March 2027". The
+          # same page also says applications "are now open", which contradicts those dates:
+          # re-read it when verifying.
+          - cycle_year: 2028
+            opens_on: 2027-02-01
+            opens_precision: month
+            closes_on: 2027-03-01
+            closes_precision: month
+            status: upcoming
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
+
+  - slug: anz
+    name: ANZ
+    careers_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+    programs:
+      - slug: graduate-program
+        name: ANZ Graduate Program
+        program_type: graduate
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+        # Page: final year (bachelor or higher) or graduated in the last three years; AU/NZ
+        # citizen or permanent resident of the program country. The page gives no dates, so
+        # there is no window yet.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+
+  - slug: westpac
+    name: Westpac Group
+    careers_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+    programs:
+      - slug: graduate-program
+        name: Westpac Graduate Program
+        program_type: graduate
+        # Page: most positions are in Sydney, select programs in VIC, QLD, SA and WA.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+        # Page: final year or completed within the past three years; AU/NZ citizen or AU PR.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: final_year}
+          citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        windows:
+          # Page: graduate applications open July, close August, assessment centres
+          # September to October, start February (no year stated).
+          - cycle_year: 2027
+            opens_on: 2026-07-01
+            opens_precision: estimated
+            closes_on: 2026-08-01
+            closes_precision: estimated
+            status: unknown
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
