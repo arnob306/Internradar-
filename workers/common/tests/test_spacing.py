@@ -102,5 +102,22 @@ def test_a_shorter_crawl_delay_never_lowers_the_spacing(
     assert sleeper.sleeps == [5, 5]
 
 
+@pytest.mark.parametrize(("crawl_delay", "expected"), [(None, 5), (12, 12)])
+def test_a_clock_that_steps_backwards_never_makes_it_wait_longer_than_the_spacing(
+    spacer: HostSpacer,
+    clock: ManualClock,
+    sleeper: FakeSleeper,
+    crawl_delay: float | None,
+    expected: float,
+) -> None:
+    # The wall clock can be corrected backwards (an NTP step). Without a ceiling the wait
+    # would be spacing plus the whole jump, which could stall a daily job for an hour.
+    spacer.wait_turn("careers.example.com", crawl_delay=crawl_delay)
+    clock.advance(-3600)
+    spacer.wait_turn("careers.example.com", crawl_delay=crawl_delay)
+
+    assert sleeper.sleeps == [expected]
+
+
 def test_the_system_sleeper_really_sleeps_for_the_given_time() -> None:
     SystemSleeper().sleep(0)
