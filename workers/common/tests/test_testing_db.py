@@ -26,6 +26,12 @@ def test_cleanup_removes_only_test_data_and_leaves_everything_else_alone() -> No
                 "values (%s, 'greenhouse', %s)",
                 (company[0], slug),
             )
+            # programs.company_id is ON DELETE RESTRICT, so cleanup must remove them first
+            db.execute(
+                "insert into public.programs (company_id, slug, name, program_type, source_url) "
+                "values (%s, %s, 'Grad', 'graduate', 'https://careers.example/grad')",
+                (company[0], f"{slug}-grad"),
+            )
         db.execute(
             "insert into public.fetch_claims (url_key, fetch_day) values "
             "('https://test.example/a', '2020-10-02'), ('https://real.example/a', '2026-10-02')"
@@ -44,10 +50,18 @@ def test_cleanup_removes_only_test_data_and_leaves_everything_else_alone() -> No
                 "select url_key from public.fetch_claims "
                 "where url_key in ('https://test.example/a', 'https://real.example/a')"
             ).fetchall()
+            programs = db.execute(
+                "select slug from public.programs "
+                "where slug in ('dbtest-acme-grad', 'real-co-grad')"
+            ).fetchall()
             assert companies == [("real-co",)]
             assert sources == [("real-co",)]  # the test company's source went with it
+            assert programs == [("real-co-grad",)]  # and its program
             assert claims == [("https://real.example/a",)]
         finally:
+            db.execute(
+                "delete from public.programs where slug in ('dbtest-acme-grad', 'real-co-grad')"
+            )
             db.execute("delete from public.companies where slug in ('dbtest-acme', 'real-co')")
             db.execute(
                 "delete from public.fetch_claims "

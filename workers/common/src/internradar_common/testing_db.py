@@ -6,6 +6,7 @@ refuses to run against anything but a local database.
 """
 
 import os
+from datetime import date
 from threading import Lock
 from typing import Any
 
@@ -24,6 +25,29 @@ _LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 # password is set once per process, under a lock.
 _password_lock = Lock()
 _password_set = False
+
+
+# Test data is recognisable, so cleanup deletes only it and never real local data (such as
+# loaded seed programs): test companies carry this slug prefix, and test claims are dated
+# before the cutoff (the tests use clocks set in 2020).
+TEST_SLUG_PREFIX = "dbtest-"
+TEST_CLAIM_CUTOFF = date(2021, 1, 1)
+
+
+def clean_test_data(connection: psycopg.Connection[tuple[Any, ...]]) -> None:
+    """Delete what the DB tests create, and nothing else.
+
+    A test company's sources, listings and status rows go with it by cascade, but
+    programs.company_id is ON DELETE RESTRICT, so its programs are deleted first.
+    """
+    pattern = f"{TEST_SLUG_PREFIX}%"
+    connection.execute(
+        "delete from public.programs "
+        "where company_id in (select id from public.companies where slug like %s)",
+        (pattern,),
+    )
+    connection.execute("delete from public.companies where slug like %s", (pattern,))
+    connection.execute("delete from public.fetch_claims where fetch_day < %s", (TEST_CLAIM_CUTOFF,))
 
 
 def _require_local(url: str) -> None:

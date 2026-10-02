@@ -6,7 +6,7 @@ import pytest
 from internradar_common.claims import InMemoryClaimStore
 from internradar_common.fetcher import PoliteFetcher
 from internradar_common.testing import FakeSleeper, ManualClock
-from internradar_common.testing_db import admin_connection, worker_connection
+from internradar_common.testing_db import admin_connection, clean_test_data, worker_connection
 from pytest_httpx import HTTPXMock
 
 
@@ -34,8 +34,9 @@ def fetcher(claims: InMemoryClaimStore, clock: ManualClock, sleeper: FakeSleeper
 def admin_db() -> Iterator[psycopg.Connection]:
     """Setup and cleanup only; the code under test always uses the worker role."""
     with admin_connection() as connection:
-        connection.execute("truncate public.fetch_claims")
+        clean_test_data(connection)
         yield connection
+        clean_test_data(connection)
 
 
 @pytest.fixture

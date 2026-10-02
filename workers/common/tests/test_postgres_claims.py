@@ -6,7 +6,7 @@ a claim here is exactly what production does. Select with `-m db` after `pnpm db
 """
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date
+from datetime import UTC, date, datetime
 from threading import Barrier
 
 import httpx
@@ -21,7 +21,9 @@ from pytest_httpx import HTTPXMock
 
 pytestmark = pytest.mark.db
 
-DAY = date(2026, 10, 2)
+# Test claims are dated 2020 so cleanup can tell them from real claims (clean_test_data).
+DAY = date(2020, 10, 2)
+TEST_START = datetime(2020, 10, 1, 1, 0, 0, tzinfo=UTC)
 URL = "https://careers.example.com/graduates"
 
 
@@ -38,7 +40,7 @@ def test_the_same_url_can_be_claimed_on_another_day_and_another_url_on_the_same_
     store = PostgresClaimStore(worker_db)
     store.claim(URL, DAY)
 
-    assert store.claim(URL, date(2026, 10, 3)) is True
+    assert store.claim(URL, date(2020, 10, 3)) is True
     assert store.claim("https://careers.example.com/internships", DAY) is True
 
 
@@ -49,7 +51,9 @@ def test_the_claim_is_stored_under_the_normalised_url(
 
     assert store.claim("https://CAREERS.example.com/graduates#apply", DAY) is True
     assert store.claim(URL, DAY) is False
-    rows = admin_db.execute("select url_key, fetch_day from public.fetch_claims").fetchall()
+    rows = admin_db.execute(
+        "select url_key, fetch_day from public.fetch_claims where fetch_day = %s", (DAY,)
+    ).fetchall()
     assert rows == [(claim_key(URL), DAY)]
 
 
@@ -88,8 +92,10 @@ def test_a_connection_that_is_not_autocommit_is_refused() -> None:
 
 
 def test_a_second_run_the_same_day_cannot_refetch_and_fails_closed_on_robots(
-    worker_db: psycopg.Connection, clock: ManualClock, sleeper: FakeSleeper, httpx_mock: HTTPXMock
+    worker_db: psycopg.Connection, httpx_mock: HTTPXMock
 ) -> None:
+    clock = ManualClock(TEST_START)
+    sleeper = FakeSleeper(clock)
     httpx_mock.add_response(url="https://careers.example.com/robots.txt", status_code=404)
     httpx_mock.add_response(url=URL, text="<html>ok</html>")
     first_run = PoliteFetcher(
