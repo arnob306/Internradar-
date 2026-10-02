@@ -72,3 +72,26 @@ def test_lookalike_hosts_are_not_mistaken_for_aggregators(url: str) -> None:
 def test_unsafe_or_malformed_urls_are_refused(url: str, reason: str) -> None:
     with pytest.raises(RejectedUrlError, match=reason):
         validate_fetch_url(url)
+
+
+PREFIX = "https://careers.example.com/"
+
+
+def test_a_url_of_exactly_2048_characters_is_accepted() -> None:
+    url = PREFIX + "x" * (2048 - len(PREFIX))
+
+    assert len(url) == 2048
+    assert validate_fetch_url(url) == url
+
+
+def test_a_url_over_2048_characters_is_refused_to_match_the_claims_table_limit() -> None:
+    # fetch_claims.url_key is limited to 2048 characters, so a longer URL would otherwise
+    # crash the run at the database instead of being rejected here.
+    with pytest.raises(RejectedUrlError, match="too long"):
+        validate_fetch_url(PREFIX + "x" * (2049 - len(PREFIX)))
+
+
+@pytest.mark.parametrize("port", ["99999", "abc", "-1", "65536"])
+def test_an_invalid_port_is_refused_rather_than_crashing_later(port: str) -> None:
+    with pytest.raises(RejectedUrlError, match="malformed"):
+        validate_fetch_url(f"https://careers.example.com:{port}/graduates")

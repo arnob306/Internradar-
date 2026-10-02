@@ -37,6 +37,8 @@ def test_at_most_three_attempts_are_made_in_total() -> None:
     [
         ("https://www.seek.com.au/graduate-jobs", "aggregator"),
         ("http://careers.example.com/graduates", "https"),
+        ("https://careers.example.com:99999/graduates", "malformed"),
+        ("https://careers.example.com/" + "x" * 2100, "too long"),
     ],
 )
 def test_a_rejected_url_makes_no_request_and_takes_no_claim(
