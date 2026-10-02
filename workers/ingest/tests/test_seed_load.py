@@ -164,6 +164,18 @@ def test_a_changed_program_is_updated_in_place(admin_db: Connection) -> None:
     assert program_row(admin_db)["name"] == "Graduate Program 2027"
 
 
+def test_a_renamed_company_is_updated_in_place(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog())
+    renamed = replace(make_catalog().companies[0], name="Seed Co Australia")
+
+    summary = load_catalog(admin_db, Catalog(companies=(renamed,)))
+
+    assert (summary.updated, summary.inserted) == (1, 0)
+    assert rows(admin_db, "select name from public.companies where slug = %s", SLUG) == [
+        {"name": "Seed Co Australia"}
+    ]
+
+
 def test_verification_is_stored_as_a_melbourne_date_and_can_be_withdrawn(
     admin_db: Connection,
 ) -> None:
