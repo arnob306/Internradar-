@@ -14,6 +14,17 @@ class RejectedUrlError(ValueError):
     """The URL must not be fetched."""
 
 
+_DEFAULT_HTTPS_PORT = 443
+
+
+def host_key(url: str) -> str:
+    """One name per host for spacing and robots: lower-case, no trailing dot, no :443."""
+    parts = urlsplit(url)
+    host = (parts.hostname or "").rstrip(".")
+    port = parts.port
+    return host if port in (None, _DEFAULT_HTTPS_PORT) else f"{host}:{port}"
+
+
 def _is_address(host: str) -> bool:
     if host == "localhost":
         return True

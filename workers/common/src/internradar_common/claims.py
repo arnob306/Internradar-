@@ -8,6 +8,8 @@ from datetime import date
 from typing import Protocol
 from urllib.parse import urlsplit, urlunsplit
 
+from internradar_common.fetch_url import host_key
+
 
 class ClaimStore(Protocol):
     def claim(self, url: str, day: date) -> bool:
@@ -16,9 +18,9 @@ class ClaimStore(Protocol):
 
 
 def claim_key(url: str) -> str:
-    """The URL as one page: scheme and host lower-cased, fragment dropped."""
+    """The URL as one page: host normalised, an empty path read as "/", fragment dropped."""
     parts = urlsplit(url)
-    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path, parts.query, ""))
+    return urlunsplit((parts.scheme.lower(), host_key(url), parts.path or "/", parts.query, ""))
 
 
 class InMemoryClaimStore:
