@@ -187,7 +187,8 @@ def test_a_program_link_survives_a_later_sync(
     sync(worker_db, source, [listing("1")])
     program = admin_db.execute(
         "insert into public.programs (company_id, slug, name, program_type, source_url) "
-        "select company_id, 'grad', 'Graduate Program', 'graduate', 'https://careers.imc.example/grad' "
+        "select company_id, 'grad', 'Graduate Program', 'graduate', "
+        "'https://careers.imc.example/grad' "
         "from public.ats_sources where id = %s returning id",
         (source,),
     ).fetchone()

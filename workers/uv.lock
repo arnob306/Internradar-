@@ -342,10 +342,14 @@ version = "0.0.0"
 source = { editable = "ingest" }
 dependencies = [
     { name = "internradar-common" },
+    { name = "psycopg", extra = ["binary"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "internradar-common", editable = "common" }]
+requires-dist = [
+    { name = "internradar-common", editable = "common" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2" },
+]
 
 [[package]]
 name = "internradar-monitor"
