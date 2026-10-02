@@ -285,6 +285,18 @@ def test_ats_kind_and_board_key_are_checked() -> None:
     assert problems_for(catalog(bad_key))
 
 
+def test_a_program_open_to_any_degree_may_have_no_discipline_tags() -> None:
+    omitted = company()
+    del omitted["programs"][0]["disciplines"]
+    empty = company()
+    empty["slug"] = "other-co"
+    empty["programs"][0]["disciplines"] = []
+
+    parsed = parse_catalog(catalog(omitted, empty), rules_schema=RULES_SCHEMA)
+
+    assert [c.programs[0].disciplines for c in parsed.companies] == [(), ()]
+
+
 def test_a_program_without_windows_is_allowed() -> None:
     raw = company()
     del raw["programs"][0]["windows"]
