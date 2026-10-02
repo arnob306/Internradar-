@@ -57,8 +57,20 @@ def sync(
     *,
     complete: bool = True,
     now: datetime = NOW,
+    allow_mass_close: bool = False,
 ) -> UpsertSummary:
-    return upsert_board(db, ats_source_id=source, listings=listings, is_complete=complete, now=now)
+    extra: dict[str, Any] = {"allow_mass_close": True} if allow_mass_close else {}
+    return upsert_board(
+        db, ats_source_id=source, listings=listings, is_complete=complete, now=now, **extra
+    )
+
+
+def board(count: int) -> list[Listing]:
+    return [listing(str(number)) for number in range(count)]
+
+
+def open_ids(db: Connection, source: UUID) -> set[str]:
+    return {k for k, v in rows(db, source).items() if v["closed_at"] is None}
 
 
 def test_new_listings_are_inserted_with_every_field(
@@ -216,6 +228,92 @@ def test_a_failure_part_way_through_rolls_back_the_whole_board(
     assert stored["1"]["title"] == "Graduate Trader"  # the edit was rolled back
     assert stored["2"]["closed_at"] is None  # nor was the missing listing closed
     assert stored["1"]["last_seen_at"] == NOW
+
+
+# --- the mass-close guard ---------------------------------------------------------------
+# A glitchy feed that returns an empty (or tiny) but "complete" board must not wipe a
+# company's live roles overnight. Up to half of a source's open listings may close in one
+# run (once it has at least 5 open); beyond that nothing closes and the sync says so.
+
+
+def test_closing_up_to_half_of_the_open_listings_is_allowed(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(10))
+
+    summary = sync(worker_db, source, board(5), now=LATER)  # exactly half missing
+
+    assert summary.closed == 5
+    assert summary.close_blocked == 0
+    assert open_ids(admin_db, source) == {str(n) for n in range(5)}
+
+
+def test_closing_more_than_half_is_blocked_but_everything_else_still_applies(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(10))
+    edited = [listing("0", title="Edited"), *board(4)[1:], listing("new")]
+
+    summary = sync(worker_db, source, edited, now=LATER)  # 6 of 10 would close
+
+    assert summary.closed == 0
+    assert summary.close_blocked == 6
+    assert summary.inserted == 1
+    assert summary.updated == 1
+    stored = rows(admin_db, source)
+    assert len(open_ids(admin_db, source)) == 11  # nothing closed, one added
+    assert stored["0"]["title"] == "Edited"
+
+
+def test_an_empty_complete_board_cannot_wipe_a_source_with_many_open_listings(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(8))
+
+    summary = sync(worker_db, source, [], complete=True, now=LATER)
+
+    assert summary.closed == 0
+    assert summary.close_blocked == 8
+    assert len(open_ids(admin_db, source)) == 8
+
+
+def test_a_small_source_is_not_protected_so_a_genuinely_emptied_board_closes(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(4))
+
+    summary = sync(worker_db, source, [], complete=True, now=LATER)
+
+    assert summary.closed == 4
+    assert summary.close_blocked == 0
+    assert open_ids(admin_db, source) == set()
+
+
+def test_the_guard_can_be_overridden_deliberately(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(8))
+
+    summary = sync(worker_db, source, [], complete=True, now=LATER, allow_mass_close=True)
+
+    assert summary.closed == 8
+    assert summary.close_blocked == 0
+    assert open_ids(admin_db, source) == set()
+
+
+def test_already_closed_listings_do_not_count_as_open_for_the_guard(
+    worker_db: Connection, admin_db: Connection, source: UUID
+) -> None:
+    sync(worker_db, source, board(10))
+    sync(worker_db, source, board(5), now=LATER)  # closes 5, leaving 5 open
+    assert len(open_ids(admin_db, source)) == 5
+
+    # 3 of the 5 open listings now go missing: 60 percent of what is open, so it is blocked
+    # even though only 3 of all 10 rows would change.
+    summary = sync(worker_db, source, board(2), now=LATER + timedelta(days=1))
+
+    assert summary.closed == 0
+    assert summary.close_blocked == 3
 
 
 def test_the_same_external_id_on_two_sources_stays_two_listings(
