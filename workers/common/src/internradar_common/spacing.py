@@ -42,7 +42,9 @@ class HostSpacer:
         spacing = max(MIN_SPACING_SECONDS, crawl_delay or 0)
         last = self._last_request.get(key)
         if last is not None:
-            remaining = spacing - (self._clock.now() - last).total_seconds()
+            # Never wait longer than the spacing itself, even if the wall clock was
+            # stepped backwards since the last request.
+            remaining = min(spacing, spacing - (self._clock.now() - last).total_seconds())
             if remaining > 0:
                 self._sleeper.sleep(remaining)
         self._last_request[key] = self._clock.now()
