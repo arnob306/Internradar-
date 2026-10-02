@@ -182,8 +182,14 @@ class PoliteFetcher:
     def _read(self, url: str, headers: dict[str, str]) -> _Answer | TooLarge:
         """One request, stopping as soon as the body passes the cap."""
         request_headers = {**headers, "User-Agent": USER_AGENT}
+        # Never follow a redirect, whatever the client defaults to: a followed redirect
+        # would skip the denylist, robots.txt, the claim and the spacing for the new host.
         with self._client.stream(
-            "GET", url, headers=request_headers, timeout=REQUEST_TIMEOUT_SECONDS
+            "GET",
+            url,
+            headers=request_headers,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+            follow_redirects=False,
         ) as response:
             content = bytearray()
             for chunk in response.iter_bytes():
