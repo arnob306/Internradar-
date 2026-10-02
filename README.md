@@ -103,6 +103,8 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 
 Phases 0 to 4 make up the MVP.
 
+After the MVP I'm considering student-contributed outcome reports (stage reached, degree area and WAM band, shown only as anonymous aggregates). The reasoning and the privacy rules are in decision D18 in the [decision log](docs/architecture/decisions.md).
+
 ## Open questions and limits
 
 - The LLM provider isn't chosen. It's behind an interface with a stub, and I'll decide in Phase 5 based on cost and whether the provider promises not to keep or train on data.
