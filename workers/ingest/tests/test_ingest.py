@@ -14,7 +14,14 @@ from uuid import UUID, uuid4
 import httpx
 import psycopg
 import pytest
-from internradar_common.fetcher import PoliteFetcher
+from internradar_common.fetcher import (
+    FetchResult,
+    NotModified,
+    PoliteFetcher,
+    Rejected,
+    TooLarge,
+    TooSlow,
+)
 from internradar_common.melbourne import melbourne_day
 from internradar_common.postgres_claims import PostgresClaimStore
 from internradar_common.testing import FakeSleeper, ManualClock
@@ -380,6 +387,43 @@ def test_a_database_error_is_recorded_not_raised(
     (row,) = fetch_rows(admin_db, source)
     assert (row["http_status"], row["is_complete"]) == (200, False)
     assert row["error"] == outcome.error
+
+
+class StubFetcher:
+    """Returns a fixed fetch result, so each failure shape can be exercised without HTTP."""
+
+    def __init__(self, result: FetchResult) -> None:
+        self._result = result
+
+    def fetch(self, _url: str) -> FetchResult:
+        return self._result
+
+
+@pytest.mark.parametrize(
+    ("result", "error"),
+    [
+        (TooLarge(limit=100), "response too large"),
+        (TooSlow(limit_seconds=30), "response too slow"),
+        (Rejected(reason="x"), "unexpected fetch result: Rejected"),
+        (NotModified(), "unexpected fetch result: NotModified"),
+    ],
+)
+def test_every_other_fetch_failure_is_recorded_with_a_clear_message(
+    worker_db: Connection,
+    admin_db: Connection,
+    source: UUID,
+    clock: ManualClock,
+    result: FetchResult,
+    error: str,
+) -> None:
+    stub: Any = StubFetcher(result)
+
+    outcome = run(worker_db, stub, source, clock)
+
+    assert outcome.kind == "not_fetched"
+    assert outcome.error == error
+    (row,) = fetch_rows(admin_db, source)
+    assert (row["http_status"], row["is_complete"], row["error"]) == (None, False, error)
 
 
 @pytest.mark.usefixtures("robots_ok")
