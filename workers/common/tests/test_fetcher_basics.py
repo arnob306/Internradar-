@@ -37,7 +37,6 @@ def test_at_most_three_attempts_are_made_in_total() -> None:
     [
         ("https://www.seek.com.au/graduate-jobs", "aggregator"),
         ("http://careers.example.com/graduates", "https"),
-        ("https://careers.example.com:99999/graduates", "malformed"),
         ("https://careers.example.com/" + "x" * 2100, "too long"),
     ],
 )
@@ -54,6 +53,16 @@ def test_a_rejected_url_makes_no_request_and_takes_no_claim(
     assert reason in result.reason
     assert httpx_mock.get_requests() == []
     assert claims.claim(url, DAY) is True
+
+
+def test_a_url_with_an_invalid_port_is_rejected_not_raised(
+    fetcher: PoliteFetcher, httpx_mock: HTTPXMock
+) -> None:
+    result = fetcher.fetch("https://careers.example.com:99999/graduates")
+
+    assert isinstance(result, Rejected)
+    assert "malformed" in result.reason
+    assert httpx_mock.get_requests() == []
 
 
 @pytest.mark.usefixtures("robots_missing")

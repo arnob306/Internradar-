@@ -15,6 +15,7 @@ class RejectedUrlError(ValueError):
 
 
 _DEFAULT_HTTPS_PORT = 443
+MAX_URL_LENGTH = 2048
 
 
 def host_key(url: str) -> str:
@@ -41,9 +42,14 @@ def _is_aggregator(host: str) -> bool:
 
 def validate_fetch_url(url: str) -> str:
     """Return the URL unchanged if it may be fetched, else raise RejectedUrlError."""
+    # fetch_claims.url_key is limited to this length; a longer URL would crash at the database.
+    if len(url) > MAX_URL_LENGTH:
+        msg = f"URL is too long (over {MAX_URL_LENGTH} characters)"
+        raise RejectedUrlError(msg)
     try:
         parts = urlsplit(url)
         host = (parts.hostname or "").rstrip(".")
+        host_key(url)  # raises ValueError for an invalid port, so it is rejected here
     except ValueError as error:
         msg = f"malformed URL: {error}"
         raise RejectedUrlError(msg) from error
