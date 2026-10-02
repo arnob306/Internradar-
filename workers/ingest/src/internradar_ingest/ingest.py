@@ -1,13 +1,15 @@
 """Ingest one Greenhouse board: fetch, parse, upsert, record. It never crashes the run.
 
 Every way a board can go wrong (robots refusal, HTTP error, no response, a body that is not a
-board, a blocked mass close, a database error) is written to ats_fetches and returned as an
-outcome, so one bad board never stops the others and nothing fails silently.
+board, a blocked mass close, a database error, even a bug) is written to ats_fetches and
+returned as an outcome, so one bad board never stops the others and nothing fails silently.
+A row is marked in progress before the fetch, so a run killed mid-way leaves a visible trace.
+KeyboardInterrupt and SystemExit are deliberately not caught.
 """
 
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 from uuid import UUID
 
 import psycopg
@@ -25,7 +27,7 @@ from internradar_common.fetcher import (
 )
 from internradar_common.melbourne import melbourne_day
 
-from internradar_ingest.fetch_log import record_fetch
+from internradar_ingest.fetch_log import record_fetch, start_fetch
 from internradar_ingest.greenhouse import InvalidBoardError, parse_greenhouse_board
 from internradar_ingest.upsert import UpsertSummary, upsert_board
 
@@ -40,6 +42,7 @@ OutcomeKind = Literal[
     "invalid_board",
     "invalid_source",
     "database_error",
+    "unexpected_error",
 ]
 
 
@@ -59,6 +62,14 @@ class BoardOutcome:
     summary: UpsertSummary | None = None
 
 
+class Recorder(Protocol):
+    """Writes the day's outcome to ats_fetches and hands the outcome back."""
+
+    def __call__(
+        self, outcome: BoardOutcome, status: int | None, *, complete: bool
+    ) -> BoardOutcome: ...
+
+
 def _describe_failure(result: FetchResult) -> tuple[str, int | None]:
     """The error text and HTTP status (if the host answered) for a fetch that gave no board."""
     if isinstance(result, DisallowedByRobots):
@@ -76,46 +87,13 @@ def _describe_failure(result: FetchResult) -> tuple[str, int | None]:
     return f"unexpected fetch result: {type(result).__name__}", None
 
 
-def _record(  # noqa: PLR0913 - the row's columns plus the collaborators
-    connection: psycopg.Connection[tuple[Any, ...]],
-    source: BoardSource,
-    clock: Clock,
-    run_id: UUID,
-    outcome: BoardOutcome,
-    *,
-    http_status: int | None,
-    is_complete: bool,
-) -> BoardOutcome:
-    now = clock.now()
-    record_fetch(
-        connection,
-        ats_source_id=source.ats_source_id,
-        fetch_day=melbourne_day(now),
-        run_id=run_id,
-        http_status=http_status,
-        is_complete=is_complete,
-        error=outcome.error,
-        now=now,
-    )
-    return outcome
-
-
-def ingest_board(
-    *,
+def _fetch_and_store(
     connection: psycopg.Connection[tuple[Any, ...]],
     fetcher: PoliteFetcher,
     source: BoardSource,
     clock: Clock,
-    run_id: UUID,
+    record: Recorder,
 ) -> BoardOutcome:
-    def record(outcome: BoardOutcome, status: int | None, *, complete: bool) -> BoardOutcome:
-        return _record(
-            connection, source, clock, run_id, outcome, http_status=status, is_complete=complete
-        )
-
-    if not _BOARD_KEY.fullmatch(source.board_key):
-        return record(BoardOutcome("invalid_source", "invalid board key"), None, complete=False)
-
     result = fetcher.fetch(f"{BOARDS_API}/{source.board_key}/jobs")
     if isinstance(result, AlreadyFetchedToday):
         return BoardOutcome("already_fetched")
@@ -145,3 +123,45 @@ def ingest_board(
     return record(
         BoardOutcome("ingested", blocked, summary), result.status, complete=parsed.is_complete
     )
+
+
+def ingest_board(
+    *,
+    connection: psycopg.Connection[tuple[Any, ...]],
+    fetcher: PoliteFetcher,
+    source: BoardSource,
+    clock: Clock,
+    run_id: UUID,
+) -> BoardOutcome:
+    def record(outcome: BoardOutcome, status: int | None, *, complete: bool) -> BoardOutcome:
+        now = clock.now()
+        record_fetch(
+            connection,
+            ats_source_id=source.ats_source_id,
+            fetch_day=melbourne_day(now),
+            run_id=run_id,
+            http_status=status,
+            is_complete=complete,
+            error=outcome.error,
+            now=now,
+        )
+        return outcome
+
+    if not _BOARD_KEY.fullmatch(source.board_key):
+        return record(BoardOutcome("invalid_source", "invalid board key"), None, complete=False)
+
+    now = clock.now()
+    start_fetch(
+        connection,
+        ats_source_id=source.ats_source_id,
+        fetch_day=melbourne_day(now),
+        run_id=run_id,
+        now=now,
+    )
+    try:
+        return _fetch_and_store(connection, fetcher, source, clock, record)
+    except Exception as error:
+        # A bug in one board must not stop the others, and it must leave a trace. Only the
+        # type is recorded: the message could carry internal detail.
+        outcome = BoardOutcome("unexpected_error", f"unexpected error: {type(error).__name__}")
+        return record(outcome, None, complete=False)
