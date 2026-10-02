@@ -58,7 +58,7 @@ def test_a_group_that_names_our_agent_is_used_instead_of_the_wildcard_group(
     assert isinstance(fetcher.fetch(PAGE), Fetched)
 
 
-@pytest.mark.parametrize("status", [500, 503, 429, 301])
+@pytest.mark.parametrize("status", [500, 503, 429, 401, 403, 301])
 def test_a_failing_or_redirecting_robots_file_forbids_the_whole_host(
     fetcher: PoliteFetcher, httpx_mock: HTTPXMock, status: int
 ) -> None:

@@ -66,14 +66,16 @@ def test_an_empty_robots_file_allows_everything() -> None:
     assert policy.crawl_delay is None
 
 
-@pytest.mark.parametrize("status", [404, 410, 401, 403])
-def test_a_missing_or_restricted_robots_file_allows_everything(status: int) -> None:
+@pytest.mark.parametrize("status", [404, 410])
+def test_a_missing_robots_file_allows_everything(status: int) -> None:
     policy = policy_from_response(status, None, AGENT)
 
     assert policy.can_fetch(f"{HOST}/anything")
 
 
-@pytest.mark.parametrize("status", [500, 502, 503, 429, None])
+# 401 and 403 usually mean the host is blocking us, and the ethics policy says to back off
+# on 403 and 429, so they forbid the host just like a server error does.
+@pytest.mark.parametrize("status", [500, 502, 503, 429, 401, 403, None])
 def test_an_unreachable_robots_file_forbids_everything(status: int | None) -> None:
     policy = policy_from_response(status, None, AGENT)
 
