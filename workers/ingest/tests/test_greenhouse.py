@@ -141,6 +141,54 @@ def test_a_job_without_a_usable_id_title_or_https_url_is_skipped(bad: dict[str, 
     assert parsed.skipped == 1
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://evil.example/apply",
+        "https://notgreenhouse.io/imc/jobs/1",
+        "https://greenhouse.io.evil.example/imc/jobs/1",
+        "https://job-boards.greenhouse.io.evil.example/imc/jobs/1",
+    ],
+)
+def test_a_listing_url_on_an_unexpected_host_is_skipped_not_shown_to_students(url: str) -> None:
+    # Students see this as an "Apply" link, so a feed must not be able to point elsewhere.
+    parsed = parse(job(absolute_url=url))
+
+    assert parsed.listings == ()
+    assert parsed.skipped == 1
+    assert parsed.is_complete is False
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://greenhouse.io/imc/jobs/1",
+        "https://boards.greenhouse.io/imc/jobs/1",
+        "https://job-boards.eu.greenhouse.io/imc/jobs/1",
+        "https://JOB-BOARDS.GREENHOUSE.IO/imc/jobs/1",
+    ],
+)
+def test_greenhouse_hosts_and_their_subdomains_are_always_accepted(url: str) -> None:
+    assert len(parse(job(absolute_url=url)).listings) == 1
+
+
+def test_the_companys_own_careers_host_is_accepted_only_when_the_caller_names_it() -> None:
+    own = job(absolute_url="https://careers.imc.com/jobs/1")
+
+    assert parse(own).listings == ()
+    named = parse_greenhouse_board(board(own), "imc", extra_hosts=("imc.com",))
+    assert [listing.url for listing in named.listings] == ["https://careers.imc.com/jobs/1"]
+
+
+@pytest.mark.parametrize(
+    "url", ["https://evilimc.com/jobs/1", "https://imc.com.evil.example/jobs/1"]
+)
+def test_a_named_company_host_does_not_match_lookalikes(url: str) -> None:
+    parsed = parse_greenhouse_board(board(job(absolute_url=url)), "imc", extra_hosts=("imc.com",))
+
+    assert parsed.listings == ()
+
+
 def test_a_job_that_is_not_an_object_is_skipped() -> None:
     parsed = parse_greenhouse_board(json.dumps({"jobs": ["nope", 3, None, job()]}), "imc")
 
