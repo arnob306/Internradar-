@@ -9,8 +9,6 @@ from http import HTTPStatus
 
 from protego import Protego
 
-_FIRST_SERVER_ERROR = 500
-
 
 @dataclass(frozen=True)
 class RobotsPolicy:
@@ -36,14 +34,12 @@ class RobotsPolicy:
 def policy_from_response(status: int | None, body: str | None, user_agent: str) -> RobotsPolicy:
     """Turn the robots.txt response (status None means no response) into a policy.
 
-    Parsed when it exists, allowed when it is absent (other 4xx), and forbidden when we
-    could not learn what the owner wants (no response, 5xx, 429, unresolved redirect).
+    Parsed when it exists, allowed only when it is plainly absent (404 or 410), and
+    forbidden whenever we could not learn what the owner wants: no response, 5xx, an
+    unresolved redirect, and 401, 403 and 429, which usually mean the host is blocking us
+    (the ethics policy says to back off on 403 and 429).
     """
     if status == HTTPStatus.OK and body is not None:
         return RobotsPolicy(Protego.parse(body), user_agent, allow_all=False)
-    is_absent = (
-        status is not None
-        and HTTPStatus.BAD_REQUEST <= status < _FIRST_SERVER_ERROR
-        and status != HTTPStatus.TOO_MANY_REQUESTS
-    )
+    is_absent = status in {HTTPStatus.NOT_FOUND, HTTPStatus.GONE}
     return RobotsPolicy(None, user_agent, allow_all=is_absent)
