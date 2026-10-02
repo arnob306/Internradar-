@@ -77,9 +77,13 @@ def _ensure_worker_password() -> None:
         _password_set = True
 
 
-def worker_connection(*, autocommit: bool = True) -> psycopg.Connection[tuple[Any, ...]]:
-    """A connection as the restricted ingest_worker login role."""
+def worker_conninfo() -> str:
+    """The connection string for the restricted ingest_worker login role (local only)."""
     _require_local(ADMIN_URL)
     _ensure_worker_password()
-    conninfo = make_conninfo(ADMIN_URL, user="ingest_worker", password=WORKER_TEST_PASSWORD)
-    return psycopg.connect(conninfo, autocommit=autocommit)
+    return make_conninfo(ADMIN_URL, user="ingest_worker", password=WORKER_TEST_PASSWORD)
+
+
+def worker_connection(*, autocommit: bool = True) -> psycopg.Connection[tuple[Any, ...]]:
+    """A connection as the restricted ingest_worker login role."""
+    return psycopg.connect(worker_conninfo(), autocommit=autocommit)
