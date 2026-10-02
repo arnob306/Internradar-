@@ -133,30 +133,34 @@ def ingest_board(
     clock: Clock,
     run_id: UUID,
 ) -> BoardOutcome:
+    # The day is taken once, when the run starts, and used for the in-progress row and the
+    # result alike. A fetch that crosses Melbourne midnight must update one row, not leave
+    # the first one "in progress" forever.
+    started_at = clock.now()
+    day = melbourne_day(started_at)
+
     def record(outcome: BoardOutcome, status: int | None, *, complete: bool) -> BoardOutcome:
-        now = clock.now()
         record_fetch(
             connection,
             ats_source_id=source.ats_source_id,
-            fetch_day=melbourne_day(now),
+            fetch_day=day,
             run_id=run_id,
             http_status=status,
             is_complete=complete,
             error=outcome.error,
-            now=now,
+            now=clock.now(),
         )
         return outcome
 
     if not _BOARD_KEY.fullmatch(source.board_key):
         return record(BoardOutcome("invalid_source", "invalid board key"), None, complete=False)
 
-    now = clock.now()
     start_fetch(
         connection,
         ats_source_id=source.ats_source_id,
-        fetch_day=melbourne_day(now),
+        fetch_day=day,
         run_id=run_id,
-        now=now,
+        now=started_at,
     )
     try:
         return _fetch_and_store(connection, fetcher, source, clock, record)
