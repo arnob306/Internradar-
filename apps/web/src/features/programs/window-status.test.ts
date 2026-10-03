@@ -111,6 +111,52 @@ describe("windowStatus: estimated dates prove nothing", () => {
   });
 });
 
+describe("windowStatus: a stored 'closed' is final", () => {
+  // Someone (the seed, the monitor, an admin) saw "Applications closed". Dates can correct a
+  // stale "open", but must never reopen a window that was explicitly marked closed.
+  it("stays closed when it opened in the past and has no closing date", () => {
+    const closed = win({ status: "closed", opens_on: "2026-08-12", opens_precision: "day" });
+
+    expect(windowStatus(closed, "2026-10-03")).toBe("closed");
+  });
+
+  it("stays closed when its opening date is still in the future", () => {
+    const closed = win({ status: "closed", opens_on: "2027-02-01", opens_precision: "day" });
+
+    expect(windowStatus(closed, "2026-10-03")).toBe("closed");
+  });
+
+  it("stays closed when the employer closed early, inside the stated dates", () => {
+    const closedEarly = win({
+      status: "closed",
+      opens_on: "2026-08-12",
+      opens_precision: "day",
+      closes_on: "2026-12-31",
+      closes_precision: "day",
+    });
+
+    expect(windowStatus(closedEarly, "2026-10-03")).toBe("closed");
+  });
+
+  it("makes a program with only that window closed", () => {
+    const closed = win({ status: "closed", opens_on: "2026-08-12", opens_precision: "day" });
+
+    expect(programStatus([closed], "2026-10-03")).toBe("closed");
+  });
+
+  it("still lets dates close a window that is stored as open", () => {
+    const stale = win({
+      status: "open",
+      opens_on: "2026-08-12",
+      opens_precision: "day",
+      closes_on: "2026-09-08",
+      closes_precision: "day",
+    });
+
+    expect(windowStatus(stale, "2026-10-03")).toBe("closed");
+  });
+});
+
 describe("programStatus", () => {
   const closed = win({ status: "closed" });
   const unknown = win({ status: "unknown" });
