@@ -54,6 +54,22 @@ describe("parseProgramsQuery", () => {
     },
   );
 
+  it("rejects an offset that is not a whole number of pages, so the page number is never misleading", () => {
+    expect(fieldsOf("offset=5")).toEqual(["offset"]);
+    expect(fieldsOf("limit=10&offset=15")).toEqual(["offset"]);
+  });
+
+  it.each(["offset=0", "offset=20", "limit=10&offset=30", "limit=50&offset=100"])(
+    "accepts %s, a whole number of pages",
+    (query) => {
+      expect(parse(query).ok).toBe(true);
+    },
+  );
+
+  it("reports only the limit when the limit is invalid, since pages cannot be worked out", () => {
+    expect(fieldsOf("limit=0&offset=5")).toEqual(["limit"]);
+  });
+
   it("rejects unknown query keys instead of ignoring them", () => {
     expect(fieldsOf("sort=name")).toEqual(["sort"]);
     expect(fieldsOf("limt=5")).toEqual(["limt"]);
