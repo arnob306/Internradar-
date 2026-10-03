@@ -21,6 +21,7 @@ describe("parseEmail", () => {
     ["no local part", "@example.com"],
     ["no dot in the domain", "student@localhost"],
     ["two @ signs", "a@b@example.com"],
+    ["two @ signs where the first half alone looks valid, which must not be cut short", "a@b.com@c.com"],
     ["a space inside", "stu dent@example.com"],
     ["an angle-bracket display name", "Student <student@example.com>"],
     ["a comma-separated list", "a@example.com,b@example.com"],
