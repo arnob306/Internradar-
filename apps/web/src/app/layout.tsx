@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactElement, ReactNode } from "react";
 import "@fontsource-variable/bricolage-grotesque";
 import "@fontsource-variable/figtree";
+import { SiteHeader } from "../components/SiteHeader";
 import "../design/tokens.css";
 import "./globals.css";
 
@@ -14,7 +15,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { readonly children: ReactNode }): ReactElement {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SiteHeader />
+        {children}
+      </body>
     </html>
   );
 }

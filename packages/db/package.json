@@ -8,7 +8,9 @@
     "db:reset": "supabase db reset --workdir .",
     "test:db": "supabase test db --workdir .",
     "types:write": "node scripts/types.mjs --write",
-    "types:check": "node scripts/types.mjs --check"
+    "types:check": "node scripts/types.mjs --check",
+    "dev:publish-seed": "node scripts/dev-publish.mjs",
+    "dev:unpublish-seed": "node scripts/dev-publish.mjs --undo"
   },
   "devDependencies": {
     "pg": "^8.23.1"

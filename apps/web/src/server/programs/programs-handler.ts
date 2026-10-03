@@ -34,7 +34,8 @@ function json(body: unknown, status: number, cacheControl: string): Response {
   });
 }
 
-function toPublic(item: ProgramListItem): PublicProgram {
+/** The public view of a program, shared by the API and the pages so neither exposes more. */
+export function toPublicProgram(item: ProgramListItem): PublicProgram {
   return {
     id: item.id,
     slug: item.slug,
@@ -62,7 +63,7 @@ export function createProgramsHandler(deps: ProgramsHandlerDeps): (request: Requ
       const { items, total } = await deps.list(parsed.value, melbourneDate(deps.now()));
       const { limit, offset } = parsed.value;
       return json(
-        ok(items.map(toPublic), { total, page: Math.floor(offset / limit) + 1, limit }),
+        ok(items.map(toPublicProgram), { total, page: Math.floor(offset / limit) + 1, limit }),
         200,
         CACHE_PUBLIC,
       );
