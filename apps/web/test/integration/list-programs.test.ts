@@ -148,6 +148,18 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
     expect(total).toBe(1);
   });
 
+  it("orders names the way a person reads them: 'Program 2' before 'Program 10'", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, { company: "same", slug: "p10", name: "Program 10" });
+      await insertProgram(db, { company: "same", slug: "p2", name: "Program 2" });
+      await insertProgram(db, { company: "same", slug: "p1", name: "program 1" });
+    });
+
+    const { items } = await listPrograms(anonClient(), query(), TODAY);
+
+    expect(items.map((item) => item.name)).toEqual(["program 1", "Program 2", "Program 10"]);
+  });
+
   it("lists open programs first, then upcoming, unknown and closed, then by name", async () => {
     await withAdmin(async (db) => {
       await insertProgram(db, { company: "z", name: "Zeta (closed)", windows: [{ status: "closed" }] });
