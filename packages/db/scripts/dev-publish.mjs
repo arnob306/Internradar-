@@ -35,10 +35,13 @@ if (process.argv.length > 2 && !undo) {
 const db = new pg.Client({ connectionString: ADMIN_URL });
 await db.connect();
 try {
-  // Test companies are left alone: the web tests manage their own data.
+  // Two kinds of rows are left alone. Test companies: the web tests manage their own data. And
+  // any program a person has verified: publishing or unpublishing those is a human decision, and
+  // this convenience must never undo it.
   const result = await db.query(
     `update public.programs set is_published = $1
      where is_published <> $1
+       and eligibility_verified_at is null
        and company_id in (select id from public.companies where slug not like 'dbtest-%')`,
     [!undo],
   );
