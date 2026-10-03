@@ -50,6 +50,10 @@ const COLUMNS = `
 // Far more than the catalog will hold for a long while; the page itself is cut in memory.
 const FETCH_LIMIT = 1000;
 
+// Names sort the way a person reads them ("Program 2" before "Program 10"), in one fixed locale so
+// the order never depends on which server renders the page.
+const NAMES = new Intl.Collator("en-AU", { numeric: true, sensitivity: "base" });
+
 const STATUS_ORDER: Readonly<Record<WindowStatus, number>> = {
   open: 0,
   upcoming: 1,
@@ -129,8 +133,8 @@ export async function listPrograms(
     .sort(
       (a, b) =>
         STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
-        a.company.name.localeCompare(b.company.name) ||
-        a.name.localeCompare(b.name),
+        NAMES.compare(a.company.name, b.company.name) ||
+        NAMES.compare(a.name, b.name),
     );
 
   return { items: items.slice(query.offset, query.offset + query.limit), total: items.length };
