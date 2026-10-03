@@ -40,7 +40,7 @@ export function ProgramCard({ program, eligibility }: ProgramCardProps): ReactEl
           <h3 className="program-card-title">
             <Link
               className="program-card-link"
-              href={`/programs/${program.company.slug}/${program.slug}`}
+              href={`/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`}
             >
               {program.name}
             </Link>
@@ -60,7 +60,11 @@ export function ProgramCard({ program, eligibility }: ProgramCardProps): ReactEl
         {eligibility === undefined ? (
           <span className="muted">Sign in to check if you&apos;re eligible.</span>
         ) : (
-          <EligibilityBadge verdict={eligibility.verdict} reasons={eligibility.reasons} />
+          <EligibilityBadge
+            verdict={eligibility.verdict}
+            reasons={eligibility.reasons}
+            subject={program.name}
+          />
         )}
       </div>
     </article>

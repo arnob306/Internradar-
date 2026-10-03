@@ -83,7 +83,7 @@ describe("ProgramCard", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Why: EY Graduate Program?" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Why? for EY Graduate Program" })).toBeTruthy();
   });
 
   it("describes the application window in plain words, flagging an estimate", () => {

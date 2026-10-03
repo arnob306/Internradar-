@@ -28,13 +28,19 @@ const ICON_PATHS: Readonly<Record<Verdict, ReactElement>> = {
 interface EligibilityBadgeProps {
   readonly verdict: Verdict;
   readonly reasons: readonly CriterionResult[];
+  /**
+   * What the badge is about, such as the program's name. It is added to the toggle as hidden
+   * text, so a page of badges has distinct buttons for a screen reader ("Why? for EY Graduate
+   * Program") while the visible label stays "Why?".
+   */
+  readonly subject?: string;
 }
 
 /**
  * The answer to "am I eligible?" as words, never colour alone, with the reasons one click
  * away. "Check requirements" is a first-class answer: the engine says it when it can't tell.
  */
-export function EligibilityBadge({ verdict, reasons }: EligibilityBadgeProps): ReactElement {
+export function EligibilityBadge({ verdict, reasons, subject }: EligibilityBadgeProps): ReactElement {
   const [expanded, setExpanded] = useState(false);
   const listId = useId();
 
@@ -66,6 +72,12 @@ export function EligibilityBadge({ verdict, reasons }: EligibilityBadgeProps): R
             onClick={() => setExpanded((open) => !open)}
           >
             Why?
+            {subject !== undefined && (
+              <>
+                {" "}
+                <span className="visually-hidden">for {subject}</span>
+              </>
+            )}
           </button>
           {expanded && (
             <ul id={listId} className="eligibility-reasons">
