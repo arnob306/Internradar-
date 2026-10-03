@@ -61,6 +61,8 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
         opensPrecision: "day",
         closesOn: "2026-09-08",
         closesPrecision: "day",
+        programStartsOn: null,
+        programEndsOn: null,
         status: "closed",
         sourceUrl: "https://careers.acme.example/window",
       },
@@ -80,6 +82,23 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
       "windows",
     ]);
     expect(item?.rulesVerified).toBe(false);
+  });
+
+  it("carries each window's own program start and end dates, which year level is judged against", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, {
+        company: "dated",
+        name: "Dated Cadetship",
+        windows: [{ programStartsOn: "2026-11-01", programEndsOn: "2027-02-01", status: "upcoming" }],
+      });
+    });
+
+    const { items } = await listPrograms(anonClient(), query(), TODAY);
+
+    expect(items[0]?.windows[0]).toMatchObject({
+      programStartsOn: "2026-11-01",
+      programEndsOn: "2027-02-01",
+    });
   });
 
   it("filters by discipline", async () => {

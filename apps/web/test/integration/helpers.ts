@@ -49,6 +49,8 @@ export interface TestWindow {
   readonly opensPrecision?: "day" | "month" | "estimated";
   readonly closesOn?: string;
   readonly closesPrecision?: "day" | "month" | "estimated";
+  readonly programStartsOn?: string;
+  readonly programEndsOn?: string;
   readonly status?: "upcoming" | "open" | "closed" | "unknown";
 }
 
@@ -90,8 +92,8 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
     await db.query(
       `insert into public.program_windows
          (program_id, cycle_year, window_seq, opens_on, opens_precision, closes_on,
-          closes_precision, status, provenance, source_url)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, 'seed', $9)`,
+          closes_precision, status, provenance, source_url, program_starts_on, program_ends_on)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, 'seed', $9, $10, $11)`,
       [
         programId,
         window.cycleYear ?? 2027,
@@ -102,6 +104,8 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
         window.closesOn === undefined ? null : (window.closesPrecision ?? "day"),
         window.status ?? "unknown",
         `https://careers.${program.company}.example/window`,
+        window.programStartsOn ?? null,
+        window.programEndsOn ?? null,
       ],
     );
   }
