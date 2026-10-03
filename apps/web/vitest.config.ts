@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   // Next rewrites tsconfig's jsx to "preserve", so the test transform sets it explicitly.
@@ -6,6 +6,8 @@ export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   test: {
     include: ["src/**/*.test.{ts,tsx}", "test/**/*.test.{ts,tsx}"],
+    // Integration tests need the local database; they run with `pnpm test:integration`.
+    exclude: [...configDefaults.exclude, "test/integration/**"],
     setupFiles: ["test/setup.ts"],
     coverage: {
       provider: "v8",

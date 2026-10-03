@@ -9,5 +9,8 @@
     "test:db": "supabase test db --workdir .",
     "types:write": "node scripts/types.mjs --write",
     "types:check": "node scripts/types.mjs --check"
+  },
+  "devDependencies": {
+    "pg": "^8.23.1"
   }
 }
