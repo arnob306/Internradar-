@@ -99,6 +99,8 @@ describe("ProgramCard", () => {
               opensPrecision: "estimated",
               closesOn: "2026-08-01",
               closesPrecision: "estimated",
+              programStartsOn: null,
+              programEndsOn: null,
               status: "unknown",
               sourceUrl: "https://example.com",
             },

@@ -12,6 +12,9 @@ export interface ProgramWindowItem {
   readonly opensPrecision: "day" | "month" | "estimated" | null;
   readonly closesOn: string | null;
   readonly closesPrecision: "day" | "month" | "estimated" | null;
+  /** The program's own dates, which year level is judged against. Null when not published. */
+  readonly programStartsOn: string | null;
+  readonly programEndsOn: string | null;
   readonly status: WindowStatus;
   readonly sourceUrl: string;
 }
@@ -44,7 +47,7 @@ const COLUMNS = `
   eligibility_rules, eligibility_verified_at,
   companies!inner ( slug, name, careers_url ),
   program_windows ( cycle_year, window_seq, opens_on, opens_precision, closes_on,
-                    closes_precision, status, source_url )
+                    closes_precision, program_starts_on, program_ends_on, status, source_url )
 `;
 
 // Far more than the catalog will hold for a long while; the page itself is cut in memory.
@@ -99,6 +102,8 @@ export async function listPrograms(
           opensPrecision: window.opens_precision,
           closesOn: window.closes_on,
           closesPrecision: window.closes_precision,
+          programStartsOn: window.program_starts_on,
+          programEndsOn: window.program_ends_on,
           status: window.status,
           sourceUrl: window.source_url,
         }))
