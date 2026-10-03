@@ -47,6 +47,13 @@ function rangeOf(date: string | null, precision: StatusWindow["opens_precision"]
  * so the feed never claims more than the employer's page does.
  */
 export function windowStatus(window: StatusWindow, today: string): WindowStatus {
+  // "Closed" was recorded by someone who saw the employer say so (the seed, the monitor or an
+  // admin). Dates can correct a stale "open", but they must never reopen a window that was
+  // explicitly closed: that would be a false "open", the one claim this product must not make.
+  if (window.status === "closed") {
+    return "closed";
+  }
+
   const opens = rangeOf(window.opens_on, window.opens_precision);
   const closes = rangeOf(window.closes_on, window.closes_precision);
 
