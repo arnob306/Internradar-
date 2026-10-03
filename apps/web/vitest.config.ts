@@ -1,13 +1,18 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Next rewrites tsconfig's jsx to "preserve", so the test transform sets it explicitly.
+  // Vite 8 transforms with oxc, not esbuild.
+  oxc: { jsx: { runtime: "automatic" } },
   test: {
-    include: ["src/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}", "test/**/*.test.{ts,tsx}"],
+    // Integration tests need the local database; they run with `pnpm test:integration`.
+    exclude: [...configDefaults.exclude, "test/integration/**"],
     setupFiles: ["test/setup.ts"],
     coverage: {
       provider: "v8",
-      include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}"],
       thresholds: { lines: 85, branches: 80, functions: 85, statements: 85 },
     },
   },
