@@ -1,4 +1,5 @@
 import type { WindowStatus } from "../../components/StatusChip";
+import { headlineWindow } from "./headline-window";
 
 type Precision = "day" | "month" | "estimated" | null;
 
@@ -88,6 +89,6 @@ export function describeWindows(
   windows: readonly TextWindow[],
   status: WindowStatus,
 ): WindowDescription {
-  const headline = windows.find((window) => window.status !== "closed") ?? windows[0];
+  const headline = headlineWindow(windows);
   return headline === undefined ? withoutDates(status) : describeOne(headline, status);
 }
