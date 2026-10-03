@@ -109,6 +109,34 @@ describe("GET /api/v1/programs", () => {
     expect(bad.response.headers.get("cache-control")).toBe("no-store");
   });
 
+  it("records a failure on the server, so an outage is not silent", async () => {
+    const failure = new Error("connection refused");
+    const log = vi.fn();
+    const handler = createProgramsHandler({
+      list: () => Promise.reject(failure),
+      now: () => NOW,
+      log,
+    });
+
+    await call(handler);
+
+    expect(log).toHaveBeenCalledExactlyOnceWith("api.programs.list", failure);
+  });
+
+  it("does not log a good answer or a visitor's mistake", async () => {
+    const log = vi.fn();
+    const handler = createProgramsHandler({
+      list: () => Promise.resolve({ items: [], total: 0 }),
+      now: () => NOW,
+      log,
+    });
+
+    await call(handler);
+    await call(handler, "?limit=0");
+
+    expect(log).not.toHaveBeenCalled();
+  });
+
   it("answers 500 without a stack trace, SQL or the underlying message", async () => {
     const list = vi.fn(() =>
       Promise.reject(new Error('relation "public.programs" does not exist: select * from programs')),

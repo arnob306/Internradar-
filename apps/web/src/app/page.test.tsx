@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProgramListItem } from "../server/programs/list-programs";
 
 const listPrograms = vi.fn();
+const logFailure = vi.fn();
+vi.mock("../server/log", () => ({ logFailure: (...args: unknown[]) => logFailure(...args) }));
 vi.mock("../server/programs/list-programs", () => ({ listPrograms: (...args: unknown[]) => listPrograms(...args) }));
 vi.mock("../server/public-client", () => ({ createPublicClient: () => ({ marker: "anon-client" }) }));
 
@@ -35,6 +37,7 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-03T14:00:00Z"));
   listPrograms.mockReset();
+  logFailure.mockReset();
   listPrograms.mockResolvedValue({ items: [item("Alpha"), item("Beta")], total: 2 });
 });
 afterEach(() => vi.useRealTimers());
@@ -91,6 +94,21 @@ describe("the home page", () => {
     expect(screen.getByText(/couldn.t load programs right now/)).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/relation|public\.programs|does not exist/);
     expect(screen.queryByRole("link", { name: /Alpha/ })).toBeNull();
+  });
+
+  it("records the failure on the server, so an outage is not silent", async () => {
+    const failure = new Error("connection refused");
+    listPrograms.mockRejectedValue(failure);
+
+    await show();
+
+    expect(logFailure).toHaveBeenCalledExactlyOnceWith("page.home.list", failure);
+  });
+
+  it("logs nothing when the page loads fine", async () => {
+    await show();
+
+    expect(logFailure).not.toHaveBeenCalled();
   });
 
   it("reminds students to confirm on the employer's own page", async () => {
