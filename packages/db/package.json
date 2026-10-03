@@ -6,6 +6,8 @@
     "db:start": "supabase start --workdir . -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,postgres-meta,supavisor",
     "db:stop": "supabase stop --workdir .",
     "db:reset": "supabase db reset --workdir .",
-    "test:db": "supabase test db --workdir ."
+    "test:db": "supabase test db --workdir .",
+    "types:write": "node scripts/types.mjs --write",
+    "types:check": "node scripts/types.mjs --check"
   }
 }

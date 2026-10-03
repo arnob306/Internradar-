@@ -61,6 +61,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Start local Supabase (applies every migration)
         run: pnpm --filter @internradar/db db:start
+      - name: Check the generated database types are current
+        run: pnpm --filter @internradar/db types:check
       - name: Run pgTAP tests
         run: pnpm --filter @internradar/db test:db
       # setup-uv publishes no floating major tag, so pin the exact release.
