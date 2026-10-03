@@ -53,6 +53,12 @@ describe("EligibilityBadge", () => {
     ).toBeTruthy();
   });
 
+  it("names the program in its toggle, so several badges on a page are told apart", () => {
+    render(<EligibilityBadge verdict="unknown" reasons={REASONS} subject="EY Graduate Program" />);
+
+    expect(screen.getByRole("button", { name: "Why: EY Graduate Program?" })).toBeTruthy();
+  });
+
   it("collapses again on a second click", async () => {
     const user = userEvent.setup();
     render(<EligibilityBadge verdict="unknown" reasons={REASONS} />);

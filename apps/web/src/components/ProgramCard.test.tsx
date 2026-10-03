@@ -55,6 +55,37 @@ describe("ProgramCard", () => {
     expect(link.getAttribute("href")).toBe("/programs/ey-australia/graduate-program");
   });
 
+  it("escapes slugs in the link, so an odd slug can never change the path", () => {
+    render(
+      <ProgramCard
+        program={program({
+          slug: "a b/c?d",
+          company: { slug: "x y", name: "Odd Co", careersUrl: "https://example.com" },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /EY Graduate Program/ }).getAttribute("href")).toBe(
+      "/programs/x%20y/a%20b%2Fc%3Fd",
+    );
+  });
+
+  it("tells screen-reader users which program an eligibility toggle belongs to", () => {
+    render(
+      <ProgramCard
+        program={program()}
+        eligibility={{
+          verdict: "unknown",
+          reasons: [
+            { criterion: "citizenship", verdict: "eligible", code: "CITIZENSHIP_OK", params: {} },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Why: EY Graduate Program?" })).toBeTruthy();
+  });
+
   it("describes the application window in plain words, flagging an estimate", () => {
     render(
       <ProgramCard
