@@ -1,6 +1,7 @@
 import { fail, ok } from "@internradar/domain";
 import { melbourneDate } from "../../features/programs/melbourne-date";
 import { parseProgramsQuery, type ProgramsQuery } from "../../features/programs/programs-query";
+import { logFailure } from "../log";
 import type { ProgramListItem, ProgramsPage, ProgramWindowItem } from "./list-programs";
 
 /** What the public API says about a program. The raw eligibility rules stay on the server. */
@@ -21,6 +22,8 @@ export interface PublicProgram {
 export interface ProgramsHandlerDeps {
   readonly list: (query: ProgramsQuery, today: string) => Promise<ProgramsPage>;
   readonly now: () => Date;
+  /** Where failures are recorded. Defaults to the safe server logger; tests pass a spy. */
+  readonly log?: (scope: string, error: unknown) => void;
 }
 
 // A good answer can sit in a CDN for a minute: the catalog changes a few times a week.
@@ -67,9 +70,10 @@ export function createProgramsHandler(deps: ProgramsHandlerDeps): (request: Requ
         200,
         CACHE_PUBLIC,
       );
-    } catch {
+    } catch (error) {
       // Whatever went wrong (a database message can name tables and columns) stays on the
-      // server; the visitor gets a generic answer.
+      // server, and only a safe summary is logged; the visitor gets a generic answer.
+      (deps.log ?? logFailure)("api.programs.list", error);
       return json(fail("INTERNAL_ERROR", "Something went wrong. Please try again."), 500, CACHE_NONE);
     }
   };

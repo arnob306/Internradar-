@@ -7,6 +7,7 @@ import {
   parseProgramsQuery,
   type ProgramsQuery,
 } from "../features/programs/programs-query";
+import { logFailure } from "../server/log";
 import { listPrograms, type ProgramsPage } from "../server/programs/list-programs";
 import { toPublicProgram } from "../server/programs/programs-handler";
 import { createPublicClient } from "../server/public-client";
@@ -47,8 +48,10 @@ export default async function HomePage({
   let page: ProgramsPage | undefined;
   try {
     page = await listPrograms(createPublicClient(), query, melbourneDate(new Date()));
-  } catch {
-    // The reason stays on the server. A visitor only needs to know to try again.
+  } catch (error) {
+    // The reason stays on the server, and only a safe summary is logged. A visitor only needs to
+    // know to try again.
+    logFailure("page.home.list", error);
     page = undefined;
   }
 
