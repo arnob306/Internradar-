@@ -65,11 +65,13 @@ export function parseProgramsQuery(params: URLSearchParams): ProgramsQueryResult
     errors.some((error) => error.field === key) ? undefined : (params.get(key) ?? undefined);
 
   let limit = DEFAULT_LIMIT;
+  let limitIsValid = true;
   const rawLimit = usable("limit");
   if (rawLimit !== undefined) {
     if (WHOLE_NUMBER.test(rawLimit) && Number(rawLimit) >= 1 && Number(rawLimit) <= MAX_LIMIT) {
       limit = Number(rawLimit);
     } else {
+      limitIsValid = false;
       fail("limit", `limit must be a whole number from 1 to ${MAX_LIMIT}.`);
     }
   }
@@ -77,10 +79,15 @@ export function parseProgramsQuery(params: URLSearchParams): ProgramsQueryResult
   let offset = 0;
   const rawOffset = usable("offset");
   if (rawOffset !== undefined) {
-    if (WHOLE_NUMBER.test(rawOffset)) {
-      offset = Number(rawOffset);
-    } else {
+    if (!WHOLE_NUMBER.test(rawOffset)) {
       fail("offset", "offset must be a whole number, 0 or more.");
+    } else if (limitIsValid && Number(rawOffset) % limit !== 0) {
+      // Pages are `limit` rows each, so an offset between two pages would be reported as
+      // "page 1" while starting mid-page. The feed's own links never produce one. With an
+      // invalid limit there are no pages to measure against, so only the limit is reported.
+      fail("offset", `offset must be a multiple of limit (${limit}), so it starts a page.`);
+    } else {
+      offset = Number(rawOffset);
     }
   }
 
