@@ -63,6 +63,8 @@ jobs:
         run: pnpm --filter @internradar/db db:start
       - name: Check the generated database types are current
         run: pnpm --filter @internradar/db types:check
+      - name: Web integration tests (anonymous role through RLS)
+        run: pnpm --filter @internradar/web test:integration
       - name: Run pgTAP tests
         run: pnpm --filter @internradar/db test:db
       # setup-uv publishes no floating major tag, so pin the exact release.
