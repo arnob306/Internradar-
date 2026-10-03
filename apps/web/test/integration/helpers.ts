@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { inject } from "vitest";
 import type { Database } from "../../src/server/db/database.types";
@@ -110,4 +111,17 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
     );
   }
   return programId;
+}
+
+/** Remove the sign-up fixtures; everything tied to a user (profiles, follows) goes with them. */
+export async function cleanTestUsers(db: pg.Client): Promise<void> {
+  await db.query("delete from auth.users where email like $1", [`${TEST_PREFIX}%@example.test`]);
+}
+
+/** A throwaway account for a test. The app itself only ever signs in by email link. */
+export function newTestUser(): { email: string; password: string } {
+  return {
+    email: `${TEST_PREFIX}${randomUUID().slice(0, 8)}@example.test`,
+    password: `${randomUUID()}Aa1!`,
+  };
 }
