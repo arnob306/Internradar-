@@ -10,7 +10,8 @@
     "types:write": "node scripts/types.mjs --write",
     "types:check": "node scripts/types.mjs --check",
     "dev:publish-seed": "node scripts/dev-publish.mjs",
-    "dev:unpublish-seed": "node scripts/dev-publish.mjs --undo"
+    "dev:unpublish-seed": "node scripts/dev-publish.mjs --undo",
+    "db:start:dev": "supabase start --workdir . -x studio,imgproxy,edge-runtime,logflare,vector,realtime,postgres-meta,supavisor"
   },
   "devDependencies": {
     "pg": "^8.23.1"
