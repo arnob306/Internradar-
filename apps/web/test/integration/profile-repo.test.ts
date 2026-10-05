@@ -41,8 +41,18 @@ describe("the profile, through row-level security, as real signed-in users", () 
 
     await saveProfile(client, userId, INPUT);
 
-    const [row] = await rowsFor(userId);
-    expect(new Date(row?.["expected_graduation"] as string).toISOString().slice(0, 10)).toBe("2027-06-01");
+    // Ask Postgres for the date as text: the driver would turn it into a JavaScript Date at local
+    // midnight, and converting that to UTC shifts it a day in Melbourne.
+    const stored = await withAdmin(
+      async (db) =>
+        (
+          await db.query<{ day: string }>(
+            "select to_char(expected_graduation, 'YYYY-MM-DD') as day from public.profiles where user_id = $1",
+            [userId],
+          )
+        ).rows[0]?.day,
+    );
+    expect(stored).toBe("2027-06-01");
   });
 
   it("saving again replaces the profile in place: still one row, with the new values", async () => {

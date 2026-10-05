@@ -11,6 +11,22 @@ import type { Tables, TablesInsert } from "../db/database.types";
 
 export type ProfileRow = Tables<"profiles">;
 
+/** The columns a profile page reads: the student's own answers, not the bookkeeping. */
+export const PROFILE_COLUMNS =
+  "expected_graduation, degree_level, disciplines, is_double_degree, planning_honours, citizenship, university, email_alerts";
+
+export type StoredProfile = Pick<
+  ProfileRow,
+  | "expected_graduation"
+  | "degree_level"
+  | "disciplines"
+  | "is_double_degree"
+  | "planning_honours"
+  | "citizenship"
+  | "university"
+  | "email_alerts"
+>;
+
 function toDate(graduation: YearMonth | null): string | null {
   if (graduation === null) {
     return null;
@@ -52,7 +68,7 @@ export function toProfileRow(userId: string, input: ProfileInput): TablesInsert<
  * is not recognised (a retired degree area, an unknown level, an unreadable date) is treated as
  * "not told us" and left out. One odd value must never stop someone loading their own profile.
  */
-export function fromProfileRow(row: ProfileRow): ProfileInput {
+export function fromProfileRow(row: StoredProfile): ProfileInput {
   return {
     expectedGraduation: fromDate(row.expected_graduation),
     degreeLevel: oneOf(DEGREE_LEVELS, row.degree_level),
