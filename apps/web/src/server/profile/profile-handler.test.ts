@@ -172,7 +172,9 @@ describe("PUT /api/v1/me/profile", () => {
   it("rejects an oversized body", async () => {
     const { PUT, save } = setup();
 
-    const response = await PUT(put({ ...SAVED, university: "x".repeat(20_000) }));
+    // A perfectly valid profile, padded with whitespace: only the size limit can refuse this, not
+    // the validation, so it proves the limit itself works.
+    const response = await PUT(put(`${JSON.stringify(SAVED)}${" ".repeat(20_000)}`));
 
     expect(response.status).toBe(400);
     expect(save).not.toHaveBeenCalled();
