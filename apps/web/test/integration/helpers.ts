@@ -116,6 +116,12 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
 
 /** Remove the sign-up fixtures; everything tied to a user (profiles, follows) goes with them. */
 export async function cleanTestUsers(db: pg.Client): Promise<void> {
+  // Rate-limit rows are keyed "<user id>:<bucket>" with no foreign key, so they go before the users.
+  await db.query(
+    `delete from public.rate_limits
+     where split_part(key, ':', 1) in (select id::text from auth.users where email like $1)`,
+    [`${TEST_PREFIX}%@example.test`],
+  );
   await db.query("delete from auth.users where email like $1", [`${TEST_PREFIX}%@example.test`]);
 }
 
