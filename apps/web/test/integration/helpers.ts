@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { inject } from "vitest";
+import { createSessionClient, type CookieJar } from "../../src/server/auth/session-client";
 import type { Database } from "../../src/server/db/database.types";
 
 /** Test companies carry this prefix, so cleanup removes only what the tests created. */
@@ -124,4 +125,47 @@ export function newTestUser(): { email: string; password: string } {
     email: `${TEST_PREFIX}${randomUUID().slice(0, 8)}@example.test`,
     password: `${randomUUID()}Aa1!`,
   };
+}
+
+interface StoredCookie {
+  value: string;
+  options: Record<string, unknown>;
+}
+
+/** A browser's cookie store, in memory: what the server read and wrote, so a test can inspect it. */
+export class MemoryJar implements CookieJar {
+  readonly cookies = new Map<string, StoredCookie>();
+
+  getAll(): { name: string; value: string }[] {
+    return [...this.cookies].map(([name, stored]) => ({ name, value: stored.value }));
+  }
+
+  set(name: string, value: string, options: Record<string, unknown>): void {
+    // A cookie set to expire immediately is a deletion, as in a real browser.
+    if (value === "" || options["maxAge"] === 0) {
+      this.cookies.delete(name);
+      return;
+    }
+    this.cookies.set(name, { value, options });
+  }
+}
+
+/** The environment a session client needs, from the running local stack. */
+export function sessionEnv(): { SUPABASE_URL: string; SUPABASE_ANON_KEY: string } {
+  return { SUPABASE_URL: inject("supabaseUrl"), SUPABASE_ANON_KEY: inject("supabaseAnonKey") };
+}
+
+/** A real, signed-in user: their own client, id and email, as a browser holding their cookies. */
+export async function signedInUser(): Promise<{
+  client: SupabaseClient<Database>;
+  userId: string;
+  email: string;
+}> {
+  const user = newTestUser();
+  const client = createSessionClient(new MemoryJar(), { env: sessionEnv() });
+  const { data, error } = await client.auth.signUp(user);
+  if (error !== null || data.user === null) {
+    throw new Error("could not create a test user");
+  }
+  return { client, userId: data.user.id, email: user.email };
 }
