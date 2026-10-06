@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { loginRedirectFor } from "./features/auth/protected-paths";
 import { createSessionClient } from "./server/auth/session-client";
+import { respondWithSession, type PendingCookie } from "./server/auth/session-response";
 
 /**
  * Runs before every page. It keeps a signed-in student's session fresh (access tokens last an
@@ -8,24 +9,22 @@ import { createSessionClient } from "./server/auth/session-client";
  * that need an account. The rules live in tested modules; this only connects them.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  let response = NextResponse.next({ request });
+  // Collected while the auth library works, then written once. A session can be split over several
+  // cookies, so the response is built after the last one is known (see respondWithSession).
+  const refreshed: PendingCookie[] = [];
+  let headers: Record<string, string> = {};
 
   const client = createSessionClient(
     {
       getAll: () => request.cookies.getAll().map(({ name, value }) => ({ name, value })),
       set: (name, value, options) => {
-        // Carry the renewed cookie on both the rest of this request and the response.
-        request.cookies.set(name, value);
-        response = NextResponse.next({ request });
-        response.cookies.set(name, value, options);
+        refreshed.push({ name, value, options });
       },
     },
     {
-      onHeaders: (headers) => {
+      onHeaders: (received) => {
         // Anything that set a session cookie must never be cached and shared.
-        for (const [name, value] of Object.entries(headers)) {
-          response.headers.set(name, value);
-        }
+        headers = { ...headers, ...received };
       },
     },
   );
@@ -35,13 +34,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const target = loginRedirectFor(request.nextUrl.pathname, request.nextUrl.search, data.user !== null);
   if (target !== null) {
     const redirect = NextResponse.redirect(new URL(target, request.url));
-    for (const cookie of response.cookies.getAll()) {
-      redirect.cookies.set(cookie);
-    }
     redirect.headers.set("cache-control", "no-store");
-    return redirect;
+    return respondWithSession(request, refreshed, headers, redirect);
   }
-  return response;
+  return respondWithSession(request, refreshed, headers);
 }
 
 export const config = {

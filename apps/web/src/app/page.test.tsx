@@ -30,6 +30,7 @@ function item(name: string): ProgramListItem {
     windows: [],
     eligibilityRules: { schemaVersion: 1 },
     rulesVerified: false,
+    rulesVersion: 1,
   };
 }
 

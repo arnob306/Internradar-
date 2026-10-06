@@ -26,6 +26,7 @@ function program(id: string, overrides: Partial<ProgramListItem> = {}): ProgramL
     windows: [],
     eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } },
     rulesVerified: true,
+    rulesVersion: 1,
     ...overrides,
   };
 }

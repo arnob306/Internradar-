@@ -76,6 +76,7 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
       "name",
       "programType",
       "rulesVerified",
+      "rulesVersion",
       "slug",
       "sourceUrl",
       "status",
@@ -99,6 +100,20 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
       programStartsOn: "2026-11-01",
       programEndsOn: "2027-02-01",
     });
+  });
+
+  it("carries the program's own rules version, which the engine reports back", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, { company: "versioned", name: "Versioned Cadetship" });
+      await db.query(
+        "update public.programs set eligibility_rules_version = 3 where company_id in (select id from public.companies where slug = $1)",
+        [`${TEST_PREFIX}versioned`],
+      );
+    });
+
+    const { items } = await listPrograms(anonClient(), query(), TODAY);
+
+    expect(items[0]?.rulesVersion).toBe(3);
   });
 
   it("filters by discipline", async () => {

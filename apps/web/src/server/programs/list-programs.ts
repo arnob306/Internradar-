@@ -34,6 +34,8 @@ export interface ProgramListItem {
   readonly eligibilityRules: Json;
   /** False until a person has checked the rules, so the engine answers "check requirements". */
   readonly rulesVerified: boolean;
+  /** Which revision of the rules this is, so a result can say what it was judged against. */
+  readonly rulesVersion: number;
 }
 
 export interface ProgramsPage {
@@ -44,7 +46,7 @@ export interface ProgramsPage {
 // Explicit columns, never `select *`: only what the feed needs is ever read.
 const COLUMNS = `
   id, slug, name, program_type, cities, disciplines, source_url,
-  eligibility_rules, eligibility_verified_at,
+  eligibility_rules, eligibility_rules_version, eligibility_verified_at,
   companies!inner ( slug, name, careers_url ),
   program_windows ( cycle_year, window_seq, opens_on, opens_precision, closes_on,
                     closes_precision, program_starts_on, program_ends_on, status, source_url )
@@ -132,6 +134,7 @@ export async function listPrograms(
         windows,
         eligibilityRules: row.eligibility_rules,
         rulesVerified: row.eligibility_verified_at !== null,
+        rulesVersion: row.eligibility_rules_version,
       };
     })
     .filter((item) => !query.openNow || item.status === "open")

@@ -2,7 +2,7 @@
 
 A web app for Australian university students applying for internships and graduate programs. I'm building it as a student project, and this README is where I record what I'm building, what I decided, and why.
 
-**Status: Phases 0 to 2 of 8 are done, and Phase 3 (ingestion) is in progress.** The design, the test plan, the tooling, the database schema, the eligibility engine and most of the ingestion pipeline are in place and tested. There's no product yet: the seed catalog is a first draft of 9 unverified programs and there's no web app. I've tried to keep this README honest about which is which.
+**Status: Phases 0 to 3 of 8 are done, and Phase 4 (the web app) is in progress.** The design, the tests, the database, the eligibility engine, the ingestion pipeline and the first two slices of the app are in place: a public programs feed, email-link sign-in, a profile, and eligibility answers on every card. There is no tracker, resume storage or program detail page yet, and the 9-program seed catalog is an unverified draft, so nothing is published as fact. What must happen before real students use it is in the [launch checklist](docs/architecture/launch-checklist.md). I've tried to keep this README honest about which is which.
 
 ## Why I'm building this
 
@@ -94,8 +94,8 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 | 0 | Foundations: monorepo, CI, guards, policy | Done, apart from three setup spikes that need Supabase |
 | 1 | Data model and row-level security | Done |
 | 2 | Eligibility engine, test-first | Done |
-| 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | In progress: polite fetcher, Greenhouse ingest, seed loader and daily workflow are built; the 9-program seed draft awaits verification |
-| 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | |
+| 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | Done, apart from verifying the seed catalog (a person has to do that) |
+| 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | In progress: feed, sign-in, profile and eligibility badges are built and reviewed; detail pages, tracker, resumes and delete-my-data are not |
 | 5 | Monitoring and email alerts, with human review | |
 | 6 | Measuring extraction accuracy on hand-labelled listings | |
 | 7 | Timeline, requirement matching against resumes, funnel analytics | |
