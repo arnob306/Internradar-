@@ -84,6 +84,35 @@ describe("ProgramFeed", () => {
     expect(screen.queryByText(/page \d/i)).toBeNull();
   });
 
+  it("shows each program's own eligibility answer, and the badge names its program", () => {
+    const programs = [program("Alpha"), program("Beta")];
+    render(
+      <ProgramFeed
+        programs={programs}
+        total={2}
+        query={query()}
+        eligibility={{
+          Alpha: {
+            verdict: "eligible",
+            reasons: [{ criterion: "citizenship", verdict: "eligible", code: "CITIZENSHIP_OK", params: {} }],
+          },
+          Beta: { verdict: "unknown", reasons: [] },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Eligible")).toBeTruthy();
+    expect(screen.getByText("Check requirements")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Why? for Alpha" })).toBeTruthy();
+    expect(screen.queryByText(/Sign in to check/)).toBeNull();
+  });
+
+  it("asks for a profile on every card when the student has not made one", () => {
+    render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query()} prompt="profile" />);
+
+    expect(screen.getByRole("link", { name: "Add your profile to check if you're eligible." })).toBeTruthy();
+  });
+
   it("has no pagination when everything fits on one page", () => {
     render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query()} />);
 

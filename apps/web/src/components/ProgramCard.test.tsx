@@ -119,6 +119,23 @@ describe("ProgramCard", () => {
     expect(screen.getByText("Sign in to check if you're eligible.")).toBeTruthy();
   });
 
+  it("makes the sign-in prompt a link to sign-in that returns to the program", () => {
+    render(<ProgramCard program={program()} />);
+
+    const link = screen.getByRole("link", { name: "Sign in to check if you're eligible." });
+    expect(link.getAttribute("href")).toBe(
+      `/login?next=${encodeURIComponent("/programs/ey-australia/graduate-program")}`,
+    );
+  });
+
+  it("asks a signed-in student with no profile to add one, linking to the profile form", () => {
+    render(<ProgramCard program={program()} prompt="profile" />);
+
+    const link = screen.getByRole("link", { name: "Add your profile to check if you're eligible." });
+    expect(link.getAttribute("href")).toBe("/profile");
+    expect(screen.queryByText(/Sign in to check/)).toBeNull();
+  });
+
   it("shows the eligibility badge once a verdict is known", () => {
     render(
       <ProgramCard
