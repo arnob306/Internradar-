@@ -25,7 +25,6 @@ export default defineConfig({
         // measured by the integration suite (vitest.integration.config.ts), not here.
         "src/server/rate-limit.ts",
         "src/server/auth/session-client.ts",
-        "src/server/auth/sign-out-session.ts",
         "src/server/profile/profile-repo.ts",
         "src/server/programs/list-programs.ts",
       ],
