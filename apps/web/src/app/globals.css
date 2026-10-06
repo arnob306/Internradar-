@@ -563,3 +563,31 @@ a {
   margin: 0;
   font-weight: 600;
 }
+
+/* Header actions: Profile and Sign out sit with the navigation links. */
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 8px 24px;
+  flex-wrap: wrap;
+}
+.header-button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.header-button:hover {
+  color: var(--color-ink);
+}
+.header-button:disabled {
+  cursor: progress;
+}
+.header-problem {
+  color: var(--color-elig-no);
+  font-size: 0.875rem;
+}

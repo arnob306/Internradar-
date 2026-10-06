@@ -1,8 +1,12 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { SignOutButton } from "./SignOutButton";
 
-/** The site header. Only Programs exists so far; the tracker and profile links arrive with them. */
-export function SiteHeader(): ReactElement {
+/**
+ * The site header. A visitor sees a way in; a signed-in student sees their profile and a way out.
+ * The tracker link arrives with the tracker.
+ */
+export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }): ReactElement {
   return (
     <header className="site-header">
       <div className="page site-header-inner">
@@ -30,6 +34,14 @@ export function SiteHeader(): ReactElement {
           <Link href="/" aria-current="page">
             Programs
           </Link>
+          {signedIn ? (
+            <>
+              <Link href="/profile">Profile</Link>
+              <SignOutButton />
+            </>
+          ) : (
+            <Link href="/login">Sign in</Link>
+          )}
         </nav>
       </div>
     </header>
