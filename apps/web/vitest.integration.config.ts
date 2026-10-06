@@ -18,6 +18,7 @@ export default defineConfig({
       include: [
         "src/server/rate-limit.ts",
         "src/server/auth/session-client.ts",
+        "src/server/auth/sign-out-session.ts",
         "src/server/profile/profile-repo.ts",
         "src/server/programs/list-programs.ts",
       ],
