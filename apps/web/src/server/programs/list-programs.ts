@@ -1,5 +1,5 @@
 import type { ProgramType } from "@internradar/domain";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { QueryData, SupabaseClient } from "@supabase/supabase-js";
 import type { WindowStatus } from "../../components/StatusChip";
 import type { ProgramsQuery } from "../../features/programs/programs-query";
 import { programStatus, type StatusWindow } from "../../features/programs/window-status";
@@ -66,6 +66,57 @@ const STATUS_ORDER: Readonly<Record<WindowStatus, number>> = {
   closed: 3,
 };
 
+/** One database row as the repository reads it (explicit columns, with the company and windows). */
+type ProgramRow = QueryData<ReturnType<typeof programsQuery>>[number];
+
+function programsQuery(client: SupabaseClient<Database>) {
+  return client.from("programs").select(COLUMNS);
+}
+
+/** Map one row to the shape the pages use, deriving its status from its windows' dates. */
+function toListItem(row: ProgramRow, today: string): ProgramListItem {
+  const windows: ProgramWindowItem[] = row.program_windows
+    .map((window) => ({
+      cycleYear: window.cycle_year,
+      windowSeq: window.window_seq,
+      opensOn: window.opens_on,
+      opensPrecision: window.opens_precision,
+      closesOn: window.closes_on,
+      closesPrecision: window.closes_precision,
+      programStartsOn: window.program_starts_on,
+      programEndsOn: window.program_ends_on,
+      status: window.status,
+      sourceUrl: window.source_url,
+    }))
+    .sort((a, b) => b.cycleYear - a.cycleYear || a.windowSeq - b.windowSeq);
+  const statusWindows: StatusWindow[] = windows.map((window) => ({
+    status: window.status,
+    opens_on: window.opensOn,
+    opens_precision: window.opensPrecision,
+    closes_on: window.closesOn,
+    closes_precision: window.closesPrecision,
+  }));
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    programType: row.program_type,
+    cities: row.cities,
+    disciplines: row.disciplines,
+    sourceUrl: row.source_url,
+    company: {
+      slug: row.companies.slug,
+      name: row.companies.name,
+      careersUrl: row.companies.careers_url,
+    },
+    status: programStatus(statusWindows, today),
+    windows,
+    eligibilityRules: row.eligibility_rules,
+    rulesVerified: row.eligibility_verified_at !== null,
+    rulesVersion: row.eligibility_rules_version,
+  };
+}
+
 /**
  * The published programs matching the query, as the caller's role is allowed to see them. Row-
  * level security hides unpublished programs; this never filters them itself, so it cannot leak
@@ -80,7 +131,7 @@ export async function listPrograms(
   query: ProgramsQuery,
   today: string,
 ): Promise<ProgramsPage> {
-  let request = client.from("programs").select(COLUMNS).limit(FETCH_LIMIT);
+  let request = programsQuery(client).limit(FETCH_LIMIT);
   if (query.type !== undefined) {
     request = request.eq("program_type", query.type);
   }
@@ -95,48 +146,7 @@ export async function listPrograms(
   }
 
   const items = data
-    .map((row): ProgramListItem => {
-      const windows: ProgramWindowItem[] = row.program_windows
-        .map((window) => ({
-          cycleYear: window.cycle_year,
-          windowSeq: window.window_seq,
-          opensOn: window.opens_on,
-          opensPrecision: window.opens_precision,
-          closesOn: window.closes_on,
-          closesPrecision: window.closes_precision,
-          programStartsOn: window.program_starts_on,
-          programEndsOn: window.program_ends_on,
-          status: window.status,
-          sourceUrl: window.source_url,
-        }))
-        .sort((a, b) => b.cycleYear - a.cycleYear || a.windowSeq - b.windowSeq);
-      const statusWindows: StatusWindow[] = windows.map((window) => ({
-        status: window.status,
-        opens_on: window.opensOn,
-        opens_precision: window.opensPrecision,
-        closes_on: window.closesOn,
-        closes_precision: window.closesPrecision,
-      }));
-      return {
-        id: row.id,
-        slug: row.slug,
-        name: row.name,
-        programType: row.program_type,
-        cities: row.cities,
-        disciplines: row.disciplines,
-        sourceUrl: row.source_url,
-        company: {
-          slug: row.companies.slug,
-          name: row.companies.name,
-          careersUrl: row.companies.careers_url,
-        },
-        status: programStatus(statusWindows, today),
-        windows,
-        eligibilityRules: row.eligibility_rules,
-        rulesVerified: row.eligibility_verified_at !== null,
-        rulesVersion: row.eligibility_rules_version,
-      };
-    })
+    .map((row) => toListItem(row, today))
     .filter((item) => !query.openNow || item.status === "open")
     .sort(
       (a, b) =>
@@ -146,4 +156,26 @@ export async function listPrograms(
     );
 
   return { items: items.slice(query.offset, query.offset + query.limit), total: items.length };
+}
+
+/**
+ * One published program by its employer's slug and its own slug, or null if there is none. A
+ * program's slug is only unique within its employer (every employer has a "graduate-program"), so
+ * both are needed. Row-level security hides unpublished programs, so they are null here too, and
+ * a visitor cannot tell a draft from a program that does not exist.
+ */
+export async function getProgram(
+  client: SupabaseClient<Database>,
+  companySlug: string,
+  programSlug: string,
+  today: string,
+): Promise<ProgramListItem | null> {
+  const { data, error } = await programsQuery(client)
+    .eq("slug", programSlug)
+    .eq("companies.slug", companySlug)
+    .maybeSingle();
+  if (error !== null) {
+    throw new Error(`fetching a program failed (${error.code})`);
+  }
+  return data === null ? null : toListItem(data, today);
 }

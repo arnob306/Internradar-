@@ -53,7 +53,9 @@ describe("getProgram (as the anonymous role, through row-level security)", () =>
       await insertProgram(db, { company: "other", slug: "different", name: "Other Program" });
     });
 
-    expect(await getProgram(anonClient(), ...args(), TODAY)).toBeNull();
+    const [employer, program] = args();
+
+    expect(await getProgram(anonClient(), employer, program, TODAY)).toBeNull();
   });
 
   it("never returns an unpublished program: row-level security hides it", async () => {
