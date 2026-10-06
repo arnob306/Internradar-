@@ -29,7 +29,7 @@ export async function viewerFor(
   try {
     signedIn = (await client.auth.getUser()).data.user !== null;
   } catch (error) {
-    logFailure("page.home.session", error);
+    logFailure("viewer.session", error);
   }
   if (!signedIn) {
     return { prompt: "sign-in" };
@@ -42,7 +42,7 @@ export async function viewerFor(
     }
     return { prompt: "profile", eligibility: eligibilityForFeed(items, toStudentProfile(profile), today) };
   } catch (error) {
-    logFailure("page.home.profile", error);
+    logFailure("viewer.profile", error);
     return { prompt: "profile" };
   }
 }
