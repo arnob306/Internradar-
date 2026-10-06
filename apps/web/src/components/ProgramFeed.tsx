@@ -13,6 +13,8 @@ interface ProgramFeedProps {
   readonly query: ProgramsQuery;
   /** Per-program eligibility, once the visitor is signed in. Keyed by program id. */
   readonly eligibility?: Readonly<Record<string, CardEligibility>>;
+  /** What each card asks for while it has no answer. */
+  readonly prompt?: "sign-in" | "profile";
 }
 
 const TYPE_FILTERS: readonly { readonly type: ProgramType; readonly label: string }[] = [
@@ -38,7 +40,7 @@ function FilterLink(props: {
   );
 }
 
-export function ProgramFeed({ programs, total, query, eligibility }: ProgramFeedProps): ReactElement {
+export function ProgramFeed({ programs, total, query, eligibility, prompt }: ProgramFeedProps): ReactElement {
   const pages = Math.max(1, Math.ceil(total / query.limit));
   const page = Math.floor(query.offset / query.limit) + 1;
 
@@ -86,6 +88,7 @@ export function ProgramFeed({ programs, total, query, eligibility }: ProgramFeed
                 key={program.id}
                 program={program}
                 {...(verdict === undefined ? {} : { eligibility: verdict })}
+                {...(prompt === undefined ? {} : { prompt })}
               />
             );
           })}

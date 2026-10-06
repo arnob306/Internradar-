@@ -23,14 +23,17 @@ interface ProgramCardProps {
   readonly program: PublicProgram;
   /** Present once the visitor is signed in and has a profile; absent for anonymous visitors. */
   readonly eligibility?: CardEligibility;
+  /** What to ask when there is no answer yet: a visitor signs in, a student adds a profile. */
+  readonly prompt?: "sign-in" | "profile";
 }
 
 /**
  * One program in the feed. Only the title is a link; CSS stretches it over the card, so the
  * eligibility button below it is never nested inside an anchor.
  */
-export function ProgramCard({ program, eligibility }: ProgramCardProps): ReactElement {
+export function ProgramCard({ program, eligibility, prompt = "sign-in" }: ProgramCardProps): ReactElement {
   const window = describeWindows(program.windows, program.status);
+  const programPath = `/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`;
 
   return (
     <article className="program-card">
@@ -58,7 +61,13 @@ export function ProgramCard({ program, eligibility }: ProgramCardProps): ReactEl
 
       <div className="program-card-footer">
         {eligibility === undefined ? (
-          <span className="muted">Sign in to check if you&apos;re eligible.</span>
+          <Link
+            href={prompt === "profile" ? "/profile" : `/login?next=${encodeURIComponent(programPath)}`}
+          >
+            {prompt === "profile"
+              ? "Add your profile to check if you're eligible."
+              : "Sign in to check if you're eligible."}
+          </Link>
         ) : (
           <EligibilityBadge
             verdict={eligibility.verdict}
