@@ -43,6 +43,8 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
+      - name: Build the web app
+        run: pnpm --filter @internradar/web build
       - name: Guard tests (lint rules)
         run: pnpm --filter @internradar/guards test
 
@@ -59,6 +61,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Start local Supabase (applies every migration)
         run: pnpm --filter @internradar/db db:start
+      - name: Check the generated database types are current
+        run: pnpm --filter @internradar/db types:check
+      - name: Web integration tests (anonymous role through RLS)
+        run: pnpm --filter @internradar/web test:integration --coverage
       - name: Run pgTAP tests
         run: pnpm --filter @internradar/db test:db
       # setup-uv publishes no floating major tag, so pin the exact release.

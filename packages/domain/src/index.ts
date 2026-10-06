@@ -58,6 +58,8 @@ export type {
   DisciplineTerm,
 } from "./eligibility/vocabulary";
 export {
+  CITIZENSHIPS,
+  DEGREE_LEVELS,
   DISCIPLINE_GROUPS,
   DISCIPLINES,
   expandDisciplines,

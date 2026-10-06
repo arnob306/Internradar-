@@ -1,0 +1,76 @@
+/*
+ * Design tokens: the colours of the approved design preview, as CSS custom properties.
+ * tokens.test.ts checks every text and background pair here against WCAG AA in both themes,
+ * so change a value and run the tests.
+ *
+ * Light is the default. Dark follows the system setting, and `data-theme` on <html> overrides
+ * it either way. The two dark blocks must stay identical (a test enforces it).
+ */
+
+:root {
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-border: #dde3ea;
+  --color-control-border: #7d8aa0;
+  --color-ink: #0f1b2d;
+  --color-muted: #51607a;
+  --color-accent: #0b6e7a;
+  --color-on-accent: #ffffff;
+  --color-open-bg: #ddf3ea;
+  --color-open-fg: #0b5d3f;
+  --color-soon-bg: #fff0d1;
+  --color-soon-fg: #7a4a00;
+  --color-closed-bg: #e8ecf1;
+  --color-closed-fg: #3b4a60;
+  --color-unknown-bg: #eaecf8;
+  --color-unknown-fg: #3a4380;
+  --color-elig-yes: #0b5d3f;
+  --color-elig-maybe: #7a4a00;
+  --color-elig-no: #9b1c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #0e1621;
+    --color-surface: #162232;
+    --color-border: #243349;
+    --color-control-border: #6f819d;
+    --color-ink: #e8eef6;
+    --color-muted: #9aa9bd;
+    --color-accent: #4cc3cf;
+    --color-on-accent: #0e1621;
+    --color-open-bg: #123d2e;
+    --color-open-fg: #7fe0b2;
+    --color-soon-bg: #4a3510;
+    --color-soon-fg: #ffd58a;
+    --color-closed-bg: #243349;
+    --color-closed-fg: #b7c4d6;
+    --color-unknown-bg: #262e5a;
+    --color-unknown-fg: #b9c2ff;
+    --color-elig-yes: #7fe0b2;
+    --color-elig-maybe: #ffd58a;
+    --color-elig-no: #ff9c9c;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #0e1621;
+  --color-surface: #162232;
+  --color-border: #243349;
+  --color-control-border: #6f819d;
+  --color-ink: #e8eef6;
+  --color-muted: #9aa9bd;
+  --color-accent: #4cc3cf;
+  --color-on-accent: #0e1621;
+  --color-open-bg: #123d2e;
+  --color-open-fg: #7fe0b2;
+  --color-soon-bg: #4a3510;
+  --color-soon-fg: #ffd58a;
+  --color-closed-bg: #243349;
+  --color-closed-fg: #b7c4d6;
+  --color-unknown-bg: #262e5a;
+  --color-unknown-fg: #b9c2ff;
+  --color-elig-yes: #7fe0b2;
+  --color-elig-maybe: #ffd58a;
+  --color-elig-no: #ff9c9c;
+}

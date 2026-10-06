@@ -1,0 +1,593 @@
+/* Base styles and component styles. Every colour comes from a token in design/tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: "Figtree Variable", system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  line-height: 1.5;
+  background: var(--color-bg);
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* Status chip: words plus an icon, coloured by data-status. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 12px 5px 9px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.chip[data-status="open"] {
+  background: var(--color-open-bg);
+  color: var(--color-open-fg);
+}
+.chip[data-status="upcoming"] {
+  background: var(--color-soon-bg);
+  color: var(--color-soon-fg);
+}
+.chip[data-status="closed"] {
+  background: var(--color-closed-bg);
+  color: var(--color-closed-fg);
+}
+.chip[data-status="unknown"] {
+  background: var(--color-unknown-bg);
+  color: var(--color-unknown-fg);
+}
+
+/* Eligibility badge: the verdict as words, with the reasons one click away. */
+.eligibility {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.eligibility-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.eligibility[data-verdict="eligible"] .eligibility-label {
+  color: var(--color-elig-yes);
+}
+.eligibility[data-verdict="unknown"] .eligibility-label {
+  color: var(--color-elig-maybe);
+}
+.eligibility[data-verdict="ineligible"] .eligibility-label {
+  color: var(--color-elig-no);
+}
+.eligibility-toggle {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.eligibility-reasons {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 12px 16px 12px 32px;
+  border-radius: 12px;
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+/* Site header */
+.site-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-ink);
+  font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.site-header nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+.site-header nav a[aria-current="page"] {
+  color: var(--color-ink);
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+
+/* Home */
+.home {
+  padding-top: 48px;
+  padding-bottom: 32px;
+}
+.home-title {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  letter-spacing: -0.02em;
+}
+.home-lede {
+  max-width: 640px;
+  margin: 16px 0 0;
+  font-size: 1.125rem;
+}
+.home-footnote {
+  max-width: 720px;
+  margin-top: 32px;
+  font-size: 0.8125rem;
+}
+.notice {
+  margin: 24px 0 0;
+  padding: 12px 16px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+
+/* Feed: filters, count, grid, pagination */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+.filter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+.filter[aria-current="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+.feed-count {
+  margin: 16px 0 0;
+  font-size: 0.875rem;
+}
+.feed-empty {
+  margin-top: 24px;
+  padding: 32px 24px;
+  border: 1px dashed var(--color-control-border);
+  border-radius: 16px;
+  text-align: center;
+}
+.program-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  min-height: 44px;
+}
+.pagination a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 600;
+}
+
+/* Program card: only the title is a link, stretched over the whole card. */
+.program-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.program-card:hover {
+  border-color: var(--color-control-border);
+}
+.program-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.program-card-company {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.program-card-title {
+  margin: 4px 0 0;
+  font-size: 1.3125rem;
+}
+.program-card-link {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.program-card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+}
+.program-card-link:focus-visible {
+  outline: none;
+}
+.program-card-link:focus-visible::after {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.program-card-type,
+.program-card-estimated {
+  border-radius: 6px;
+  background: var(--color-closed-bg);
+  color: var(--color-closed-fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+.program-card-type {
+  flex-shrink: 0;
+}
+.program-card-estimated {
+  margin-left: 8px;
+  padding: 2px 6px;
+}
+.program-card-dates {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.program-card-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+}
+
+/* Chips hug their text instead of stretching across the card. */
+.program-card > .chip {
+  align-self: flex-start;
+}
+
+/* Text for screen readers only: still read aloud, but takes no space on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Sign-in: one left-aligned column. The only motion on the page is the ring in the confirmation. */
+.login {
+  max-width: 520px;
+  margin-left: max(24px, calc((100vw - 1120px) / 2));
+  padding-top: 72px;
+  padding-bottom: 96px;
+}
+.login-title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  letter-spacing: -0.02em;
+}
+.login-lede {
+  margin: 14px 0 32px;
+  font-size: 1.125rem;
+  max-width: 44ch;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 440px;
+}
+.login-form label {
+  font-weight: 600;
+}
+.login-form input {
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 1rem;
+}
+.login-form input[aria-invalid="true"] {
+  border-color: var(--color-elig-no);
+  border-width: 2px;
+}
+.login-problem {
+  margin: 0;
+  color: var(--color-elig-no);
+  font-weight: 500;
+}
+.login-submit {
+  min-height: 52px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+.login-hint {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+}
+.login-sent {
+  max-width: 440px;
+}
+.login-sent h2 {
+  margin: 16px 0 8px;
+  font-size: 1.75rem;
+}
+.login-sent p {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.login-link {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.login-ring {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+.login-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  animation: ring-ping 1.4s ease-out 1 both;
+}
+@keyframes ring-ping {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(4.5);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-ring::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Profile: the same left column as sign-in, grouped by what the questions are about. */
+.profile {
+  max-width: 640px;
+  margin-left: max(24px, calc((100vw - 1120px) / 2));
+  padding-top: 72px;
+  padding-bottom: 96px;
+}
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.profile-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.profile-form legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.profile-form .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.profile-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 200px;
+}
+.profile-form label:not(.check) {
+  font-weight: 600;
+}
+.profile-form select,
+.profile-form input[type="text"] {
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+.profile-form [aria-invalid="true"] {
+  border-color: var(--color-elig-no);
+  border-width: 2px;
+}
+.profile-form .hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  max-width: 60ch;
+}
+.profile-form .checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 4px 16px;
+}
+.profile-form .check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 400;
+}
+.profile-form input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+}
+.profile-form input:disabled + * ,
+.profile-form .check:has(input:disabled) {
+  color: var(--color-muted);
+}
+.field-problem {
+  margin: 0;
+  color: var(--color-elig-no);
+  font-weight: 500;
+}
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.profile-actions .login-submit {
+  margin-top: 0;
+  padding: 0 28px;
+}
+.profile-actions p {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Header actions: Profile and Sign out sit with the navigation links. */
+.site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 8px 24px;
+  flex-wrap: wrap;
+}
+.header-button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.header-button:hover {
+  color: var(--color-ink);
+}
+.header-button:disabled {
+  cursor: progress;
+}
+.header-problem {
+  color: var(--color-elig-no);
+  font-size: 0.875rem;
+}
