@@ -7,7 +7,12 @@ const listPrograms = vi.fn();
 const logFailure = vi.fn();
 vi.mock("../server/log", () => ({ logFailure: (...args: unknown[]) => logFailure(...args) }));
 vi.mock("../server/programs/list-programs", () => ({ listPrograms: (...args: unknown[]) => listPrograms(...args) }));
-vi.mock("../server/public-client", () => ({ createPublicClient: () => ({ marker: "anon-client" }) }));
+const getUser = vi.fn();
+const loadProfile = vi.fn();
+vi.mock("../server/auth/request-session", () => ({
+  sessionClientForRequest: () => Promise.resolve({ marker: "session-client", auth: { getUser } }),
+}));
+vi.mock("../server/profile/profile-repo", () => ({ loadProfile: (...args: unknown[]) => loadProfile(...args) }));
 
 import HomePage from "./page";
 
@@ -38,9 +43,78 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-10-03T14:00:00Z"));
   listPrograms.mockReset();
   logFailure.mockReset();
+  getUser.mockReset().mockResolvedValue({ data: { user: null } });
+  loadProfile.mockReset().mockResolvedValue(null);
   listPrograms.mockResolvedValue({ items: [item("Alpha"), item("Beta")], total: 2 });
 });
 afterEach(() => vi.useRealTimers());
+
+const STUDENT = {
+  expectedGraduation: { year: 2026, month: 11 },
+  degreeLevel: "undergraduate",
+  disciplines: ["computer_science"],
+  isDoubleDegree: false,
+  planningHonours: false,
+  citizenship: "au_citizen",
+  university: null,
+  emailAlerts: true,
+};
+
+describe("eligibility on the home page", () => {
+  it("asks a visitor to sign in, and never loads a profile for them", async () => {
+    await show();
+
+    expect(screen.getAllByRole("link", { name: "Sign in to check if you're eligible." })).toHaveLength(2);
+    expect(loadProfile).not.toHaveBeenCalled();
+  });
+
+  it("asks a signed-in student with no profile to add one", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+
+    await show();
+
+    expect(screen.getAllByRole("link", { name: "Add your profile to check if you're eligible." })).toHaveLength(2);
+    expect(screen.queryByText(/Sign in to check/)).toBeNull();
+  });
+
+  it("shows each program's answer to a signed-in student with a profile", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    loadProfile.mockResolvedValue(STUDENT);
+    listPrograms.mockResolvedValue({
+      items: [
+        { ...item("Alpha"), rulesVerified: true, eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } } },
+        { ...item("Beta"), rulesVerified: false },
+      ],
+      total: 2,
+    });
+
+    await show();
+
+    expect(screen.getByText("Eligible")).toBeTruthy();
+    expect(screen.getByText("Check requirements")).toBeTruthy();
+    expect(screen.queryByText(/to check if you're eligible/)).toBeNull();
+  });
+
+  it("still shows the programs, and records the failure safely, if the profile cannot be loaded", async () => {
+    const failure = new Error("connection refused");
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    loadProfile.mockRejectedValue(failure);
+
+    await show();
+
+    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
+    expect(logFailure).toHaveBeenCalledExactlyOnceWith("page.home.profile", failure);
+  });
+
+  it("does not trust a session lookup that fails: the page loads as for a visitor", async () => {
+    getUser.mockRejectedValue(new Error("auth down"));
+
+    await show();
+
+    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Sign in to check if you're eligible." })).toHaveLength(2);
+  });
+});
 
 describe("the home page", () => {
   it("shows the feed from the data layer", async () => {
@@ -56,7 +130,7 @@ describe("the home page", () => {
     await show({ type: "graduate", openNow: "true", limit: "5" });
 
     expect(listPrograms).toHaveBeenCalledWith(
-      { marker: "anon-client" },
+      { marker: "session-client", auth: { getUser } },
       { limit: 5, offset: 0, type: "graduate", discipline: undefined, openNow: true },
       "2026-10-04",
     );
