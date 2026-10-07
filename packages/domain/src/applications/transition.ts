@@ -31,6 +31,8 @@ export type TransitionResult =
 export interface StatusChange {
   readonly fromStatus: ApplicationStatus | null;
   readonly toStatus: ApplicationStatus;
+  /** True when that change was itself an undo. */
+  readonly isUndo?: boolean;
 }
 
 export function isApplicationStatus(value: unknown): value is ApplicationStatus {
@@ -49,9 +51,10 @@ export function transition(from: ApplicationStatus, to: ApplicationStatus): Tran
 }
 
 /**
- * The status an undo returns to, or null when there is nothing to undo: no move yet, or only the
- * moment the application was first saved.
+ * The status an undo returns to, or null when there is nothing to undo: no move yet, only the
+ * moment the application was first saved, or a latest move that was itself an undo (the database
+ * allows one step back at a time and records it, so undo never walks further back).
  */
 export function undoTarget(latest: StatusChange | null): ApplicationStatus | null {
-  return latest?.fromStatus ?? null;
+  return latest === null || latest.isUndo === true ? null : latest.fromStatus;
 }
