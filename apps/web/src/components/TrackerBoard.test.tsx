@@ -65,8 +65,9 @@ describe("TrackerBoard: what it shows", () => {
     );
   });
 
-  it("says when they applied, once they have", () => {
-    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-02" })]} />);
+  it("says when they applied, as the day it was in Melbourne, from the timestamp the database keeps", () => {
+    // 14:30 UTC on 1 October is already 2 October in Melbourne.
+    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-01T14:30:00+00:00" })]} />);
 
     expect(within(row("EY Graduate Program")).getByText("Applied 2 October 2026")).toBeTruthy();
   });
@@ -90,7 +91,7 @@ describe("TrackerBoard: what it shows", () => {
 
 describe("TrackerBoard: moving an application", () => {
   it("sends only the new status, as JSON, to that application, and shows the answer", async () => {
-    const fetchMock = answer(200, { success: true, data: record({ status: "applied", appliedAt: "2026-10-08" }) });
+    const fetchMock = answer(200, { success: true, data: record({ status: "applied", appliedAt: "2026-10-08T05:12:33.123+00:00" }) });
     render(<TrackerBoard initial={[record()]} />);
 
     await userEvent.setup().click(within(row("EY Graduate Program")).getByRole("button", { name: "Move to Applied" }));
@@ -114,7 +115,7 @@ describe("TrackerBoard: moving an application", () => {
 
   it("goes back one step with Undo, sending no data", async () => {
     const fetchMock = answer(200, { success: true, data: record({ status: "saved" }) });
-    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-08" })]} />);
+    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-08T05:12:33.123+00:00" })]} />);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Undo last move" }));
 
