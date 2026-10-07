@@ -238,3 +238,57 @@ describe("buildTimeline: saved programs and safety", () => {
     expect(() => build(input as unknown as TimelineProgram[], Object.freeze(["id-a"]))).not.toThrow();
   });
 });
+
+const pastSpan = (
+  cycleYear: number,
+  opensOn: string,
+  closesOn: string | null,
+  closesPrecision: "day" | "month" | "estimated" = "day",
+  windowSeq = 1,
+) =>
+  window({
+    cycleYear,
+    windowSeq,
+    opensOn,
+    opensPrecision: "day",
+    closesOn,
+    closesPrecision: closesOn === null ? null : closesPrecision,
+    status: "closed",
+  });
+
+describe("buildTimeline: how long a past window stayed open", () => {
+  it("projects the opening and closing months of a past window to the next time they come round", () => {
+    const { usual } = build([program("a", [pastSpan(2026, "2025-08-12", "2025-09-08")])]);
+
+    expect(usual[0]?.spans).toEqual([{ start: { year: 2027, month: 8 }, end: { year: 2027, month: 9 } }]);
+  });
+
+  it("has no end when the past window had no closing date, or only an estimate of one", () => {
+    const none = build([program("a", [pastSpan(2026, "2025-08-12", null)])]).usual[0];
+    const estimated = build([program("b", [pastSpan(2026, "2025-08-12", "2025-09-08", "estimated")])]).usual[0];
+
+    expect(none?.spans).toEqual([{ start: { year: 2027, month: 8 }, end: null }]);
+    expect(estimated?.spans).toEqual([{ start: { year: 2027, month: 8 }, end: null }]);
+  });
+
+  it("keeps the length when a window runs over the end of a year", () => {
+    const { usual } = build([program("a", [pastSpan(2026, "2025-12-01", "2026-01-15")])]);
+
+    expect(usual[0]?.spans).toEqual([{ start: { year: 2026, month: 12 }, end: { year: 2027, month: 1 } }]);
+  });
+
+  it("shows one span when two cycles agree and both when they differ, soonest first", () => {
+    const agree = build([program("a", [pastSpan(2026, "2025-08-12", "2025-09-08"), pastSpan(2025, "2024-08-05", "2024-09-30")])]);
+    const differ = build([program("b", [pastSpan(2026, "2025-08-12", "2025-09-08"), pastSpan(2025, "2024-03-01", "2024-04-01")])]);
+
+    expect(agree.usual[0]?.spans).toHaveLength(1);
+    expect(differ.usual[0]?.spans.map((span) => span.start.month)).toEqual([3, 8]);
+  });
+
+  it("is still never more precise than a month", () => {
+    const { usual } = build([program("a", [pastSpan(2026, "2025-08-12", "2025-09-08")])]);
+
+    expect(JSON.stringify(usual[0]?.spans)).not.toMatch(/12|08"/);
+    expect(Object.keys(usual[0]?.spans[0]?.start ?? {}).sort()).toEqual(["month", "year"]);
+  });
+});
