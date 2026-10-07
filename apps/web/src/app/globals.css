@@ -755,6 +755,7 @@ a {
 
 /* Tracker: one row per saved program, with its status, the moves it allows, and notes. */
 .tracker {
+  padding-top: 72px;
   padding-bottom: 96px;
 }
 .tracker-list {

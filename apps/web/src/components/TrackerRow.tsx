@@ -3,6 +3,7 @@
 import { nextStatuses } from "@internradar/domain";
 import Link from "next/link";
 import { useId, useState, type ReactElement } from "react";
+import { melbourneDate } from "../features/programs/melbourne-date";
 import { APPLICATION_STATUS_LABELS } from "../features/vocabulary-labels";
 import type { ApplicationRecord } from "../server/applications/applications-handler";
 
@@ -38,9 +39,9 @@ interface TrackerRowProps {
 
 type Outcome = { readonly ok: true; readonly record: ApplicationRecord | null } | { readonly ok: false; readonly message: string };
 
-/** "2026-10-02" as "2 October 2026", read from the text so no time zone can move the day. */
-function longDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split("-");
+/** The Melbourne day of a timestamp, such as "2 October 2026" (ADR-015: never the UTC date). */
+function longDate(timestamp: string): string {
+  const [year, month, day] = melbourneDate(new Date(timestamp)).split("-");
   return `${Number(day)} ${MONTHS[Number(month) - 1] ?? ""} ${year}`;
 }
 
