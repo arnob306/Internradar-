@@ -103,7 +103,7 @@ describe("ProgramDetail: are you eligible?", () => {
   it("escapes the slugs when it builds that sign-in link", () => {
     render(<ProgramDetail program={program({ slug: "a b", company: { slug: "x y", name: "X", careersUrl: "https://x.example" } })} />);
 
-    expect(screen.getByRole("link", { name: /Sign in/ }).getAttribute("href")).toBe(
+    expect(screen.getByRole("link", { name: "Sign in to check if you're eligible." }).getAttribute("href")).toBe(
       `/login?next=${encodeURIComponent("/programs/x%20y/a%20b")}`,
     );
   });

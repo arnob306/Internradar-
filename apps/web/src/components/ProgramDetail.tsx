@@ -7,6 +7,7 @@ import { describeWindows } from "../features/programs/window-text";
 import { DISCIPLINE_LABELS, PROGRAM_TYPE_LABELS } from "../features/vocabulary-labels";
 import type { PublicProgram } from "../server/programs/programs-handler";
 import type { CardEligibility } from "./ProgramCard";
+import { SaveProgramButton } from "./SaveProgramButton";
 import { StatusChip } from "./StatusChip";
 
 interface ProgramDetailProps {
@@ -15,6 +16,8 @@ interface ProgramDetailProps {
   readonly eligibility?: CardEligibility;
   /** What to ask while there is no answer: a visitor signs in, a student adds a profile. */
   readonly prompt?: "sign-in" | "profile";
+  /** Whether this student already has the program in their tracker. */
+  readonly saved?: boolean;
 }
 
 function capitalise(text: string): string {
@@ -36,7 +39,7 @@ function precisionNote(window: WindowItem, estimated: boolean): string | null {
   return precision === "day" ? "to the day" : precision === "month" ? "to the month" : null;
 }
 
-export function ProgramDetail({ program, eligibility, prompt = "sign-in" }: ProgramDetailProps): ReactElement {
+export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved = false }: ProgramDetailProps): ReactElement {
   const path = `/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`;
   const applyUrl = safeExternalUrl(program.sourceUrl);
   const areas = program.disciplines.filter(isDiscipline).map((discipline) => DISCIPLINE_LABELS[discipline]);
@@ -114,6 +117,13 @@ export function ProgramDetail({ program, eligibility, prompt = "sign-in" }: Prog
         </div>
 
         <aside className="detail-side">
+          <div className="detail-panel">
+            {prompt === "sign-in" ? (
+              <Link href={`/login?next=${encodeURIComponent(path)}`}>Sign in to save this program</Link>
+            ) : (
+              <SaveProgramButton programId={program.id} initiallySaved={saved} />
+            )}
+          </div>
           <div className="detail-panel">
             {applyUrl === null ? (
               <p>We couldn&apos;t show a safe link to the employer&apos;s page.</p>
