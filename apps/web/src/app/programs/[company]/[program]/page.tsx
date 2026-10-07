@@ -4,6 +4,7 @@ import { cache, type ReactElement } from "react";
 import { ProgramDetail } from "../../../../components/ProgramDetail";
 import { slugFromPath } from "../../../../features/programs/detail-guards";
 import { melbourneDate } from "../../../../features/programs/melbourne-date";
+import { hasApplicationFor } from "../../../../server/applications/applications-repo";
 import { sessionClientForRequest } from "../../../../server/auth/request-session";
 import { logFailure } from "../../../../server/log";
 import { getProgram } from "../../../../server/programs/list-programs";
@@ -30,6 +31,16 @@ const loadProgram = cache(async (company: string, program: string, today: string
   const client = await sessionClientForRequest();
   return { client, item: await getProgram(client, company, program, today) };
 });
+
+/** Whether a signed-in student already saved this; a failed lookup just offers Save again. */
+async function savedByViewer(client: Awaited<ReturnType<typeof loadProgram>>["client"], programId: string): Promise<boolean> {
+  try {
+    return await hasApplicationFor(client, programId);
+  } catch (error) {
+    logFailure("page.program.saved", error);
+    return false;
+  }
+}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   try {
@@ -66,11 +77,14 @@ export default async function ProgramPage({ params }: PageProps): Promise<ReactE
   }
 
   const viewer = await viewerFor(loaded.client, [loaded.item], today);
+  // "sign-in" is the visitor's prompt: there is no session to look up a tracker for.
+  const saved = viewer.prompt === "sign-in" ? false : await savedByViewer(loaded.client, loaded.item.id);
   return (
     <main className="page detail-page">
       <ProgramDetail
         program={toPublicProgram(loaded.item)}
         prompt={viewer.prompt}
+        saved={saved}
         {...(viewer.eligibility?.[loaded.item.id] === undefined ? {} : { eligibility: viewer.eligibility[loaded.item.id] })}
       />
     </main>

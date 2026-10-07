@@ -713,6 +713,30 @@ a {
   text-align: center;
   text-decoration: none;
 }
+.detail-save {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-accent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.detail-save:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.save-state {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+.save-state span {
+  font-weight: 700;
+}
 .detail-trust {
   margin: 0;
   font-weight: 700;
