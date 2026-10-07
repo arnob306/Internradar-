@@ -38,12 +38,20 @@ export interface ConfirmedEntry {
   readonly closesPrecision: Precision;
 }
 
+/** When a past window usually runs, as months only. `end` is null when the past window gave no closing month. */
+export interface MonthSpan {
+  readonly start: MonthInYear;
+  readonly end: MonthInYear | null;
+}
+
 export interface UsualEntry {
   readonly kind: "usual";
   readonly program: TimelineProgram;
   readonly saved: boolean;
   /** The next time each month that past cycles opened in comes round, soonest first. */
   readonly occurrences: readonly MonthInYear[];
+  /** The same months as `occurrences`, with how long each past window stayed open when that was stated. */
+  readonly spans: readonly MonthSpan[];
   /** The past cycles this is based on, newest first, each with where the date came from. */
   readonly basedOn: readonly { readonly cycleYear: number; readonly sourceUrl: string }[];
 }
@@ -74,6 +82,29 @@ function isPastEvidence(window: TimelineWindow, today: string): window is Timeli
   );
 }
 
+const monthIndex = (year: number, month: number): number => year * 12 + (month - 1);
+const fromIndex = (index: number): MonthInYear => ({ year: Math.floor(index / 12), month: (index % 12) + 1 });
+const indexOfDate = (isoDate: string): number => monthIndex(Number(isoDate.slice(0, 4)), Number(isoDate.slice(5, 7)));
+
+/**
+ * Each past window as the months it ran, moved to its next occurrence. The length is the number of
+ * months between the opening and closing month; a closing date that is only an estimate is not used.
+ */
+function spansOf(windows: readonly (TimelineWindow & { opensOn: string })[], todayYear: number, todayMonth: number): MonthSpan[] {
+  const spans = new Map<string, MonthSpan & { readonly key: number }>();
+  for (const window of windows) {
+    const opensIndex = indexOfDate(window.opensOn);
+    const month = (opensIndex % 12) + 1;
+    const start = monthIndex(month >= todayMonth ? todayYear : todayYear + 1, month);
+    const closesStated =
+      window.closesOn !== null && (window.closesPrecision === "day" || window.closesPrecision === "month");
+    const length = closesStated && window.closesOn !== null ? indexOfDate(window.closesOn) - opensIndex : -1;
+    const end = length >= 0 ? fromIndex(start + length) : null;
+    spans.set(`${start}-${length}`, { start: fromIndex(start), end, key: start });
+  }
+  return [...spans.values()].sort((a, b) => a.key - b.key).map(({ start, end }) => ({ start, end }));
+}
+
 function usualFor(program: TimelineProgram, today: string, saved: boolean): UsualEntry | null {
   const evidence = program.windows.filter((window) => isPastEvidence(window, today));
   const cycles = [...new Set(evidence.map((window) => window.cycleYear))].sort((a, b) => b - a).slice(0, CYCLES_USED);
@@ -89,13 +120,15 @@ function usualFor(program: TimelineProgram, today: string, saved: boolean): Usua
     .map((month) => ({ year: month >= todayMonth ? todayYear : todayYear + 1, month }))
     .sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month));
 
+  const spans = spansOf(used, todayYear, todayMonth);
+
   const basedOn = cycles.map((cycleYear) => {
     const first = used
       .filter((window) => window.cycleYear === cycleYear)
       .sort((a, b) => a.windowSeq - b.windowSeq)[0];
     return { cycleYear, sourceUrl: first?.sourceUrl ?? "" };
   });
-  return { kind: "usual", program, saved, occurrences, basedOn };
+  return { kind: "usual", program, saved, occurrences, spans, basedOn };
 }
 
 function confirmedFor(program: TimelineProgram, saved: boolean): ConfirmedEntry | null {
