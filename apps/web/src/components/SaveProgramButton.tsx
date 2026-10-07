@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 
 const MESSAGES = {
   signedOut: "Sign in to save programs to your tracker.",
@@ -24,6 +24,15 @@ function problemFor(status: number): string {
 export function SaveProgramButton({ programId, initiallySaved }: SaveProgramButtonProps): ReactElement {
   const [status, setStatus] = useState<Status>(initiallySaved ? "saved" : "idle");
   const [problem, setProblem] = useState<string | null>(null);
+  const savedRef = useRef<HTMLParagraphElement>(null);
+  // Only a save made here moves focus; a page that loads already saved leaves it where it is.
+  const [savedHere, setSavedHere] = useState(false);
+
+  useEffect(() => {
+    if (savedHere) {
+      savedRef.current?.focus();
+    }
+  }, [savedHere]);
 
   async function save(): Promise<void> {
     if (status !== "idle") {
@@ -40,6 +49,7 @@ export function SaveProgramButton({ programId, initiallySaved }: SaveProgramButt
       // 201 is a new save and 200 means it was already there: either way it is in the tracker.
       if (response.ok) {
         setStatus("saved");
+        setSavedHere(true);
         return;
       }
       setProblem(problemFor(response.status));
@@ -52,7 +62,7 @@ export function SaveProgramButton({ programId, initiallySaved }: SaveProgramButt
 
   if (status === "saved") {
     return (
-      <p className="save-state">
+      <p className="save-state" role="status" tabIndex={-1} ref={savedRef}>
         <span>Saved</span> <Link href="/tracker">View in my tracker</Link>
       </p>
     );

@@ -2,7 +2,7 @@
 
 import { nextStatuses } from "@internradar/domain";
 import Link from "next/link";
-import { useId, useState, type ReactElement } from "react";
+import { useEffect, useId, useRef, useState, type ReactElement } from "react";
 import { melbourneDate } from "../features/programs/melbourne-date";
 import { APPLICATION_STATUS_LABELS } from "../features/vocabulary-labels";
 import type { ApplicationRecord } from "../server/applications/applications-handler";
@@ -89,6 +89,33 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
   const [problem, setProblem] = useState<string | null>(null);
   const [notesSaved, setNotesSaved] = useState(false);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  // A button that is pressed and then replaced would drop keyboard focus onto the page, so each
+  // action hands focus to whatever now reports its result.
+  const chip = useRef<HTMLSpanElement>(null);
+  const notesStatus = useRef<HTMLSpanElement>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
+  const removeButton = useRef<HTMLButtonElement>(null);
+  const hasAsked = useRef(false);
+  const [moves, setMoves] = useState(0);
+
+  useEffect(() => {
+    if (moves > 0) {
+      chip.current?.focus();
+    }
+  }, [moves]);
+  useEffect(() => {
+    if (notesSaved) {
+      notesStatus.current?.focus();
+    }
+  }, [notesSaved]);
+  useEffect(() => {
+    if (confirmingRemove) {
+      hasAsked.current = true;
+      confirmButton.current?.focus();
+    } else if (hasAsked.current) {
+      removeButton.current?.focus();
+    }
+  }, [confirmingRemove]);
 
   const path = `${API}/${encodeURIComponent(record.id)}`;
   const programHref = `/programs/${encodeURIComponent(record.companySlug)}/${encodeURIComponent(record.programSlug)}`;
@@ -114,6 +141,7 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
     if (outcome?.ok === true && outcome.record !== null) {
       setRecord(outcome.record);
       setNotes(outcome.record.notes ?? "");
+      setMoves((count) => count + 1);
     }
   }
 
@@ -147,7 +175,7 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
           </p>
         </div>
         <div className="tracker-status">
-          <span className="tracker-chip" data-status={record.status}>
+          <span className="tracker-chip" data-status={record.status} tabIndex={-1} ref={chip}>
             {APPLICATION_STATUS_LABELS[record.status]}
           </span>
           {record.appliedAt !== null && <span className="muted">Applied {longDate(record.appliedAt)}</span>}
@@ -165,7 +193,7 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
             Move to {APPLICATION_STATUS_LABELS[status]}
           </button>
         ))}
-        {record.status !== "saved" && (
+        {record.canUndo && (
           <button type="button" disabled={busy} onClick={() => void change(() => send(`${path}/undo`, "POST"))}>
             Undo last move
           </button>
@@ -187,7 +215,11 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
         <button type="button" disabled={busy || !notesChanged} onClick={() => void saveNotes()}>
           Save notes
         </button>
-        {notesSaved && !notesChanged && <span className="muted">Notes saved</span>}
+        {notesSaved && !notesChanged && (
+          <span className="muted" role="status" tabIndex={-1} ref={notesStatus}>
+            Notes saved
+          </span>
+        )}
       </div>
 
       {problem !== null && (
@@ -199,7 +231,7 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
       {confirmingRemove ? (
         <div className="tracker-confirm">
           <p>Remove this program from your tracker? Its notes and history go with it.</p>
-          <button type="button" disabled={busy} onClick={() => void remove()}>
+          <button type="button" disabled={busy} ref={confirmButton} onClick={() => void remove()}>
             Yes, remove
           </button>
           <button type="button" disabled={busy} onClick={() => setConfirmingRemove(false)}>
@@ -207,7 +239,7 @@ export function TrackerRow({ initial, onRemoved }: TrackerRowProps): ReactElemen
           </button>
         </div>
       ) : (
-        <button type="button" className="tracker-remove" disabled={busy} onClick={() => setConfirmingRemove(true)}>
+        <button type="button" className="tracker-remove" disabled={busy} ref={removeButton} onClick={() => setConfirmingRemove(true)}>
           Remove
         </button>
       )}
