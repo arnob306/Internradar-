@@ -35,6 +35,17 @@ describe("SaveProgramButton", () => {
     expect(screen.queryByRole("button", { name: "Save to my tracker" })).toBeNull();
   });
 
+  it("announces the save and puts focus on that message, since the button it replaces is gone", async () => {
+    answer(201, { success: true, data: { id: "a1" } });
+    render(<SaveProgramButton programId="p1" initiallySaved={false} />);
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "Save to my tracker" }));
+
+    const status = await screen.findByRole("status");
+    expect(status.textContent).toContain("Saved");
+    expect(document.activeElement).toBe(status);
+  });
+
   it("shows an already saved program as saved, with no button to press again", () => {
     render(<SaveProgramButton programId="p1" initiallySaved />);
 

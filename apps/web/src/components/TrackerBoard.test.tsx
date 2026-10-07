@@ -116,7 +116,7 @@ describe("TrackerBoard: moving an application", () => {
 
   it("goes back one step with Undo, sending no data", async () => {
     const fetchMock = answer(200, { success: true, data: record({ status: "saved" }) });
-    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-08T05:12:33.123+00:00" })]} />);
+    render(<TrackerBoard initial={[record({ status: "applied", appliedAt: "2026-10-08T05:12:33.123+00:00", canUndo: true })]} />);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Undo last move" }));
 
@@ -129,7 +129,7 @@ describe("TrackerBoard: moving an application", () => {
 
   it("says plainly when there is nothing to undo", async () => {
     answer(409, { success: false, error: { code: "NOTHING_TO_UNDO" } });
-    render(<TrackerBoard initial={[record({ status: "applied" })]} />);
+    render(<TrackerBoard initial={[record({ status: "applied", canUndo: true })]} />);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Undo last move" }));
 
@@ -258,5 +258,79 @@ describe("TrackerBoard: removing", () => {
 
     expect((await screen.findByRole("alert")).textContent).toMatch(/couldn't update/i);
     expect(screen.getByRole("listitem", { name: "EY Graduate Program" })).toBeTruthy();
+  });
+});
+
+describe("TrackerBoard: Undo only when there is something to undo", () => {
+  it("hides Undo when the last move cannot be undone, and shows it when it can", () => {
+    const { unmount } = render(<TrackerBoard initial={[record({ status: "applied", canUndo: false })]} />);
+    expect(screen.queryByRole("button", { name: "Undo last move" })).toBeNull();
+    unmount();
+
+    render(<TrackerBoard initial={[record({ status: "applied", canUndo: true })]} />);
+    expect(screen.getByRole("button", { name: "Undo last move" })).toBeTruthy();
+  });
+
+  it("offers Undo once a move has been made, and takes it away once it is undone", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: record({ status: "applied", canUndo: true }) }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ success: true, data: record({ status: "saved", canUndo: false }) }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<TrackerBoard initial={[record()]} />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Move to Applied" }));
+    await user.click(await screen.findByRole("button", { name: "Undo last move" }));
+
+    expect(await screen.findByText("Saved")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Undo last move" })).toBeNull();
+  });
+});
+
+describe("TrackerBoard: keyboard focus and announcements", () => {
+  it("moves focus to the new status when a move replaces the button that was pressed", async () => {
+    answer(200, { success: true, data: record({ status: "applied", canUndo: true }) });
+    render(<TrackerBoard initial={[record()]} />);
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "Move to Applied" }));
+
+    await screen.findByRole("button", { name: "Undo last move" });
+    expect(document.activeElement?.textContent).toBe("Applied");
+  });
+
+  it("announces saved notes and puts focus on that message", async () => {
+    answer(200, { success: true, data: record({ notes: "x" }) });
+    render(<TrackerBoard initial={[record()]} />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText("Notes for EY Graduate Program"), "x");
+    await user.click(screen.getByRole("button", { name: "Save notes" }));
+
+    const status = await screen.findByRole("status");
+    expect(status.textContent).toBe("Notes saved");
+    expect(document.activeElement).toBe(status);
+  });
+
+  it("puts focus on the confirm button when asking, and back on Remove when the student keeps it", async () => {
+    render(<TrackerBoard initial={[record()]} />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Yes, remove" }));
+    await user.click(screen.getByRole("button", { name: "Keep it" }));
+
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Remove" }));
+  });
+
+  it("puts focus on the list when a row is removed, so it is not lost", async () => {
+    answer(204);
+    render(<TrackerBoard initial={[record(), record({ id: "a2", programName: "Other Program" })]} />);
+    const user = userEvent.setup();
+
+    await user.click(within(row("EY Graduate Program")).getByRole("button", { name: "Remove" }));
+    await user.click(screen.getByRole("button", { name: "Yes, remove" }));
+
+    expect(document.activeElement).toBe(screen.getByRole("region", { name: "Your applications" }));
   });
 });
