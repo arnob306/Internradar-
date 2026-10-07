@@ -79,6 +79,14 @@ describe("undoing the most recent move", () => {
     expect(undoTarget({ fromStatus: null, toStatus: "saved" })).toBeNull();
   });
 
+  it("cannot undo a move that was itself an undo, so undo never walks back more than one step", () => {
+    expect(undoTarget({ fromStatus: "interview", toStatus: "applied", isUndo: true })).toBeNull();
+  });
+
+  it("can undo an ordinary move whose change is marked as not an undo", () => {
+    expect(undoTarget({ fromStatus: "applied", toStatus: "interview", isUndo: false })).toBe("applied");
+  });
+
   it("cannot undo when there is no move at all", () => {
     expect(undoTarget(null)).toBeNull();
   });
