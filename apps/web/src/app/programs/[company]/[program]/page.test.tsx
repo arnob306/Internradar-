@@ -5,6 +5,7 @@ import type { ProgramListItem } from "../../../../server/programs/list-programs"
 
 const getProgram = vi.fn();
 const viewerFor = vi.fn();
+const hasApplicationFor = vi.fn();
 const logFailure = vi.fn();
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
@@ -17,6 +18,9 @@ vi.mock("../../../../server/auth/request-session", () => ({
 }));
 vi.mock("../../../../server/programs/list-programs", () => ({
   getProgram: (...args: unknown[]) => getProgram(...args),
+}));
+vi.mock("../../../../server/applications/applications-repo", () => ({
+  hasApplicationFor: (...args: unknown[]) => hasApplicationFor(...args),
 }));
 vi.mock("../../../../server/programs/viewer", () => ({ viewerFor: (...args: unknown[]) => viewerFor(...args) }));
 
@@ -51,6 +55,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-10-03T14:00:00Z"));
   getProgram.mockReset().mockResolvedValue(item());
   viewerFor.mockReset().mockResolvedValue({ prompt: "sign-in" });
+  hasApplicationFor.mockReset().mockResolvedValue(false);
   logFailure.mockReset();
   notFound.mockClear();
 });
@@ -155,5 +160,41 @@ describe("the program page's title", () => {
     arrange();
 
     expect(await generateMetadata(input)).toEqual({ title: "Program" });
+  });
+});
+
+describe("the program page: the tracker", () => {
+  it("does not ask a visitor's session anything about a tracker", async () => {
+    render(await ProgramPage(params()));
+
+    expect(hasApplicationFor).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Sign in to save this program" })).toBeTruthy();
+  });
+
+  it("shows a signed-in student a Save button when the program is not saved", async () => {
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    render(await ProgramPage(params()));
+
+    expect(hasApplicationFor).toHaveBeenCalledExactlyOnceWith({ marker: "session-client" }, "p1");
+    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeTruthy();
+  });
+
+  it("shows it as saved when the student already saved it", async () => {
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    hasApplicationFor.mockResolvedValue(true);
+    render(await ProgramPage(params()));
+
+    expect(screen.queryByRole("button", { name: "Save to my tracker" })).toBeNull();
+    expect(screen.getByRole("link", { name: "View in my tracker" })).toBeTruthy();
+  });
+
+  it("still shows the program, and logs only a safe summary, when the lookup fails", async () => {
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    hasApplicationFor.mockRejectedValue(new Error("db password=hunter2"));
+    render(await ProgramPage(params()));
+
+    expect(screen.getByRole("heading", { level: 1, name: "EY Graduate Program" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeTruthy();
+    expect(logFailure).toHaveBeenCalledWith("page.program.saved", expect.any(Error));
   });
 });
