@@ -24,6 +24,7 @@ function record(overrides: Partial<ApplicationRecord> = {}): ApplicationRecord {
     notes: null,
     resumeId: null,
     updatedAt: "2026-10-08T00:00:00Z",
+    canUndo: false,
     ...overrides,
   };
 }

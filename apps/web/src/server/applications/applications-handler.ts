@@ -30,6 +30,8 @@ export interface ApplicationRecord {
   readonly notes: string | null;
   readonly resumeId: string | null;
   readonly updatedAt: string;
+  /** Whether the last status move can be undone: false for a new save and after an undo. */
+  readonly canUndo: boolean;
 }
 
 /** What the server may change in one step. `appliedAt` is set by the server, never the client. */

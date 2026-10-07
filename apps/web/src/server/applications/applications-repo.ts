@@ -1,4 +1,4 @@
-import type { ApplicationStatus, StatusChange } from "@internradar/domain";
+import { undoTarget, type ApplicationStatus, type StatusChange } from "@internradar/domain";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { headlineWindow } from "../../features/programs/headline-window";
 import type { Database } from "../db/database.types";
@@ -47,7 +47,7 @@ interface Row {
   };
 }
 
-function toRecord(row: Row): ApplicationRecord {
+function toRecord(row: Row, canUndo: boolean): ApplicationRecord {
   return {
     id: row.id,
     programId: row.program_id,
@@ -61,7 +61,43 @@ function toRecord(row: Row): ApplicationRecord {
     notes: row.notes,
     resumeId: row.resume_id,
     updatedAt: row.updated_at,
+    canUndo,
   };
+}
+
+/**
+ * Which of these applications can have their last move undone. One query reads the history of all
+ * of them, newest event first, so the first event seen for an application is its latest. The
+ * domain's `undoTarget` decides, so the answer matches what an undo would do.
+ */
+async function undoableIds(client: Client, ids: readonly string[]): Promise<ReadonlySet<string>> {
+  if (ids.length === 0) {
+    return new Set();
+  }
+  const { data, error } = await client
+    .from("application_events")
+    .select("application_id, from_status, to_status, is_undo")
+    .in("application_id", ids)
+    .order("id", { ascending: false });
+  if (error !== null) {
+    throw new ApplicationStoreError("reading", error.code);
+  }
+  const latest = new Map<string, StatusChange>();
+  for (const event of data) {
+    if (!latest.has(event.application_id)) {
+      latest.set(event.application_id, { fromStatus: event.from_status, toStatus: event.to_status, isUndo: event.is_undo });
+    }
+  }
+  return new Set([...latest].filter(([, change]) => undoTarget(change) !== null).map(([id]) => id));
+}
+
+async function toRecords(client: Client, rows: readonly Row[]): Promise<ApplicationRecord[]> {
+  const undoable = await undoableIds(client, rows.map((row) => row.id));
+  return rows.map((row) => toRecord(row, undoable.has(row.id)));
+}
+
+async function recordOf(client: Client, row: Row): Promise<ApplicationRecord> {
+  return toRecord(row, (await undoableIds(client, [row.id])).has(row.id));
 }
 
 /** The student's applications, newest change first. Row-level security limits them to their own. */
@@ -70,7 +106,7 @@ export async function listApplications(client: Client): Promise<ApplicationRecor
   if (error !== null) {
     throw new ApplicationStoreError("reading", error.code);
   }
-  return data.map(toRecord);
+  return toRecords(client, data);
 }
 
 /** Whether the student already has this program in their tracker. Row-level security limits it to their own. */
@@ -88,7 +124,7 @@ export async function findApplication(client: Client, id: string): Promise<Appli
   if (error !== null) {
     throw new ApplicationStoreError("reading", error.code);
   }
-  return data === null ? null : toRecord(data);
+  return data === null ? null : recordOf(client, data);
 }
 
 /**
@@ -131,7 +167,7 @@ export async function saveApplication(
     .select(COLUMNS)
     .single();
   if (inserted.error === null) {
-    return { record: toRecord(inserted.data), created: true };
+    return { record: await recordOf(client, inserted.data), created: true };
   }
   if (inserted.error.code !== UNIQUE_VIOLATION) {
     throw new ApplicationStoreError("saving", inserted.error.code);
@@ -146,7 +182,7 @@ export async function saveApplication(
   if (existing.error !== null || existing.data === null) {
     throw new ApplicationStoreError("saving", existing.error?.code ?? UNIQUE_VIOLATION);
   }
-  return { record: toRecord(existing.data), created: false };
+  return { record: await recordOf(client, existing.data), created: false };
 }
 
 /** The most recent status change of an application, or null if there is none or it is not theirs. */
@@ -190,7 +226,7 @@ export async function updateApplication(
   if (error !== null) {
     throw new ApplicationStoreError("updating", error.code);
   }
-  return data === null ? null : toRecord(data);
+  return data === null ? null : recordOf(client, data);
 }
 
 /** Remove one of the student's applications and its history. False if there was nothing to remove. */

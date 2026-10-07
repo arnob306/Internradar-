@@ -352,3 +352,24 @@ describe("whether the last move can be undone", () => {
     expect(byProgram).toEqual({ one: true, two: false });
   });
 });
+
+describe("when the history cannot be read", () => {
+  it("fails with only the database's code, never its message", async () => {
+    const programId = await newProgram();
+    const { client, userId } = await signedInUser();
+    await saveApplication(client, userId, programId, TODAY);
+    const failing = { select: () => ({ in: () => ({ order: () => Promise.resolve({ data: null, error: { code: "XX000", message: "secret table name" } }) }) }) };
+    const broken = new Proxy(client, {
+      get: (target, key) =>
+        key === "from"
+          ? (table: string) => (table === "application_events" ? failing : target.from(table as "applications"))
+          : Reflect.get(target, key),
+    });
+
+    const failure = await listApplications(broken).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ApplicationStoreError);
+    expect(failure).toMatchObject({ action: "reading", code: "XX000" });
+    expect((failure as Error).message).not.toMatch(/secret/);
+  });
+});
