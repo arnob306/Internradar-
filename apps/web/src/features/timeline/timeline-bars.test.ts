@@ -114,6 +114,23 @@ describe("chartFor: stated dates", () => {
     expect((bar?.endPct ?? 0) - (bar?.startPct ?? 0)).toBeGreaterThanOrEqual(1);
   });
 
+  it("never draws an estimated date as a stated one", () => {
+    const estimatedOpening = window({ status: "upcoming", opensOn: "2026-12-01", opensPrecision: "estimated" });
+    const estimatedClosing = window({
+      status: "upcoming",
+      opensOn: "2026-12-01",
+      opensPrecision: "day",
+      closesOn: "2027-01-31",
+      closesPrecision: "estimated",
+    });
+
+    const result = chart([program("a", [estimatedOpening]), program("b", [estimatedClosing])]);
+
+    expect(result.undated.map((entry) => entry.program.slug)).toEqual(["a"]);
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.bars[0]).toMatchObject({ endPct: 100, endKnown: false });
+  });
+
   it("does not draw a bar for a date beyond the year, or for a window with no opening date", () => {
     const result = chart([
       program("far", [upcoming("2027-10-01", "month")]),
