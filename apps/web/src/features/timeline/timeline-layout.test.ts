@@ -44,6 +44,17 @@ describe("layoutTimeline", () => {
     expect(result.months).toEqual([]);
   });
 
+  it("counts an open program as open now even with no stated opening date, or one in the current month", () => {
+    const result = layout([
+      program("undated-open", [window({ status: "open" })]),
+      program("this-month", [window({ status: "open", opensOn: "2026-10-01", opensPrecision: "day" })]),
+    ]);
+
+    expect(result.now.map((entry) => entry.program.slug).sort()).toEqual(["this-month", "undated-open"]);
+    expect(result.undated).toEqual([]);
+    expect(result.months).toEqual([]);
+  });
+
   it("places a confirmed upcoming program under the month it opens in", () => {
     const result = layout([program("a", [upcoming("2026-11-15")])]);
 
