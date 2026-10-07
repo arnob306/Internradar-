@@ -752,3 +752,112 @@ a {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Tracker: one row per saved program, with its status, the moves it allows, and notes. */
+.tracker {
+  padding-bottom: 96px;
+}
+.tracker-list {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tracker-row {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+}
+.tracker-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.tracker-name {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+.tracker-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 4px 0 0;
+  color: var(--color-muted);
+}
+.tracker-status {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+.tracker-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 999px;
+  font-weight: 600;
+}
+.tracker-chip[data-status="offer"] {
+  border-color: var(--color-elig-yes);
+}
+.tracker-chip[data-status="rejected"] {
+  border-color: var(--color-elig-no);
+}
+.tracker-actions,
+.tracker-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.tracker-confirm p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.tracker-row button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+.tracker-row button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.tracker-remove {
+  justify-self: start;
+  color: var(--color-muted);
+}
+.tracker-notes {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.tracker-notes textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: inherit;
+  resize: vertical;
+}
+.tracker-empty {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin-top: 24px;
+}
+@media (max-width: 760px) {
+  .tracker-status {
+    justify-items: start;
+  }
+}

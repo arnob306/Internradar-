@@ -3,8 +3,8 @@ import type { ReactElement } from "react";
 import { SignOutButton } from "./SignOutButton";
 
 /**
- * The site header. A visitor sees a way in; a signed-in student sees their profile and a way out.
- * The tracker link arrives with the tracker.
+ * The site header. A visitor sees a way in; a signed-in student sees their tracker, their profile
+ * and a way out.
  */
 export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }): ReactElement {
   return (
@@ -36,6 +36,7 @@ export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }
           </Link>
           {signedIn ? (
             <>
+              <Link href="/tracker">Tracker</Link>
               <Link href="/profile">Profile</Link>
               <SignOutButton />
             </>
