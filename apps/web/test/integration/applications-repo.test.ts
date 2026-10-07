@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   ApplicationStoreError,
   findApplication,
+  hasApplicationFor,
   latestChange,
   listApplications,
   removeApplication,
@@ -289,5 +290,25 @@ describe("removing an application", () => {
     const { client } = await signedInUser();
 
     expect(await removeApplication(client, randomUUID())).toBe(false);
+  });
+});
+
+describe("whether a program is already in the tracker", () => {
+  it("is true once they saved it, and false before", async () => {
+    const programId = await newProgram();
+    const { client, userId } = await signedInUser();
+
+    expect(await hasApplicationFor(client, programId)).toBe(false);
+    await saveApplication(client, userId, programId, TODAY);
+    expect(await hasApplicationFor(client, programId)).toBe(true);
+  });
+
+  it("is false for a program only someone else saved", async () => {
+    const programId = await newProgram();
+    const other = await signedInUser();
+    await saveApplication(other.client, other.userId, programId, TODAY);
+    const { client } = await signedInUser();
+
+    expect(await hasApplicationFor(client, programId)).toBe(false);
   });
 });
