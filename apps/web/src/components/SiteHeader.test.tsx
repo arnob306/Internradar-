@@ -47,6 +47,15 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
   });
 
+  it("links everyone, signed in or not, to the timeline", () => {
+    const { unmount } = render(<SiteHeader />);
+    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/timeline");
+    unmount();
+
+    render(<SiteHeader signedIn />);
+    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/timeline");
+  });
+
   it("treats the absence of the prop as a visitor", () => {
     render(<SiteHeader />);
 
