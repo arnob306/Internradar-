@@ -73,6 +73,15 @@ export async function listApplications(client: Client): Promise<ApplicationRecor
   return data.map(toRecord);
 }
 
+/** Whether the student already has this program in their tracker. Row-level security limits it to their own. */
+export async function hasApplicationFor(client: Client, programId: string): Promise<boolean> {
+  const { data, error } = await client.from("applications").select("id").eq("program_id", programId).limit(1);
+  if (error !== null) {
+    throw new ApplicationStoreError("reading", error.code);
+  }
+  return data.length > 0;
+}
+
 /** One of the student's own applications, or null: someone else's looks exactly like a missing one. */
 export async function findApplication(client: Client, id: string): Promise<ApplicationRecord | null> {
   const { data, error } = await client.from("applications").select(COLUMNS).eq("id", id).maybeSingle();
