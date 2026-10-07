@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactElement } from "react";
-import { TimelineView } from "../../components/TimelineView";
+import { TimelineChart } from "../../components/TimelineChart";
 import { melbourneDate } from "../../features/programs/melbourne-date";
 import { MAX_LIMIT } from "../../features/programs/programs-query";
 import { buildTimeline } from "../../features/timeline/build-timeline";
-import { layoutTimeline } from "../../features/timeline/timeline-layout";
+import { chartFor } from "../../features/timeline/timeline-bars";
 import { listApplications } from "../../server/applications/applications-repo";
 import { sessionClientForRequest } from "../../server/auth/request-session";
 import { logFailure } from "../../server/log";
@@ -61,20 +61,21 @@ export default async function TimelinePage(): Promise<ReactElement> {
     );
   }
 
-  const layout = layoutTimeline(buildTimeline(page.items.map(toPublicProgram), today, saved), today);
+  const chart = chartFor(buildTimeline(page.items.map(toPublicProgram), today, saved), today);
   return (
     <main className="page timeline-page">
       <h1 className="home-title">When applications open</h1>
       <p className="home-lede muted">
-        Large employers rarely announce when they open. Here is what each has published, and where they
-        haven&apos;t, the month they opened in past years.
+        Large employers rarely announce when they open. Each bar shows when a program&apos;s applications are
+        open, so you can see what to prepare for and when. Where an employer hasn&apos;t published dates, the bar
+        shows when they were open in past years.
       </p>
       {page.items.length < page.total && (
         <p className="notice">
           Showing the first {page.items.length} of {page.total} programs.
         </p>
       )}
-      <TimelineView layout={layout} />
+      <TimelineChart chart={chart} />
       <p className="home-footnote muted">
         Dates change: always confirm on the employer&apos;s own page before you plan around one.
       </p>
