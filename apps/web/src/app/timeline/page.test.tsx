@@ -68,7 +68,7 @@ describe("the timeline page", () => {
     render(await TimelinePage());
 
     expect(screen.getByRole("heading", { level: 1, name: "When applications open" })).toBeTruthy();
-    expect(within(screen.getByRole("region", { name: "November 2026" })).getByText("Program a")).toBeTruthy();
+    expect(within(screen.getByRole("table", { name: "Applications over the next twelve months" })).getByText("Program a")).toBeTruthy();
     expect(listApplications).not.toHaveBeenCalled();
   });
 
@@ -88,7 +88,7 @@ describe("the timeline page", () => {
 
     render(await TimelinePage());
 
-    expect(within(screen.getByRole("region", { name: "November 2026" })).getByText("Saved")).toBeTruthy();
+    expect(within(screen.getByRole("row", { name: /Program a/ })).getByText("Saved")).toBeTruthy();
   });
 
   it("still shows the timeline, and logs a safe summary, when the saved programs cannot be read", async () => {
@@ -97,7 +97,7 @@ describe("the timeline page", () => {
 
     render(await TimelinePage());
 
-    expect(screen.getByRole("region", { name: "November 2026" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
     expect(screen.queryByText("Saved")).toBeNull();
     expect(logFailure).toHaveBeenCalledWith("page.timeline.saved", expect.any(Error));
     expect(document.body.textContent).not.toMatch(/hunter2/);
@@ -108,7 +108,7 @@ describe("the timeline page", () => {
 
     render(await TimelinePage());
 
-    expect(screen.getByRole("region", { name: "November 2026" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
     expect(listApplications).not.toHaveBeenCalled();
     expect(logFailure).toHaveBeenCalledWith("page.timeline.session", expect.any(Error));
   });
