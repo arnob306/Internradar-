@@ -159,6 +159,23 @@ export async function listPrograms(
 }
 
 /**
+ * One published program by its id, or null if there is none. Like {@link getProgram}, row-level
+ * security hides unpublished programs, so a draft and a program that does not exist look the same.
+ * The id must be a uuid: callers check that first, and the database's code is all a failure carries.
+ */
+export async function getProgramById(
+  client: SupabaseClient<Database>,
+  programId: string,
+  today: string,
+): Promise<ProgramListItem | null> {
+  const { data, error } = await programsQuery(client).eq("id", programId).maybeSingle();
+  if (error !== null) {
+    throw new Error(`fetching a program failed (${error.code})`);
+  }
+  return data === null ? null : toListItem(data, today);
+}
+
+/**
  * One published program by its employer's slug and its own slug, or null if there is none. A
  * program's slug is only unique within its employer (every employer has a "graduate-program"), so
  * both are needed. Row-level security hides unpublished programs, so they are null here too, and
