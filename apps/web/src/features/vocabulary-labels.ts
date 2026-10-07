@@ -1,4 +1,4 @@
-import type { Citizenship, DegreeLevel, Discipline, ProgramType } from "@internradar/domain";
+import type { ApplicationStatus, Citizenship, DegreeLevel, Discipline, ProgramType } from "@internradar/domain";
 
 /**
  * Plain-language names for the shared vocabularies. Records, so a new term in a vocabulary is a
@@ -46,4 +46,13 @@ export const PROGRAM_TYPE_LABELS: Readonly<Record<ProgramType, string>> = {
   graduate: "Graduate",
   cadetship: "Cadetship",
   discovery: "Discovery",
+};
+
+export const APPLICATION_STATUS_LABELS: Readonly<Record<ApplicationStatus, string>> = {
+  saved: "Saved",
+  applied: "Applied",
+  online_assessment: "Online assessment",
+  interview: "Interview",
+  offer: "Offer",
+  rejected: "Rejected",
 };
