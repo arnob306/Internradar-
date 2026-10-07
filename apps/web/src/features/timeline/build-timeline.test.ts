@@ -23,7 +23,7 @@ function program(slug: string, windows: TimelineWindow[] = [], name = `Program $
     slug,
     name,
     programType: "graduate",
-    company: { slug: `co-${slug}`, name: `Company ${slug}` },
+    company: { slug: `co-${slug}`, name: `Company ${slug}`, careersUrl: "https://example.com/careers" },
     windows,
   };
 }
