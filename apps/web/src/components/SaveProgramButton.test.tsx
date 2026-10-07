@@ -16,7 +16,7 @@ describe("SaveProgramButton", () => {
   it("offers to save a program that is not in the tracker yet", () => {
     render(<SaveProgramButton programId="p1" initiallySaved={false} />);
 
-    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeEnabled();
+    expect((screen.getByRole("button", { name: "Save to my tracker" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("sends only the program id, as JSON, and then says it is saved with a link to the tracker", async () => {
@@ -58,7 +58,7 @@ describe("SaveProgramButton", () => {
     await userEvent.setup().click(screen.getByRole("button", { name: "Save to my tracker" }));
 
     expect((await screen.findByRole("alert")).textContent).toMatch(/sign in/i);
-    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeEnabled();
+    expect((screen.getByRole("button", { name: "Save to my tracker" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("tells a student who is going too fast to wait", async () => {
@@ -88,7 +88,7 @@ describe("SaveProgramButton", () => {
     await userEvent.setup().click(screen.getByRole("button", { name: "Save to my tracker" }));
 
     expect((await screen.findByRole("alert")).textContent).toMatch(/couldn't save/i);
-    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeEnabled();
+    expect((screen.getByRole("button", { name: "Save to my tracker" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("does not send twice while a save is in flight", async () => {
