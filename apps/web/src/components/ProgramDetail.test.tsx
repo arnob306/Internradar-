@@ -193,3 +193,26 @@ describe("ProgramDetail: the employer's page and how much to trust this", () => 
     expect(screen.getByText(/read the requirements on the employer/i)).toBeTruthy();
   });
 });
+
+describe("ProgramDetail: saving to the tracker", () => {
+  it("offers a signed-in student a way to save the program", () => {
+    render(<ProgramDetail program={program()} prompt="profile" saved={false} />);
+
+    expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeTruthy();
+  });
+
+  it("shows a program the student already saved as saved", () => {
+    render(<ProgramDetail program={program()} prompt="profile" saved />);
+
+    expect(screen.queryByRole("button", { name: "Save to my tracker" })).toBeNull();
+    expect(screen.getByRole("link", { name: "View in my tracker" })).toBeTruthy();
+  });
+
+  it("sends a visitor to sign in, and brings them back to this program", () => {
+    render(<ProgramDetail program={program()} />);
+
+    expect(screen.queryByRole("button", { name: "Save to my tracker" })).toBeNull();
+    const link = screen.getByRole("link", { name: "Sign in to save this program" });
+    expect(link.getAttribute("href")).toBe("/login?next=%2Fprograms%2Fey-australia%2Fgraduate-program");
+  });
+});
