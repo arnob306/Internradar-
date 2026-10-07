@@ -27,6 +27,7 @@ export default defineConfig({
         "src/server/auth/session-client.ts",
         "src/server/profile/profile-repo.ts",
         "src/server/programs/list-programs.ts",
+        "src/server/applications/applications-repo.ts",
       ],
       thresholds: { lines: 85, branches: 80, functions: 85, statements: 85 },
     },
