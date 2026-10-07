@@ -34,6 +34,7 @@ export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }
           <Link href="/" aria-current="page">
             Programs
           </Link>
+          <Link href="/timeline">Timeline</Link>
           {signedIn ? (
             <>
               <Link href="/tracker">Tracker</Link>
