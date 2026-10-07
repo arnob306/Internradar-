@@ -312,3 +312,43 @@ describe("whether a program is already in the tracker", () => {
     expect(await hasApplicationFor(client, programId)).toBe(false);
   });
 });
+
+describe("whether the last move can be undone", () => {
+  it("is false for a program that was only just saved, in every way a record is read", async () => {
+    const programId = await newProgram();
+    const { client, userId } = await signedInUser();
+    const saved = await saveApplication(client, userId, programId, TODAY);
+    const id = saved?.record.id ?? "";
+
+    expect(saved?.record.canUndo).toBe(false);
+    expect((await findApplication(client, id))?.canUndo).toBe(false);
+    expect((await listApplications(client)).map((record) => record.canUndo)).toEqual([false]);
+  });
+
+  it("is true after a move, and false again once that move was undone", async () => {
+    const programId = await newProgram();
+    const { client, userId } = await signedInUser();
+    const id = (await saveApplication(client, userId, programId, TODAY))?.record.id ?? "";
+
+    const moved = await updateApplication(client, id, { status: "applied", appliedAt: "2026-10-08T01:00:00.000Z" }, "saved");
+    expect(moved?.canUndo).toBe(true);
+    expect((await findApplication(client, id))?.canUndo).toBe(true);
+
+    const undone = await updateApplication(client, id, { status: "saved" }, "applied");
+    expect(undone?.canUndo).toBe(false);
+    expect((await listApplications(client)).map((record) => record.canUndo)).toEqual([false]);
+  });
+
+  it("is worked out for each application on its own", async () => {
+    const first = await newProgram({ slug: "one" });
+    const second = await newProgram({ slug: "two" });
+    const { client, userId } = await signedInUser();
+    const firstId = (await saveApplication(client, userId, first, TODAY))?.record.id ?? "";
+    await saveApplication(client, userId, second, TODAY);
+    await updateApplication(client, firstId, { status: "rejected" }, "saved");
+
+    const byProgram = Object.fromEntries((await listApplications(client)).map((record) => [record.programSlug, record.canUndo]));
+
+    expect(byProgram).toEqual({ one: true, two: false });
+  });
+});
