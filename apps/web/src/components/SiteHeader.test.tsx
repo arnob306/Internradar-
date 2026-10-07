@@ -38,6 +38,15 @@ describe("SiteHeader", () => {
     expect(nav.querySelector("a[href='/login']")).toBeNull();
   });
 
+  it("gives a signed-in student a link to their tracker, and a visitor none", () => {
+    const { unmount } = render(<SiteHeader signedIn />);
+    expect(screen.getByRole("link", { name: "Tracker" }).getAttribute("href")).toBe("/tracker");
+    unmount();
+
+    render(<SiteHeader />);
+    expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
+  });
+
   it("treats the absence of the prop as a visitor", () => {
     render(<SiteHeader />);
 
