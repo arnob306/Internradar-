@@ -40,6 +40,16 @@ describe("withinLimit, through the real rate_limit_hit function", () => {
     expect(await withinLimit(client, "feedback", 2, HOUR)).toBe(true);
   });
 
+  it("has its own bucket for the tracker, so changing applications never uses up the profile's budget", async () => {
+    const { client } = await signedInUser();
+    for (let call = 0; call < 3; call++) {
+      await withinLimit(client, "tracker", 2, HOUR);
+    }
+
+    expect(await withinLimit(client, "tracker", 2, HOUR)).toBe(false);
+    expect(await withinLimit(client, "profile", 2, HOUR)).toBe(true);
+  });
+
   it("is unavailable to a visitor: there is no one to count, so it fails instead of allowing", async () => {
     await expect(withinLimit(anonClient(), "profile", 3, HOUR)).rejects.toThrow();
   });
