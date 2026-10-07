@@ -65,3 +65,11 @@ export {
   expandDisciplines,
   isDiscipline,
 } from "./eligibility/vocabulary";
+export type { ApplicationStatus, StatusChange, TransitionResult } from "./applications/transition";
+export {
+  APPLICATION_STATUSES,
+  isApplicationStatus,
+  nextStatuses,
+  transition,
+  undoTarget,
+} from "./applications/transition";
