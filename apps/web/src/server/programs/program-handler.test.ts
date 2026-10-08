@@ -78,7 +78,7 @@ describe("GET /api/v1/programs/{company}/{program}", () => {
 
   it.each([
     ["an empty slug", ""],
-    ["upper case", "Example"],
+    ["a leading hyphen", "-example"],
     ["a slash", "a%2Fb"],
     ["a malformed escape", "%E0%A4%A"],
     ["a path trick", ".."],

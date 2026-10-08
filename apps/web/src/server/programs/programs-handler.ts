@@ -27,10 +27,10 @@ export interface ProgramsHandlerDeps {
 }
 
 // A good answer can sit in a CDN for a minute: the catalog changes a few times a week.
-const CACHE_PUBLIC = "public, s-maxage=60, stale-while-revalidate=300";
-const CACHE_NONE = "no-store";
+export const CACHE_PUBLIC = "public, s-maxage=60, stale-while-revalidate=300";
+export const CACHE_NONE = "no-store";
 
-function json(body: unknown, status: number, cacheControl: string): Response {
+export function json(body: unknown, status: number, cacheControl: string): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": cacheControl },
