@@ -88,6 +88,46 @@ describe("TimelineChart: the year", () => {
   });
 });
 
+describe("TimelineChart: the key", () => {
+  it("shows what each kind of mark means, in words beside a small sample of it", () => {
+    const { container } = show([program("a", [upcoming("2026-11-15")])]);
+
+    const key = screen.getByRole("list", { name: "Key to the bars" });
+    const labels = within(key)
+      .getAllByRole("listitem")
+      .map((item) => item.textContent);
+    expect(labels).toEqual([
+      "Dates the employer published",
+      "A guess from earlier years",
+      "No closing date listed",
+      "Today",
+    ]);
+    const samples = [...key.querySelectorAll<HTMLElement>("[data-swatch]")].map((sample) => sample.dataset["swatch"]);
+    expect(samples).toEqual(["confirmed", "usual", "open-end", "today"]);
+    expect(container.querySelectorAll("[data-swatch]")).toHaveLength(4);
+  });
+
+  it("draws the samples for the picture only, so a screen reader hears each label once", () => {
+    const { container } = show([program("a", [upcoming("2026-11-15")])]);
+
+    for (const sample of container.querySelectorAll("[data-swatch]")) {
+      expect(sample.getAttribute("aria-hidden")).toBe("true");
+    }
+  });
+
+  it("does not count the samples as bars on the chart", () => {
+    const { container } = show([program("a", [upcoming("2026-11-15", "2026-12-15")])]);
+
+    expect(bars(container)).toHaveLength(1);
+  });
+
+  it("leaves the key out when there is no chart to explain", () => {
+    show([program("none")]);
+
+    expect(screen.queryByRole("list", { name: "Key to the bars" })).toBeNull();
+  });
+});
+
 describe("TimelineChart: rows and bars", () => {
   it("gives each program a row with a link to its page", () => {
     show([program("a", [upcoming("2026-11-15")], "Alpha Program")]);
