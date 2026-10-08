@@ -137,6 +137,13 @@ describe("TimelineChart: how sure each date is, and what to do next", () => {
     expect(within(row).getByText("Start preparing from 18 Oct 2026.")).toBeTruthy();
   });
 
+  it("works out the advice from today's date: once the preparation time has begun it says to start now", () => {
+    show([program("a", [upcoming("2026-10-20")])]);
+
+    const row = screen.getByRole("row", { name: /Program a/ });
+    expect(within(row).getByText("Opening soon. Start preparing now.")).toBeTruthy();
+  });
+
   it("marks a program that is open now confirmed and says there is no closing date", () => {
     show([program("a", [window({ status: "open" })])]);
 
