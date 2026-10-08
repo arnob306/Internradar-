@@ -1,18 +1,11 @@
-import type { CriterionResult, ProgramType, Verdict } from "@internradar/domain";
+import type { CriterionResult, Verdict } from "@internradar/domain";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { describeWindows } from "../features/programs/window-text";
+import { PROGRAM_TYPE_LABELS } from "../features/vocabulary-labels";
 import type { PublicProgram } from "../server/programs/programs-handler";
 import { EligibilityBadge } from "./EligibilityBadge";
 import { StatusChip } from "./StatusChip";
-
-const TYPE_LABELS: Readonly<Record<ProgramType, string>> = {
-  internship: "Internship",
-  vacationer: "Vacationer",
-  graduate: "Graduate",
-  cadetship: "Cadetship",
-  discovery: "Discovery",
-};
 
 export interface CardEligibility {
   readonly verdict: Verdict;
@@ -49,7 +42,7 @@ export function ProgramCard({ program, eligibility, prompt = "sign-in" }: Progra
             </Link>
           </h3>
         </div>
-        <span className="program-card-type">{TYPE_LABELS[program.programType]}</span>
+        <span className="program-card-type">{PROGRAM_TYPE_LABELS[program.programType]}</span>
       </div>
 
       <StatusChip status={program.status} />

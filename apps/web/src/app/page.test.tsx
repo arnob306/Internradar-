@@ -104,7 +104,7 @@ describe("eligibility on the home page", () => {
     await show();
 
     expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
-    expect(logFailure).toHaveBeenCalledExactlyOnceWith("page.home.profile", failure);
+    expect(logFailure).toHaveBeenCalledExactlyOnceWith("viewer.profile", failure);
   });
 
   it("does not trust a session lookup that fails: the page loads as for a visitor", async () => {

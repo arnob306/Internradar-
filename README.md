@@ -11,7 +11,7 @@ Applying for internships as a student is mostly logistics. Programs open and clo
 Sites like [Prepped](https://preppedstudent.com) already cover a lot: hundreds of employers, deadline alerts, mock interviews. I can't beat that on breadth as a solo student, so I'm not trying to. I'm going deep on three things instead:
 
 1. **Eligibility.** "Am I eligible for this program?" answered from my year level, graduation date and citizenship. Most bank, Big 4 and big-tech internships want penultimate-year students, and discovery programs like Optiver FutureFocus want earlier years. Working that out by hand for 50 programs is tedious and easy to get wrong.
-2. **Timeline.** A calendar of when each program usually opens and closes, built from past cycles. Some windows are short, and missing one is the most common way to lose an application.
+2. **Timeline.** Large companies rarely say when applications will open, and neither I nor my friends could tell. One page lays out every program's opening window on a single time axis: confirmed dates where the employer has published them, and "usually opens around..." estimates from past cycles, clearly labelled as estimates. Some windows are short, and missing one is the most common way to lose an application.
 3. **What employers look for.** Requirements pulled from each listing and compared with my resume, so I can see the gaps for each role.
 
 On top of that sits an application tracker that also records which resume version I sent to which employer, so I can eventually see which version gets more interviews.
@@ -95,10 +95,10 @@ The full reasoning is in the [ADRs](docs/adr/README.md) and the [decision log](d
 | 1 | Data model and row-level security | Done |
 | 2 | Eligibility engine, test-first | Done |
 | 3 | Ingestion: a curated program list and a Greenhouse adapter (Lever deferred) | Done, apart from verifying the seed catalog (a person has to do that) |
-| 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions | In progress: feed, sign-in, profile and eligibility badges are built and reviewed; detail pages, tracker, resumes and delete-my-data are not |
+| 4 | Web app: sign-up, listings feed, eligibility badges, tracker, resume versions, opening-dates timeline (first version, D19) | In progress: feed, sign-in, profile, eligibility badges and program pages are built and reviewed; the tracker's rules, handlers and database layer are built but not yet wired to routes or pages; resumes, delete-my-data and the timeline are not |
 | 5 | Monitoring and email alerts, with human review | |
 | 6 | Measuring extraction accuracy on hand-labelled listings | |
-| 7 | Timeline, requirement matching against resumes, funnel analytics | |
+| 7 | Timeline predictions computed from more history, requirement matching against resumes, funnel analytics | |
 | 8 | Hardening and the final write-up | |
 
 Phases 0 to 4 make up the MVP.
@@ -108,7 +108,7 @@ After the MVP I'm considering student-contributed outcome reports (stage reached
 ## Open questions and limits
 
 - The LLM provider isn't chosen. It's behind an interface with a stub, and I'll decide in Phase 5 based on cost and whether the provider promises not to keep or train on data.
-- The timeline needs history, and I'll start with one or two past cycles that I look up by hand. Until there's more, it will say "not enough data" rather than guess.
+- The timeline is only as good as its dates. The first version uses confirmed dates plus one or two past cycles that I look up by hand, each with its source. A program with neither is listed as "no date yet" rather than guessed. Computing predictions automatically from more history comes in Phase 7.
 - Review is me, alone. I'm promising a 48-hour turnaround because that's what I can keep.
 - Free tiers have limits (database size, email volume, pausing after inactivity), and several vendor details are marked in the design to verify before I rely on them.
 
