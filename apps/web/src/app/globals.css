@@ -1031,6 +1031,42 @@ a {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
+/* The key: a small sample of each mark, drawn the same way as the mark itself. */
+.chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 16px 0 20px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+.chart-key li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-swatch {
+  display: inline-block;
+  width: 32px;
+  height: 14px;
+  border-radius: 6px;
+  background: var(--color-accent);
+}
+.chart-swatch[data-swatch="usual"] {
+  background: transparent;
+  border: 2px dashed var(--color-accent);
+}
+.chart-swatch[data-swatch="open-end"] {
+  background: linear-gradient(to right, var(--color-accent) 60%, transparent);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.chart-swatch[data-swatch="today"] {
+  width: 2px;
+  height: 18px;
+  border-radius: 0;
+}
 .chart-name .timeline-head {
   align-items: baseline;
 }

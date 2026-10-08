@@ -117,6 +117,27 @@ function RowView({ row, todayPct }: { readonly row: ChartRow; readonly todayPct:
   );
 }
 
+const KEY_ITEMS = [
+  { swatch: "confirmed", label: "Dates the employer published" },
+  { swatch: "usual", label: "A guess from earlier years" },
+  { swatch: "open-end", label: "No closing date listed" },
+  { swatch: "today", label: "Today" },
+] as const;
+
+/** A small sample of each mark beside its meaning. The samples are only the picture. */
+function ChartKey(): ReactElement {
+  return (
+    <ul className="chart-key" aria-label="Key to the bars">
+      {KEY_ITEMS.map((item) => (
+        <li key={item.swatch}>
+          <span className="chart-swatch" data-swatch={item.swatch} aria-hidden="true" />
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function Section({ id, title, children }: { readonly id: string; readonly title: string; readonly children: ReactNode }): ReactElement {
   return (
     <section className="timeline-section" aria-labelledby={`timeline-${id}`}>
@@ -159,6 +180,7 @@ export function TimelineChart({ chart }: { readonly chart: Chart }): ReactElemen
         Solid bars are dates the employer has published. Dashed bars are guesses from earlier years: they show
         the months a program was open last time, not an announcement, and employers can change them.
       </p>
+      {chart.rows.length > 0 && <ChartKey />}
 
       {chart.rows.length === 0 ? (
         <p className="notice">No program has a date in the next twelve months yet.</p>
