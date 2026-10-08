@@ -25,6 +25,8 @@ export interface ChartRow {
 export interface Chart {
   /** The twelve months shown, starting with the current month. */
   readonly axis: readonly AxisMonth[];
+  /** Today's Melbourne date (ISO), so each row can say what to do from today. */
+  readonly today: string;
   readonly todayPct: number;
   readonly rows: readonly ChartRow[];
   /** A stated opening date beyond the twelve months. */
@@ -136,6 +138,7 @@ export function chartFor(timeline: Timeline, today: string): Chart {
 
   return {
     axis,
+    today,
     todayPct: toPct((todayParts.day - 1) / todayParts.daysInMonth),
     rows: rows.sort((a, b) => firstStart(a) - firstStart(b) || a.entry.program.name.localeCompare(b.entry.program.name)),
     later,

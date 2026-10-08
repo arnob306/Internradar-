@@ -38,15 +38,17 @@ function beforeOpening(entry: ConfirmedEntry, today: string): string {
   return from <= today ? "Opening soon. Start preparing now." : `Start preparing from ${shortDate(from)}.`;
 }
 
-/** A guess names only months, never a day: the month it usually opens and the month to start preparing. */
+/**
+ * Advice for a guess names only a month, never a day. The row already says which months it usually
+ * opens in, so this is only when to start, from the soonest of them.
+ */
 function whenUsual(entry: UsualEntry, today: string): string {
   const first = entry.occurrences[0];
   if (first === undefined) {
     return NOT_ANNOUNCED;
   }
   const from = daysBefore(`${first.year}-${pad(first.month)}-01`, PREP_LEAD_DAYS);
-  const opens = `Usually opens around ${monthName(first.month)}.`;
-  return from <= today ? `${opens} Start preparing now.` : `${opens} Start preparing around ${monthName(Number(from.slice(5, 7)))}.`;
+  return from <= today ? "Start preparing now." : `Start preparing around ${monthName(Number(from.slice(5, 7)))}.`;
 }
 
 /** One plain sentence on what to do about this program now. `today` is the Melbourne date. */

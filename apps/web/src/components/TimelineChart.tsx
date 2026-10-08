@@ -3,23 +3,12 @@ import type { ReactElement, ReactNode } from "react";
 import { safeExternalUrl } from "../features/programs/detail-guards";
 import { describeWindows } from "../features/programs/window-text";
 import type { ConfirmedEntry, NoDateEntry, TimelineProgram, UsualEntry } from "../features/timeline/build-timeline";
+import { dateBasis, type TimelineEntry } from "../features/timeline/date-basis";
+import { MONTH_NAMES } from "../features/timeline/month-names";
+import { nextAction } from "../features/timeline/next-action";
 import type { Bar, Chart, ChartRow } from "../features/timeline/timeline-bars";
 import { PROGRAM_TYPE_LABELS } from "../features/vocabulary-labels";
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
+import { DateBasisChip } from "./DateBasisChip";
 
 const programHref = (program: TimelineProgram): string =>
   `/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`;
@@ -30,7 +19,8 @@ function monthLabel(year: number, month: number, isFirst: boolean): string {
   return isFirst || month === 1 ? `${short} ${year}` : short;
 }
 
-function Heading({ program, saved }: { readonly program: TimelineProgram; readonly saved: boolean }): ReactElement {
+function Heading({ entry }: { readonly entry: TimelineEntry }): ReactElement {
+  const { program, saved } = entry;
   return (
     <div className="timeline-head">
       <Link href={programHref(program)} className="timeline-name">
@@ -40,6 +30,7 @@ function Heading({ program, saved }: { readonly program: TimelineProgram; readon
         {program.company.name} · {PROGRAM_TYPE_LABELS[program.programType]}
       </span>
       {saved && <span className="timeline-saved">Saved</span>}
+      <DateBasisChip basis={dateBasis(entry)} />
     </div>
   );
 }
@@ -96,13 +87,14 @@ function BarMark({ bar }: { readonly bar: Bar }): ReactElement {
   );
 }
 
-function RowView({ row, todayPct }: { readonly row: ChartRow; readonly todayPct: number }): ReactElement {
+function RowView({ row, todayPct, today }: { readonly row: ChartRow; readonly todayPct: number; readonly today: string }): ReactElement {
   const { entry } = row;
   return (
     <tr className="chart-row">
       <th scope="row" className="chart-name">
-        <Heading program={entry.program} saved={entry.saved} />
+        <Heading entry={entry} />
         {entry.kind === "confirmed" ? <p className="timeline-when">{statedText(entry)}</p> : <UsualText entry={entry} />}
+        <p className="timeline-next">{nextAction(entry, today)}</p>
       </th>
       <td className="chart-cell">
         {/* The picture only: the dates are already in words beside it. */}
@@ -147,19 +139,21 @@ function Section({ id, title, children }: { readonly id: string; readonly title:
   );
 }
 
-function ConfirmedItem({ entry }: { readonly entry: ConfirmedEntry }): ReactElement {
+function ConfirmedItem({ entry, today }: { readonly entry: ConfirmedEntry; readonly today: string }): ReactElement {
   return (
     <li className="timeline-item" data-kind="confirmed">
-      <Heading program={entry.program} saved={entry.saved} />
+      <Heading entry={entry} />
       <p className="timeline-when">{statedText(entry)}</p>
+      <p className="timeline-next">{nextAction(entry, today)}</p>
     </li>
   );
 }
 
-function PlainItem({ entry }: { readonly entry: NoDateEntry }): ReactElement {
+function PlainItem({ entry, today }: { readonly entry: NoDateEntry; readonly today: string }): ReactElement {
   return (
     <li className="timeline-item" data-kind="none">
-      <Heading program={entry.program} saved={entry.saved} />
+      <Heading entry={entry} />
+      <p className="timeline-next">{nextAction(entry, today)}</p>
     </li>
   );
 }
@@ -202,7 +196,7 @@ export function TimelineChart({ chart }: { readonly chart: Chart }): ReactElemen
           </thead>
           <tbody>
             {chart.rows.map((row) => (
-              <RowView key={row.entry.program.id} row={row} todayPct={chart.todayPct} />
+              <RowView key={row.entry.program.id} row={row} todayPct={chart.todayPct} today={chart.today} />
             ))}
           </tbody>
         </table>
@@ -211,21 +205,21 @@ export function TimelineChart({ chart }: { readonly chart: Chart }): ReactElemen
       {chart.later.length > 0 && (
         <Section id="later" title="Opening later">
           {chart.later.map((entry) => (
-            <ConfirmedItem key={entry.program.id} entry={entry} />
+            <ConfirmedItem key={entry.program.id} entry={entry} today={chart.today} />
           ))}
         </Section>
       )}
       {chart.undated.length > 0 && (
         <Section id="undated" title="Opening soon, date not listed">
           {chart.undated.map((entry) => (
-            <ConfirmedItem key={entry.program.id} entry={entry} />
+            <ConfirmedItem key={entry.program.id} entry={entry} today={chart.today} />
           ))}
         </Section>
       )}
       {chart.noDate.length > 0 && (
         <Section id="none" title="No date yet">
           {chart.noDate.map((entry) => (
-            <PlainItem key={entry.program.id} entry={entry} />
+            <PlainItem key={entry.program.id} entry={entry} today={chart.today} />
           ))}
         </Section>
       )}
