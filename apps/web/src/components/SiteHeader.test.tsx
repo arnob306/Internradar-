@@ -1,9 +1,45 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const pathname = vi.fn<() => string>();
+vi.mock("next/navigation", () => ({ usePathname: () => pathname() }));
+
 import { SiteHeader } from "./SiteHeader";
 
+beforeEach(() => {
+  pathname.mockReset().mockReturnValue("/");
+});
+
 describe("SiteHeader", () => {
+  it("marks only the link for the page being viewed as current", () => {
+    pathname.mockReturnValue("/timeline");
+    render(<SiteHeader signedIn />);
+
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    const current = [...nav.querySelectorAll("a[aria-current='page']")].map((link) => link.textContent);
+    expect(current).toEqual(["Timeline"]);
+  });
+
+  it("keeps a section's link current on its sub-pages, and Programs on a program page", () => {
+    pathname.mockReturnValue("/tracker/anything");
+    const { unmount } = render(<SiteHeader signedIn />);
+    expect(screen.getByRole("link", { name: "Tracker" }).getAttribute("aria-current")).toBe("page");
+    unmount();
+
+    pathname.mockReturnValue("/programs/co/prog");
+    render(<SiteHeader />);
+    expect(screen.getByRole("link", { name: "Programs" }).getAttribute("aria-current")).toBe("page");
+  });
+
+  it("marks nothing as current on a page the navigation does not list", () => {
+    pathname.mockReturnValue("/login");
+    render(<SiteHeader />);
+
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(nav.querySelector("a[aria-current='page']")).toBeNull();
+  });
+
   it("is the page's banner landmark, with the product name linking home", () => {
     render(<SiteHeader />);
 
