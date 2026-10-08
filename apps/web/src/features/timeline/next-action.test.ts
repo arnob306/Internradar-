@@ -110,11 +110,12 @@ describe("nextAction: a program the employer says is coming, with no date", () =
   });
 });
 
+// The row already says which months it usually opens in, so a guess's next action is only the advice.
 describe("nextAction: a guess from past cycles", () => {
-  it("names the usual month and the month to start preparing, never a day", () => {
+  it("names the month to start preparing, never a day", () => {
     const text = nextAction(usual([{ year: 2027, month: 3 }]), TODAY);
 
-    expect(text).toBe("Usually opens around March. Start preparing around February.");
+    expect(text).toBe("Start preparing around February.");
     expect(text).not.toMatch(/\d/);
   });
 
@@ -127,22 +128,16 @@ describe("nextAction: a guess from past cycles", () => {
         ]),
         TODAY,
       ),
-    ).toBe("Usually opens around March. Start preparing around February.");
+    ).toBe("Start preparing around February.");
   });
 
   it("counts the preparation month from the first day of the usual month", () => {
-    expect(nextAction(usual([{ year: 2027, month: 2 }]), TODAY)).toBe(
-      "Usually opens around February. Start preparing around January.",
-    );
+    expect(nextAction(usual([{ year: 2027, month: 2 }]), TODAY)).toBe("Start preparing around January.");
   });
 
   it("says to start now when the preparation time has already begun", () => {
-    expect(nextAction(usual([{ year: 2026, month: 10 }]), TODAY)).toBe(
-      "Usually opens around October. Start preparing now.",
-    );
-    expect(nextAction(usual([{ year: 2026, month: 11 }]), TODAY)).toBe(
-      "Usually opens around November. Start preparing now.",
-    );
+    expect(nextAction(usual([{ year: 2026, month: 10 }]), TODAY)).toBe("Start preparing now.");
+    expect(nextAction(usual([{ year: 2026, month: 11 }]), TODAY)).toBe("Start preparing now.");
   });
 });
 

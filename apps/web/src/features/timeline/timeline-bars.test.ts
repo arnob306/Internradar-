@@ -64,6 +64,10 @@ describe("chartFor: the axis", () => {
   it("marks today partway through the first month", () => {
     expect(chart([]).todayPct).toBeCloseTo(pct(7 / 31), 5);
   });
+
+  it("carries today's date, so each row can say what to do from today", () => {
+    expect(chart([]).today).toBe(TODAY);
+  });
 });
 
 describe("chartFor: stated dates", () => {

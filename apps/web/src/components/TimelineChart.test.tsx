@@ -128,6 +128,53 @@ describe("TimelineChart: the key", () => {
   });
 });
 
+describe("TimelineChart: how sure each date is, and what to do next", () => {
+  it("marks a published opening confirmed and says when to start preparing", () => {
+    show([program("a", [upcoming("2026-11-15")])]);
+
+    const row = screen.getByRole("row", { name: /Program a/ });
+    expect(within(row).getByText("Confirmed")).toBeTruthy();
+    expect(within(row).getByText("Start preparing from 18 Oct 2026.")).toBeTruthy();
+  });
+
+  it("marks a program that is open now confirmed and says there is no closing date", () => {
+    show([program("a", [window({ status: "open" })])]);
+
+    const row = screen.getByRole("row", { name: /Program a/ });
+    expect(within(row).getByText("Confirmed")).toBeTruthy();
+    expect(within(row).getByText("No closing date listed. Apply soon.")).toBeTruthy();
+  });
+
+  it("marks a guess from past cycles estimated and gives only the advice, not a second date", () => {
+    show([program("a", [past("2025-08-12", "2025-09-08")])]);
+
+    const row = screen.getByRole("row", { name: /Program a/ });
+    expect(within(row).getByText("Estimated")).toBeTruthy();
+    expect(within(row).getByText("Start preparing around July.")).toBeTruthy();
+    expect(row.textContent).toContain("Usually opens around August");
+  });
+
+  it("does the same for programs listed under the chart", () => {
+    show([
+      program("far", [upcoming("2028-01-01")]),
+      program("undated", [window({ status: "upcoming" })]),
+      program("none"),
+    ]);
+
+    const later = screen.getByRole("region", { name: "Opening later" });
+    expect(within(later).getByText("Confirmed")).toBeTruthy();
+    expect(within(later).getByText("Start preparing from 4 Dec 2027.")).toBeTruthy();
+
+    const undated = screen.getByRole("region", { name: "Opening soon, date not listed" });
+    expect(within(undated).getByText("Not announced")).toBeTruthy();
+    expect(within(undated).getByText("Dates not announced. Check the employer's page.")).toBeTruthy();
+
+    const none = screen.getByRole("region", { name: "No date yet" });
+    expect(within(none).getByText("Not announced")).toBeTruthy();
+    expect(within(none).getByText("Dates not announced. Check the employer's page.")).toBeTruthy();
+  });
+});
+
 describe("TimelineChart: rows and bars", () => {
   it("gives each program a row with a link to its page", () => {
     show([program("a", [upcoming("2026-11-15")], "Alpha Program")]);
