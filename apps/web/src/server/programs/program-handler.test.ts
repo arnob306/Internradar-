@@ -69,12 +69,19 @@ describe("GET /api/v1/programs/{company}/{program}", () => {
     expect(response.headers.get("content-type")).toBe("application/json; charset=utf-8");
   });
 
-  it("says 404 when there is no such published program, and never caches that", async () => {
+  it("says 404 when there is no such published program, and lets a CDN remember that for 30 seconds", async () => {
     const { response, body } = await call(setup(null).handler);
 
     expect(response.status).toBe(404);
     expect(body.success).toBe(false);
     expect(body.error?.code).toBe("PROGRAM_NOT_FOUND");
+    expect(response.headers.get("cache-control")).toBe("public, s-maxage=30");
+  });
+
+  it("does not cache a 404 for a slug that could not exist, since that never reaches the database", async () => {
+    const { response } = await call(setup(null).handler, "", "graduate-program");
+
+    expect(response.status).toBe(404);
     expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
