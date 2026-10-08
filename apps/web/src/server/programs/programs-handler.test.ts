@@ -2,6 +2,7 @@ import type { Envelope } from "@internradar/domain";
 import { describe, expect, it, vi } from "vitest";
 import type { ProgramsQuery } from "../../features/programs/programs-query";
 import { createProgramsHandler, type PublicProgram } from "./programs-handler";
+import type { RequestLimiter } from "../request-limiter";
 import type { ProgramListItem, ProgramsPage } from "./list-programs";
 
 // 2026-10-03 14:00 UTC is already 4 October in Melbourne.
@@ -25,12 +26,15 @@ function item(name: string): ProgramListItem {
   };
 }
 
-function setup(page: ProgramsPage = { items: [item("Graduate Program")], total: 1 }) {
+const allow: RequestLimiter = () => ({ allowed: true, retryAfterSeconds: 0 });
+
+function setup(page: ProgramsPage = { items: [item("Graduate Program")], total: 1 }, allowed = true) {
   const list = vi.fn<(query: ProgramsQuery, today: string) => Promise<ProgramsPage>>(() =>
     Promise.resolve(page),
   );
-  const handler = createProgramsHandler({ list, now: () => NOW });
-  return { list, handler };
+  const limit = vi.fn<RequestLimiter>(() => ({ allowed, retryAfterSeconds: 42 }));
+  const handler = createProgramsHandler({ list, now: () => NOW, limit });
+  return { list, limit, handler };
 }
 
 async function call(handler: ReturnType<typeof setup>["handler"], query = "") {
@@ -110,12 +114,37 @@ describe("GET /api/v1/programs", () => {
     expect(bad.response.headers.get("cache-control")).toBe("no-store");
   });
 
+  it("asks the limiter about this request before doing anything else", async () => {
+    const { limit, handler } = setup();
+    const request = new Request("https://internradar.example/api/v1/programs", { headers: { "x-real-ip": "1.1.1.1" } });
+
+    await handler(request);
+
+    expect(limit).toHaveBeenCalledExactlyOnceWith(request);
+  });
+
+  it.each([
+    ["a good query", ""],
+    ["a bad query", "?limit=0"],
+  ])("tells a client over the limit to wait, for %s, without validating or querying", async (_label, query) => {
+    const { list, handler } = setup(undefined, false);
+
+    const { response, body } = await call(handler, query);
+
+    expect(response.status).toBe(429);
+    expect(!body.success && body.error.code).toBe("RATE_LIMITED");
+    expect(response.headers.get("retry-after")).toBe("42");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(list).not.toHaveBeenCalled();
+  });
+
   it("records a failure on the server, so an outage is not silent", async () => {
     const failure = new Error("connection refused");
     const log = vi.fn();
     const handler = createProgramsHandler({
       list: () => Promise.reject(failure),
       now: () => NOW,
+      limit: allow,
       log,
     });
 
@@ -129,6 +158,7 @@ describe("GET /api/v1/programs", () => {
     const handler = createProgramsHandler({
       list: () => Promise.resolve({ items: [], total: 0 }),
       now: () => NOW,
+      limit: allow,
       log,
     });
 
@@ -142,7 +172,7 @@ describe("GET /api/v1/programs", () => {
     const list = vi.fn(() =>
       Promise.reject(new Error('relation "public.programs" does not exist: select * from programs')),
     );
-    const handler = createProgramsHandler({ list, now: () => NOW });
+    const handler = createProgramsHandler({ list, now: () => NOW, limit: allow });
 
     const { response, body } = await call(handler);
     const text = JSON.stringify(body);

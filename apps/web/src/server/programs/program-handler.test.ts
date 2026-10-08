@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProgramListItem } from "./list-programs";
 import { createProgramHandler } from "./program-handler";
 import type { PublicProgram } from "./programs-handler";
+import type { RequestLimiter } from "../request-limiter";
 
 // 2026-10-03 14:00 UTC is already 4 October in Melbourne.
 const NOW = new Date("2026-10-03T14:00:00Z");
@@ -25,11 +26,12 @@ const found: ProgramListItem = {
 
 type Get = (company: string, program: string, today: string) => Promise<ProgramListItem | null>;
 
-function setup(result: ProgramListItem | null | Error = found) {
+function setup(result: ProgramListItem | null | Error = found, allowed = true) {
   const get = vi.fn<Get>(() => (result instanceof Error ? Promise.reject(result) : Promise.resolve(result)));
   const log = vi.fn<(scope: string, error: unknown) => void>();
-  const handler = createProgramHandler({ get, now: () => NOW, log });
-  return { get, log, handler };
+  const limit = vi.fn<RequestLimiter>(() => ({ allowed, retryAfterSeconds: 42 }));
+  const handler = createProgramHandler({ get, now: () => NOW, log, limit });
+  return { get, log, limit, handler };
 }
 
 async function call(handler: ReturnType<typeof setup>["handler"], company = "example-co", program = "graduate-program") {
@@ -94,6 +96,31 @@ describe("GET /api/v1/programs/{company}/{program}", () => {
 
     expect(first.get).not.toHaveBeenCalled();
     expect(second.get).not.toHaveBeenCalled();
+  });
+
+  it("asks the limiter about this request before doing anything else", async () => {
+    const { limit, handler } = setup();
+    const request = new Request("https://internradar.example/api/v1/programs/x/y", { headers: { "x-real-ip": "1.1.1.1" } });
+
+    await handler(request, { params: Promise.resolve({ company: "example-co", program: "graduate-program" }) });
+
+    expect(limit).toHaveBeenCalledExactlyOnceWith(request);
+  });
+
+  it.each([
+    ["a real program", "example-co", "graduate-program"],
+    ["a slug that could not exist", "", "graduate-program"],
+  ])("tells a client over the limit to wait, for %s, without looking anything up", async (_label, company, program) => {
+    const { get, handler } = setup(found, false);
+
+    const { response, body } = await call(handler, company, program);
+
+    expect(response.status).toBe(429);
+    expect(body.success).toBe(false);
+    expect(body.error?.code).toBe("RATE_LIMITED");
+    expect(response.headers.get("retry-after")).toBe("42");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(get).not.toHaveBeenCalled();
   });
 
   it("gives a generic answer and logs only a safe summary when the lookup fails", async () => {
