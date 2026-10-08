@@ -3,10 +3,13 @@ import { slugFromPath } from "../../features/programs/detail-guards";
 import { melbourneDate } from "../../features/programs/melbourne-date";
 import { logFailure } from "../log";
 import type { ProgramListItem } from "./list-programs";
-import { CACHE_NONE, CACHE_PUBLIC, json, toPublicProgram } from "./programs-handler";
+import type { RequestLimiter } from "../request-limiter";
+import { CACHE_NONE, CACHE_PUBLIC, json, toPublicProgram, tooManyRequests } from "./programs-handler";
 
 export interface ProgramHandlerDeps {
   readonly get: (company: string, program: string, today: string) => Promise<ProgramListItem | null>;
+  /** Counts each caller's requests; a caller over the limit is turned away before any other work. */
+  readonly limit: RequestLimiter;
   readonly now: () => Date;
   /** Where failures are recorded. Defaults to the safe server logger; tests pass a spy. */
   readonly log?: (scope: string, error: unknown) => void;
@@ -24,7 +27,12 @@ const notFound = (): Response => json(fail("PROGRAM_NOT_FOUND", "We couldn't fin
  * caller cannot tell them apart.
  */
 export function createProgramHandler(deps: ProgramHandlerDeps): (request: Request, context: RouteContext) => Promise<Response> {
-  return async (_request, context) => {
+  return async (request, context) => {
+    const verdict = deps.limit(request);
+    if (!verdict.allowed) {
+      return tooManyRequests(verdict.retryAfterSeconds);
+    }
+
     const raw = await context.params;
     const company = slugFromPath(raw.company);
     const program = slugFromPath(raw.program);
