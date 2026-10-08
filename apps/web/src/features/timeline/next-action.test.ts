@@ -83,6 +83,12 @@ describe("nextAction: a program with a stated opening", () => {
     );
   });
 
+  it("ignores whatever day is stored when the employer stated only the month", () => {
+    expect(nextAction(confirmed({ opensOn: "2027-02-17", opensPrecision: "month" }), TODAY)).toBe(
+      "Start preparing from 4 Jan 2027.",
+    );
+  });
+
   it("says to start now when the preparation date is today", () => {
     expect(nextAction(confirmed({ opensOn: "2026-11-05" }), TODAY)).toBe("Opening soon. Start preparing now.");
   });
