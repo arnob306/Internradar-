@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { NavLink } from "./NavLink";
 import { SignOutButton } from "./SignOutButton";
 
 /**
@@ -31,18 +32,18 @@ export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }
           InternRadar
         </Link>
         <nav aria-label="Main">
-          <Link href="/" aria-current="page">
+          <NavLink href="/" sections={["/", "/programs"]}>
             Programs
-          </Link>
-          <Link href="/timeline">Timeline</Link>
+          </NavLink>
+          <NavLink href="/timeline">Timeline</NavLink>
           {signedIn ? (
             <>
-              <Link href="/tracker">Tracker</Link>
-              <Link href="/profile">Profile</Link>
+              <NavLink href="/tracker">Tracker</NavLink>
+              <NavLink href="/profile">Profile</NavLink>
               <SignOutButton />
             </>
           ) : (
-            <Link href="/login">Sign in</Link>
+            <NavLink href="/login">Sign in</NavLink>
           )}
         </nav>
       </div>

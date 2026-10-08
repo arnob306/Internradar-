@@ -33,8 +33,8 @@ describe("SiteHeader", () => {
   });
 
   it("marks nothing as current on a page the navigation does not list", () => {
-    pathname.mockReturnValue("/login");
-    render(<SiteHeader />);
+    pathname.mockReturnValue("/trackers");
+    render(<SiteHeader signedIn />);
 
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(nav.querySelector("a[aria-current='page']")).toBeNull();
