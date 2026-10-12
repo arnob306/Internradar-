@@ -100,6 +100,21 @@ companies:
           graduationWindow:
             earliest: {year: 2024, month: 7}
             latest: {year: 2026, month: 12}
+        # Stages as Deloitte's "How we hire" page describes them (read 2026-10-13). Some roles
+        # use a job simulation in place of the digital interview.
+        application_stages:
+          - name: Apply
+            description: Submit your CV and answer screening questions for the role you choose.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Online assessment
+            description: An immersive set of virtual activities that shows your strengths and gives you feedback on them.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Digital interview
+            description: Three quick video questions about your achievements and interests, with one chance to re-record.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Assessment day
+            description: In person or virtual, with information sessions, networking, a group case study and a 1:1 interview with a leader.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
         windows:
           # Page: "We open Program applications twice a year: in February/March and in July".
           - cycle_year: 2027
@@ -165,6 +180,20 @@ companies:
             earliest: {year: 2023, month: 1}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as PwC's graduate program page describes them (read 2026-10-13).
+        application_stages:
+          - name: Apply online
+            description: Submit your CV and academic transcript through the online portal.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: Online assessments
+            description: Four assessments on your behaviours, skills and emotional intelligence, about 50 minutes in total, to submit within 48 hours.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: Digital interview and team preference
+            description: Two recorded questions, then your team preferences. It takes about 10 minutes and you have 48 hours to finish.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: In-person assessment centre
+            description: A group case study in the morning, then an individual interview with a senior and a junior team member.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
         windows:
           # Page shows "Applications closed" (2026-10-03); start generally January or February.
           - cycle_year: 2027
@@ -300,6 +329,24 @@ companies:
             earliest: {year: 2023, month: 10}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as ANZ's graduate program page describes them (read 2026-10-13). ANZ says no
+        # resume or cover letter is needed.
+        application_stages:
+          - name: Quick online application
+            description: A short form. ANZ does not ask for a resume or cover letter.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Digital interview and game-based assessment
+            description: Games that help ANZ get to know you, and recorded answers to short video prompts.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Personality questionnaire
+            description: Questions about how you like to work.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Interview preparation
+            description: Tips from past graduates on how to get ready for the interview.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Face to face interview
+            description: A meeting with ANZ leaders, so you can assess each other.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
 
   - slug: westpac
     name: Westpac Group
@@ -320,6 +367,20 @@ companies:
             earliest: {year: 2023, month: 7}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as Westpac's "How to apply" page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: About 10 minutes. Answer the pre-screening questions, choose up to three business areas and a location, and upload your resume and transcripts.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Online assessments
+            description: A psychometric assessment you are invited to complete within 48 hours.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Video interview
+            description: Short pre-recorded questions about your motivations. It is not live, and you cannot pause or restart it.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Assessment centre
+            description: Usually virtual, with a behavioural interview and a business case study. Westpac tells you in advance if it is in person.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
         windows:
           # Page: graduate applications open July, close August, assessment centres
           # September to October, start February (no year stated).
@@ -370,6 +431,21 @@ companies:
         # Eligibility has not been read from the page yet, so only the schema version is set.
         eligibility_rules:
           schemaVersion: 1
+        # Stages as KPMG's graduates page describes them (read 2026-10-13). The page names no
+        # separate assessment centre: interview and extra testing are described together.
+        application_stages:
+          - name: Submit your application
+            description: A quick online form of about 5 minutes. Upload a CV under two pages and say which areas you prefer.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Online assessments
+            description: Two assessments, one on cognitive abilities and one on values and leadership, taking 45 minutes to an hour in total.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Shortlisted to business
+            description: Your application and assessment results are reviewed, and you may be asked for your transcript.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Interview
+            description: You meet potential team members and complete further testing activities.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
         windows:
           # Page: "We are accepting applications for our graduate program rolling intake"; the
           # program starts in February each year. No closing date is stated. The author's
