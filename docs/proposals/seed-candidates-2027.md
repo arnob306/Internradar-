@@ -31,10 +31,37 @@ entered as windows.
 
 - Most large graduate programs open between February and April the year before they start, with a
   second wave from July to September (GradConnection and UTS career advice).
-- Big four and consulting firms commonly open in early January and close in late February or March
-  ([hackingthecaseinterview.com guide](https://www.hackingthecaseinterview.com/pages/consulting-recruiting-australia)).
-  Deloitte, PwC and EY are in the seed with no past windows, so this would fit them, but check each
-  firm's own page for the last cycle.
+- A consulting guide says big four and strategy firms open in early January and close in late February
+  or March ([hackingthecaseinterview.com guide](https://www.hackingthecaseinterview.com/pages/consulting-recruiting-australia)).
+  **Do not use it for the big four's graduate or vacationer programs.** The firms' own pages (section 4)
+  describe different timings, so treat that guide as being about strategy-consulting recruiting.
+
+## 4. Your research (pasted 2026-10-12) checked against official pages
+
+The pasted text looked like AI search summaries, so each claim was checked against the employer's own
+site. These come from search results on official domains; I did not open every page in full, so confirm
+the exact dates on the page before anything is written to the seed.
+
+| Claim in your paste | Result | Official source | Notes |
+|---|---|---|---|
+| Big 4 (Deloitte, PwC, EY, KPMG) open between July and November, peaking August to October | **Not supported** | [Deloitte](https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html), [PwC](https://jobs-au.pwc.com/au/en/job/720054WD/FY27-W2-Vacationer-Brisbane-Accounting-Assurance-Audit), [KPMG](https://kpmg.com/au/en/careers/graduates/vacation-program.html), [EY](https://www.ey.com/en_au/careers/2026-27-vacationer-program-student-opportunities) | **Deloitte:** opens in February/March and again in July; the 2026 graduate and vacationer round was 1 to 22 July, with a few audit and tax roles left. **PwC:** one FY27 vacationer role opened 8 June and closed 22 June 2026. **KPMG:** vacationer applications are closed and 2027/28 dates are not announced; the program starts in November or December. **EY:** the 2027 graduate and 2026/27 vacationer programs are open now, reviewed on a rolling basis, with no dates listed. A possible source of the mix-up: vacationer programs *start* around November and December. |
+| Australian Government Graduate Program (and its Data stream) opens 1 March | **Confirmed for the opening** | [APS Jobs, Data Stream](https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream) | The page says applications open 1 March 2027 (for people finishing by 31 December 2026). **No closing date found**: the "about 31 March" in your paste is not on that page (a 2024 post said open until 3 April 2024). Do not enter a close date until one is published. |
+| NAB summer internship opens early July, closes early August | **Confirmed** | [NAB](https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program) | 2026: opened Monday 6 July, closed 11:59pm AEST Sunday 9 August. |
+| Westpac summer internship opens July, closes August | **Confirmed as typical** | [Westpac](https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/summer-intern/) | The page says typical key dates are July to August and the 2026 round is closed. Exact days not found. |
+| CommBank summer internship mid-August to early September | **Matches your seed** | (already in `catalog.yaml`) | The seed has 12 August to 8 September 2026. |
+| ANZ summer internship June to July | **Not found** | [ANZ](https://www.anz.com.au/careers/programs/summer-intern/) | Eligibility (penultimate year) is stated; I found no dates. |
+| Data and Digital Cadet opens 1 April; student placements open 1 December; Treasury and Defence internships | **Not checked** | | Check on APS Jobs and each department's page. |
+
+### What this means for the catalogue
+
+- **Programs missing from the seed:** KPMG (graduate and vacationer), and the Australian Government
+  Graduate Program with its streams (Data, Digital, Accounting and Financial Management, and others).
+- **Vacationer or summer programs missing:** the seed has one (CommBank Summer Intern). NAB, Westpac,
+  ANZ, Deloitte, PwC, KPMG and EY all run one, with their own windows. They are separate programs with
+  separate dates from the graduate programs, which is exactly the "stream" distinction the timeline needs.
+- **The Big 4 are not one pattern.** Deloitte opens twice a year, PwC's vacationer round opened in June,
+  KPMG has not announced, and EY rolls. A single "usually opens around..." per firm would mislead; each
+  program and each round needs its own record.
 
 ## How to apply any of this
 
