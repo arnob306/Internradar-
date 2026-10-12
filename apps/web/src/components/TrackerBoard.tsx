@@ -26,7 +26,7 @@ export function TrackerBoard({ initial }: TrackerBoardProps): ReactElement {
       {shown.length === 0 ? (
         <div className="tracker-empty">
           <p>You haven&apos;t saved any programs yet. Save one from its page and it will show up here.</p>
-          <Link href="/">Browse programs</Link>
+          <Link href="/programs">Browse programs</Link>
         </div>
       ) : (
         <ul className="tracker-list">

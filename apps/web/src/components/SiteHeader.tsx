@@ -32,10 +32,8 @@ export function SiteHeader({ signedIn = false }: { readonly signedIn?: boolean }
           InternRadar
         </Link>
         <nav aria-label="Main">
-          <NavLink href="/" sections={["/", "/programs"]}>
-            Programs
-          </NavLink>
-          <NavLink href="/timeline">Timeline</NavLink>
+          <NavLink href="/">Timeline</NavLink>
+          <NavLink href="/programs">Programs</NavLink>
           {signedIn ? (
             <>
               <NavLink href="/tracker">Tracker</NavLink>

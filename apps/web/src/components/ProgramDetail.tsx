@@ -46,7 +46,7 @@ export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved 
 
   return (
     <div className="detail">
-      <Link href="/" className="detail-back">
+      <Link href="/programs" className="detail-back">
         All programs
       </Link>
 

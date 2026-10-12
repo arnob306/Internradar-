@@ -1,94 +1,101 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { ProgramFeed } from "../components/ProgramFeed";
+import { TimelineChart } from "../components/TimelineChart";
 import { melbourneDate } from "../features/programs/melbourne-date";
-import {
-  DEFAULT_LIMIT,
-  parseProgramsQuery,
-  type ProgramsQuery,
-} from "../features/programs/programs-query";
+import { MAX_LIMIT } from "../features/programs/programs-query";
+import { buildTimeline } from "../features/timeline/build-timeline";
+import { summariseTimeline } from "../features/timeline/summarise";
+import { chartFor } from "../features/timeline/timeline-bars";
+import { listApplications } from "../server/applications/applications-repo";
 import { sessionClientForRequest } from "../server/auth/request-session";
 import { logFailure } from "../server/log";
 import { listPrograms, type ProgramsPage } from "../server/programs/list-programs";
 import { toPublicProgram } from "../server/programs/programs-handler";
-import { viewerFor, type Viewer } from "../server/programs/viewer";
 
-// The feed reads the database on every request, so it is always current.
+export const metadata: Metadata = { title: "When applications open" };
+
+// Built from the visitor's session on every request: the dates and the saved badges are current.
 export const dynamic = "force-dynamic";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+type Client = Awaited<ReturnType<typeof sessionClientForRequest>>;
 
-const DEFAULT_QUERY: ProgramsQuery = {
-  limit: DEFAULT_LIMIT,
-  offset: 0,
-  type: undefined,
-  discipline: undefined,
-  openNow: false,
-};
+const HEADLINE = "Never miss an application window.";
 
-function toParams(raw: SearchParams): URLSearchParams {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(raw)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (item !== undefined) {
-        params.append(key, item);
-      }
-    }
+/** The programs this student saved. A visitor, or any failure, simply has none: the page still works. */
+async function savedProgramIds(client: Client): Promise<string[]> {
+  let signedIn = false;
+  try {
+    signedIn = (await client.auth.getUser()).data.user !== null;
+  } catch (error) {
+    logFailure("page.timeline.session", error);
   }
-  return params;
+  if (!signedIn) {
+    return [];
+  }
+  try {
+    return (await listApplications(client)).map((application) => application.programId);
+  } catch (error) {
+    logFailure("page.timeline.saved", error);
+    return [];
+  }
 }
 
-export default async function HomePage({
-  searchParams,
-}: {
-  readonly searchParams: Promise<SearchParams>;
-}): Promise<ReactElement> {
-  const parsed = parseProgramsQuery(toParams(await searchParams));
-  const query = parsed.ok ? parsed.value : DEFAULT_QUERY;
+const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+
+export default async function HomePage(): Promise<ReactElement> {
   const today = melbourneDate(new Date());
 
-  let page: ProgramsPage | undefined;
-  let viewer: Viewer = { prompt: "sign-in" };
+  let page: ProgramsPage;
+  let saved: string[];
   try {
     const client = await sessionClientForRequest();
-    page = await listPrograms(client, query, today);
-    viewer = await viewerFor(client, page.items, today);
+    page = await listPrograms(
+      client,
+      { limit: MAX_LIMIT, offset: 0, type: undefined, discipline: undefined, openNow: false },
+      today,
+    );
+    saved = await savedProgramIds(client);
   } catch (error) {
-    // The reason stays on the server, and only a safe summary is logged. A visitor only needs to
-    // know to try again.
-    logFailure("page.home.list", error);
-    page = undefined;
+    // Only a safe summary is logged. A visitor needs to know to try again, not why.
+    logFailure("page.timeline.load", error);
+    return (
+      <main className="page timeline-page">
+        <h1 className="home-title">{HEADLINE}</h1>
+        <p className="notice">We couldn&apos;t load the timeline right now. Please try again in a moment.</p>
+      </main>
+    );
   }
 
+  const timeline = buildTimeline(page.items.map(toPublicProgram), today, saved);
+  const summary = summariseTimeline(timeline);
+  const chart = chartFor(timeline, today);
   return (
-    <main className="page home">
-      <h1 className="home-title">Graduate and internship programs, checked against you.</h1>
+    <main className="page timeline-page">
+      <h1 className="home-title">{HEADLINE}</h1>
       <p className="home-lede muted">
-        Every program links to the employer&apos;s own page. We show whether you&apos;re eligible,
-        and say so plainly when we can&apos;t tell.
+        Large employers rarely announce when they open. Each bar shows when a program&apos;s applications are
+        open, so you can see what to prepare for and when. Where an employer hasn&apos;t published dates, the bar
+        shows when they were open in past years.
       </p>
-
-      {!parsed.ok && (
+      <ul className="summary" aria-label="Programs at a glance">
+        <li>{count(summary.total, "program", "programs")}</li>
+        <li>{summary.openNow} open now</li>
+        <li>{summary.openingSoon} opening soon</li>
+        <li>{summary.estimated} estimated from earlier years</li>
+        <li>{summary.notAnnounced} with no dates announced</li>
+      </ul>
+      <p>
+        <Link href="/programs">Browse all programs</Link>
+      </p>
+      {page.items.length < page.total && (
         <p className="notice">
-          Some filters in that link weren&apos;t valid, so they were ignored.{" "}
-          <Link href="/">Clear filters</Link>
+          Showing the first {page.items.length} of {page.total} programs.
         </p>
       )}
-
-      {page === undefined ? (
-        <p className="notice">We couldn&apos;t load programs right now. Please try again in a moment.</p>
-      ) : (
-        <ProgramFeed
-          programs={page.items.map(toPublicProgram)}
-          total={page.total}
-          query={query}
-          prompt={viewer.prompt}
-          {...(viewer.eligibility === undefined ? {} : { eligibility: viewer.eligibility })}
-        />
-      )}
-
+      <TimelineChart chart={chart} />
       <p className="home-footnote muted">
-        Eligibility is a guide: always confirm on the employer&apos;s own page before you apply.
+        Dates change: always confirm on the employer&apos;s own page before you plan around one.
       </p>
     </main>
   );
