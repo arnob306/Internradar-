@@ -35,6 +35,7 @@ function item(slug: string, overrides: Partial<ProgramListItem> = {}): ProgramLi
     windows: [],
     eligibilityRules: { schemaVersion: 1 },
     rulesVerified: true,
+    applicationStages: [],
     rulesVersion: 1,
     ...overrides,
   };

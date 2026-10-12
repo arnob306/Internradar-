@@ -21,6 +21,7 @@ const found: ProgramListItem = {
   windows: [],
   eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } },
   rulesVerified: true,
+  applicationStages: [],
   rulesVersion: 1,
 };
 

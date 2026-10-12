@@ -40,6 +40,7 @@ function item(overrides: Partial<ProgramListItem> = {}): ProgramListItem {
     windows: [],
     eligibilityRules: { schemaVersion: 1 },
     rulesVerified: true,
+    applicationStages: [],
     rulesVersion: 1,
     ...overrides,
   };

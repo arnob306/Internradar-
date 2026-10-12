@@ -17,6 +17,7 @@ function program(overrides: Partial<PublicProgram> = {}): PublicProgram {
     status: "open",
     windows: [],
     rulesVerified: true,
+    applicationStages: [],
     ...overrides,
   };
 }
@@ -214,5 +215,50 @@ describe("ProgramDetail: saving to the tracker", () => {
     expect(screen.queryByRole("button", { name: "Save to my tracker" })).toBeNull();
     const link = screen.getByRole("link", { name: "Sign in to save this program" });
     expect(link.getAttribute("href")).toBe("/login?next=%2Fprograms%2Fey-australia%2Fgraduate-program");
+  });
+});
+
+describe("ProgramDetail: how to prepare and apply", () => {
+  const stages = [
+    { name: "Online application", description: "Your CV and a short form.", sourceUrl: "https://www.ey.com/apply" },
+    { name: "Video interview", description: null, sourceUrl: "https://www.ey.com/process" },
+  ];
+
+  it("lists the stages in the employer's order, each with a link to where it was described", () => {
+    render(<ProgramDetail program={program({ applicationStages: stages })} />);
+
+    const section = screen.getByRole("region", { name: "How to prepare and apply" });
+    const items = within(section).getAllByRole("listitem");
+    expect(items.map((item) => item.querySelector("strong")?.textContent)).toEqual([
+      "Online application",
+      "Video interview",
+    ]);
+    expect(within(items[0] as HTMLElement).getByText("Your CV and a short form.")).toBeTruthy();
+    const link = within(items[1] as HTMLElement).getByRole("link", { name: "Where this is described" });
+    expect(link.getAttribute("href")).toBe("https://www.ey.com/process");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+  });
+
+  it("tells the student to check the employer's page, since stages can change", () => {
+    render(<ProgramDetail program={program({ applicationStages: stages })} />);
+
+    const section = screen.getByRole("region", { name: "How to prepare and apply" });
+    expect(section.textContent).toMatch(/confirm on the employer.s page/i);
+  });
+
+  it("says plainly when the employer has not published the stages, and invents none", () => {
+    render(<ProgramDetail program={program({ applicationStages: [] })} />);
+
+    const section = screen.getByRole("region", { name: "How to prepare and apply" });
+    expect(within(section).getByText(/stages aren.t published/i)).toBeTruthy();
+    expect(within(section).queryAllByRole("listitem")).toHaveLength(0);
+  });
+
+  it("puts the apply link in the section, beside the preparation advice", () => {
+    render(<ProgramDetail program={program()} />);
+
+    const section = screen.getByRole("region", { name: "How to prepare and apply" });
+    const apply = within(section).getByRole("link", { name: /Apply on EY Australia.s site/ });
+    expect(apply.getAttribute("href")).toBe("https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities");
   });
 });

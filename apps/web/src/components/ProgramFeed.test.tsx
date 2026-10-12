@@ -18,6 +18,7 @@ function program(name: string): PublicProgram {
     status: "open",
     windows: [],
     rulesVerified: true,
+    applicationStages: [],
   };
 }
 

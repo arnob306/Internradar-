@@ -21,6 +21,7 @@ function program(overrides: Partial<EligibilityInput> = {}): EligibilityInput {
     windows: [window()],
     eligibilityRules: { schemaVersion: 1 },
     rulesVerified: true,
+    applicationStages: [],
     rulesVersion: 1,
     ...overrides,
   };

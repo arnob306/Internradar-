@@ -22,6 +22,7 @@ function item(name: string): ProgramListItem {
     windows: [],
     eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } },
     rulesVerified: true,
+    applicationStages: [],
     rulesVersion: 1,
   };
 }
@@ -90,6 +91,7 @@ describe("GET /api/v1/programs", () => {
 
     const [program] = body.success ? body.data : [];
     expect(Object.keys(program ?? {}).sort()).toEqual([
+      "applicationStages",
       "cities",
       "company",
       "disciplines",
