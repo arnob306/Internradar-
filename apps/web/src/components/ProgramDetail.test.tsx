@@ -65,7 +65,7 @@ describe("ProgramDetail: the program", () => {
   it("links back to all programs", () => {
     render(<ProgramDetail program={program()} />);
 
-    expect(screen.getByRole("link", { name: "All programs" }).getAttribute("href")).toBe("/");
+    expect(screen.getByRole("link", { name: "All programs" }).getAttribute("href")).toBe("/programs");
   });
 });
 

@@ -13,7 +13,7 @@ beforeEach(() => {
 
 describe("SiteHeader", () => {
   it("marks only the link for the page being viewed as current", () => {
-    pathname.mockReturnValue("/timeline");
+    pathname.mockReturnValue("/");
     render(<SiteHeader signedIn />);
 
     const nav = screen.getByRole("navigation", { name: "Main" });
@@ -30,6 +30,7 @@ describe("SiteHeader", () => {
     pathname.mockReturnValue("/programs/co/prog");
     render(<SiteHeader />);
     expect(screen.getByRole("link", { name: "Programs" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("aria-current")).toBeNull();
   });
 
   it("marks nothing as current on a page the navigation does not list", () => {
@@ -47,13 +48,14 @@ describe("SiteHeader", () => {
     expect(screen.getByRole("link", { name: /InternRadar/ }).getAttribute("href")).toBe("/");
   });
 
-  it("has a labelled main navigation with Programs marked as the current page", () => {
+  it("has a labelled main navigation with Timeline marked as the current page on the home page", () => {
     render(<SiteHeader />);
 
     const nav = screen.getByRole("navigation", { name: "Main" });
-    const programs = nav.querySelector("a[href='/']");
-    expect(programs?.textContent).toBe("Programs");
-    expect(programs?.getAttribute("aria-current")).toBe("page");
+    const timeline = nav.querySelector("a[href='/']");
+    expect(timeline?.textContent).toBe("Timeline");
+    expect(timeline?.getAttribute("aria-current")).toBe("page");
+    expect(nav.querySelector("a[href='/programs']")?.getAttribute("aria-current")).toBeNull();
   });
 
   it("offers a visitor a way in, and nothing that needs an account", () => {
@@ -83,13 +85,15 @@ describe("SiteHeader", () => {
     expect(screen.queryByRole("link", { name: "Tracker" })).toBeNull();
   });
 
-  it("links everyone, signed in or not, to the timeline", () => {
+  it("links everyone, signed in or not, to the timeline and the list of programs", () => {
     const { unmount } = render(<SiteHeader />);
-    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/timeline");
+    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/");
+    expect(screen.getByRole("link", { name: "Programs" }).getAttribute("href")).toBe("/programs");
     unmount();
 
     render(<SiteHeader signedIn />);
-    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/timeline");
+    expect(screen.getByRole("link", { name: "Timeline" }).getAttribute("href")).toBe("/");
+    expect(screen.getByRole("link", { name: "Programs" }).getAttribute("href")).toBe("/programs");
   });
 
   it("treats the absence of the prop as a visitor", () => {

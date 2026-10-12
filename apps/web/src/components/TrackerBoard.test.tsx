@@ -43,7 +43,7 @@ describe("TrackerBoard: what it shows", () => {
     render(<TrackerBoard initial={[]} />);
 
     expect(screen.getByText(/haven't saved any programs/i)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Browse programs" }).getAttribute("href")).toBe("/");
+    expect(screen.getByRole("link", { name: "Browse programs" }).getAttribute("href")).toBe("/programs");
   });
 
   it("lists each program with its employer, intake and status in words, linking to the program", () => {

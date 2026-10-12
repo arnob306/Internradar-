@@ -47,10 +47,10 @@ describe("ProgramFeed", () => {
   it("offers filters as plain links that name the choice", () => {
     render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query()} />);
 
-    expect(hrefOf("All programs")).toBe("/");
-    expect(hrefOf("Graduate")).toBe("/?type=graduate");
-    expect(hrefOf("Vacationer")).toBe("/?type=vacationer");
-    expect(hrefOf("Open now")).toBe("/?openNow=true");
+    expect(hrefOf("All programs")).toBe("/programs");
+    expect(hrefOf("Graduate")).toBe("/programs?type=graduate");
+    expect(hrefOf("Vacationer")).toBe("/programs?type=vacationer");
+    expect(hrefOf("Open now")).toBe("/programs?openNow=true");
   });
 
   it("marks the current choice for screen readers, not only by colour", () => {
@@ -73,14 +73,14 @@ describe("ProgramFeed", () => {
   it("clicking the current type again switches it off", () => {
     render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query({ type: "graduate" })} />);
 
-    expect(hrefOf("Graduate")).toBe("/");
+    expect(hrefOf("Graduate")).toBe("/programs");
   });
 
   it("explains an empty result and offers a way out", () => {
     render(<ProgramFeed programs={[]} total={0} query={query({ openNow: true })} />);
 
     expect(screen.getByText("No programs match these filters.")).toBeTruthy();
-    expect(hrefOf("Clear filters")).toBe("/");
+    expect(hrefOf("Clear filters")).toBe("/programs");
     expect(screen.queryByText(/page \d/i)).toBeNull();
   });
 
@@ -126,7 +126,7 @@ describe("ProgramFeed", () => {
     );
 
     expect(screen.getByText("Page 1 of 3")).toBeTruthy();
-    expect(hrefOf(/next/i)).toBe("/?type=graduate&offset=20");
+    expect(hrefOf(/next/i)).toBe("/programs?type=graduate&offset=20");
     expect(screen.queryByRole("link", { name: /previous/i })).toBeNull();
   });
 
@@ -136,8 +136,8 @@ describe("ProgramFeed", () => {
     );
 
     expect(screen.getByText("Page 2 of 3")).toBeTruthy();
-    expect(hrefOf(/previous/i)).toBe("/");
-    expect(hrefOf(/next/i)).toBe("/?offset=40");
+    expect(hrefOf(/previous/i)).toBe("/programs");
+    expect(hrefOf(/next/i)).toBe("/programs?offset=40");
     unmount();
 
     render(<ProgramFeed programs={[program("Alpha")]} total={45} query={query({ offset: 40 })} />);

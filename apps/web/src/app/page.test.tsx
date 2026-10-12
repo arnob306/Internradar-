@@ -1,194 +1,159 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProgramListItem } from "../server/programs/list-programs";
 
-const listPrograms = vi.fn();
-const logFailure = vi.fn();
-vi.mock("../server/log", () => ({ logFailure: (...args: unknown[]) => logFailure(...args) }));
-vi.mock("../server/programs/list-programs", () => ({ listPrograms: (...args: unknown[]) => listPrograms(...args) }));
 const getUser = vi.fn();
-const loadProfile = vi.fn();
+const listPrograms = vi.fn();
+const listApplications = vi.fn();
+const logFailure = vi.fn();
+
+vi.mock("../server/log", () => ({ logFailure: (...args: unknown[]) => logFailure(...args) }));
 vi.mock("../server/auth/request-session", () => ({
-  sessionClientForRequest: () => Promise.resolve({ marker: "session-client", auth: { getUser } }),
+  sessionClientForRequest: () => Promise.resolve({ auth: { getUser }, marker: "session-client" }),
 }));
-vi.mock("../server/profile/profile-repo", () => ({ loadProfile: (...args: unknown[]) => loadProfile(...args) }));
+vi.mock("../server/programs/list-programs", () => ({
+  listPrograms: (...args: unknown[]) => listPrograms(...args),
+}));
+vi.mock("../server/applications/applications-repo", () => ({
+  listApplications: (...args: unknown[]) => listApplications(...args),
+}));
 
 import HomePage from "./page";
 
-function item(name: string): ProgramListItem {
+function item(slug: string, overrides: Partial<ProgramListItem> = {}): ProgramListItem {
   return {
-    id: name,
-    slug: name.toLowerCase(),
-    name,
+    id: `id-${slug}`,
+    slug,
+    name: `Program ${slug}`,
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
-    sourceUrl: "https://example.com/x",
-    company: { slug: "example-co", name: "Example Co", careersUrl: "https://example.com" },
-    status: "open",
+    sourceUrl: "https://example.com/p",
+    company: { slug: `co-${slug}`, name: `Company ${slug}`, careersUrl: "https://example.com" },
+    status: "unknown",
     windows: [],
     eligibilityRules: { schemaVersion: 1 },
-    rulesVerified: false,
+    rulesVerified: true,
     rulesVersion: 1,
+    ...overrides,
   };
 }
 
-async function show(params: Record<string, string | string[] | undefined> = {}) {
-  render(await HomePage({ searchParams: Promise.resolve(params) }));
-}
+const upcomingWindow = {
+  cycleYear: 2027,
+  windowSeq: 1,
+  opensOn: "2026-11-15",
+  opensPrecision: "day" as const,
+  closesOn: null,
+  closesPrecision: null,
+  programStartsOn: null,
+  programEndsOn: null,
+  status: "upcoming" as const,
+  sourceUrl: "https://example.com/w",
+};
 
 beforeEach(() => {
   // 14:00 UTC on 3 Oct is already 4 Oct in Melbourne.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-03T14:00:00Z"));
-  listPrograms.mockReset();
-  logFailure.mockReset();
   getUser.mockReset().mockResolvedValue({ data: { user: null } });
-  loadProfile.mockReset().mockResolvedValue(null);
-  listPrograms.mockResolvedValue({ items: [item("Alpha"), item("Beta")], total: 2 });
-});
-afterEach(() => vi.useRealTimers());
-
-const STUDENT = {
-  expectedGraduation: { year: 2026, month: 11 },
-  degreeLevel: "undergraduate",
-  disciplines: ["computer_science"],
-  isDoubleDegree: false,
-  planningHonours: false,
-  citizenship: "au_citizen",
-  university: null,
-  emailAlerts: true,
-};
-
-describe("eligibility on the home page", () => {
-  it("asks a visitor to sign in, and never loads a profile for them", async () => {
-    await show();
-
-    expect(screen.getAllByRole("link", { name: "Sign in to check if you're eligible." })).toHaveLength(2);
-    expect(loadProfile).not.toHaveBeenCalled();
-  });
-
-  it("asks a signed-in student with no profile to add one", async () => {
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
-
-    await show();
-
-    expect(screen.getAllByRole("link", { name: "Add your profile to check if you're eligible." })).toHaveLength(2);
-    expect(screen.queryByText(/Sign in to check/)).toBeNull();
-  });
-
-  it("shows each program's answer to a signed-in student with a profile", async () => {
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
-    loadProfile.mockResolvedValue(STUDENT);
-    listPrograms.mockResolvedValue({
-      items: [
-        { ...item("Alpha"), rulesVerified: true, eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } } },
-        { ...item("Beta"), rulesVerified: false },
-      ],
-      total: 2,
-    });
-
-    await show();
-
-    expect(screen.getByText("Eligible")).toBeTruthy();
-    expect(screen.getByText("Check requirements")).toBeTruthy();
-    expect(screen.queryByText(/to check if you're eligible/)).toBeNull();
-  });
-
-  it("still shows the programs, and records the failure safely, if the profile cannot be loaded", async () => {
-    const failure = new Error("connection refused");
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
-    loadProfile.mockRejectedValue(failure);
-
-    await show();
-
-    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
-    expect(logFailure).toHaveBeenCalledExactlyOnceWith("viewer.profile", failure);
-  });
-
-  it("does not trust a session lookup that fails: the page loads as for a visitor", async () => {
-    getUser.mockRejectedValue(new Error("auth down"));
-
-    await show();
-
-    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: "Sign in to check if you're eligible." })).toHaveLength(2);
-  });
+  listPrograms.mockReset().mockResolvedValue({ items: [item("a", { windows: [upcomingWindow], status: "upcoming" })], total: 1 });
+  listApplications.mockReset().mockResolvedValue([]);
+  logFailure.mockReset();
 });
 
 describe("the home page", () => {
-  it("shows the feed from the data layer", async () => {
-    await show();
+  it("shows a visitor the timeline without asking for an account or looking up a tracker", async () => {
+    render(await HomePage());
 
-    expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("checked against you");
-    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Beta/ })).toBeTruthy();
-    expect(screen.getByText("2 programs")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1, name: "Never miss an application window." })).toBeTruthy();
+    expect(within(screen.getByRole("table", { name: "Applications over the next twelve months" })).getByText("Program a")).toBeTruthy();
+    expect(listApplications).not.toHaveBeenCalled();
   });
 
-  it("asks the data layer with the parsed filters and today's Melbourne date, as a visitor", async () => {
-    await show({ type: "graduate", openNow: "true", limit: "5" });
+  it("reads all programs as whoever is asking, using today's Melbourne date", async () => {
+    render(await HomePage());
 
-    expect(listPrograms).toHaveBeenCalledWith(
-      { marker: "session-client", auth: { getUser } },
-      { limit: 5, offset: 0, type: "graduate", discipline: undefined, openNow: true },
+    expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ marker: "session-client" }),
+      expect.objectContaining({ limit: 100, offset: 0, type: undefined, discipline: undefined, openNow: false }),
       "2026-10-04",
     );
   });
 
-  it("ignores filters that are not valid, says so, and still shows the programs", async () => {
-    await show({ limit: "0", sort: "name" });
+  it("badges the programs a signed-in student has saved", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    listApplications.mockResolvedValue([{ programId: "id-a" }]);
 
-    expect(screen.getByText(/weren.t valid, so they were ignored/)).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Alpha/ })).toBeTruthy();
-    expect(listPrograms).toHaveBeenCalledWith(
-      expect.anything(),
-      { limit: 20, offset: 0, type: undefined, discipline: undefined, openNow: false },
-      "2026-10-04",
-    );
+    render(await HomePage());
+
+    expect(within(screen.getByRole("row", { name: /Program a/ })).getByText("Saved")).toBeTruthy();
   });
 
-  it("treats a filter given twice as invalid rather than picking one", async () => {
-    await show({ type: ["graduate", "vacationer"] });
+  it("still shows the timeline, and logs a safe summary, when the saved programs cannot be read", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    listApplications.mockRejectedValue(new Error("db password=hunter2"));
 
-    expect(screen.getByText(/weren.t valid, so they were ignored/)).toBeTruthy();
+    render(await HomePage());
+
+    expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
+    expect(screen.queryByText("Saved")).toBeNull();
+    expect(logFailure).toHaveBeenCalledWith("page.timeline.saved", expect.any(Error));
+    expect(document.body.textContent).not.toMatch(/hunter2/);
   });
 
-  it("says nothing about filters when they are fine", async () => {
-    await show({ type: "graduate" });
+  it("treats a session that cannot be read as a visitor", async () => {
+    getUser.mockRejectedValue(new Error("session store down"));
 
-    expect(screen.queryByText(/weren.t valid/)).toBeNull();
+    render(await HomePage());
+
+    expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
+    expect(listApplications).not.toHaveBeenCalled();
+    expect(logFailure).toHaveBeenCalledWith("page.timeline.session", expect.any(Error));
   });
 
-  it("shows a calm message, and no internals, when the data layer fails", async () => {
-    listPrograms.mockRejectedValue(new Error('relation "public.programs" does not exist'));
+  it("says so, and logs only a safe summary, when programs cannot be loaded", async () => {
+    listPrograms.mockRejectedValue(new Error("db password=hunter2"));
 
-    await show();
+    render(await HomePage());
 
-    expect(screen.getByText(/couldn.t load programs right now/)).toBeTruthy();
-    expect(document.body.textContent).not.toMatch(/relation|public\.programs|does not exist/);
-    expect(screen.queryByRole("link", { name: /Alpha/ })).toBeNull();
+    expect(screen.getByText(/couldn't load the timeline/i)).toBeTruthy();
+    expect(logFailure).toHaveBeenCalledWith("page.timeline.load", expect.any(Error));
+    expect(document.body.textContent).not.toMatch(/hunter2/);
   });
 
-  it("records the failure on the server, so an outage is not silent", async () => {
-    const failure = new Error("connection refused");
-    listPrograms.mockRejectedValue(failure);
+  it("says when the list was cut short, rather than silently leaving programs out", async () => {
+    listPrograms.mockResolvedValue({ items: [item("a")], total: 150 });
 
-    await show();
+    render(await HomePage());
 
-    expect(logFailure).toHaveBeenCalledExactlyOnceWith("page.home.list", failure);
+    expect(screen.getByText(/first 1 of 150 programs/i)).toBeTruthy();
   });
 
-  it("logs nothing when the page loads fine", async () => {
-    await show();
+  it("reminds students to confirm on the employer's page", async () => {
+    render(await HomePage());
 
-    expect(logFailure).not.toHaveBeenCalled();
+    expect(screen.getByText(/confirm on the employer's own page/i)).toBeTruthy();
   });
 
-  it("reminds students to confirm on the employer's own page", async () => {
-    await show();
+  it("summarises the programs by how sure their dates are", async () => {
+    listPrograms.mockResolvedValue({
+      items: [item("a", { windows: [upcomingWindow], status: "upcoming" }), item("b"), item("c")],
+      total: 3,
+    });
 
-    expect(screen.getByText(/always confirm on the employer.s own page/)).toBeTruthy();
+    render(await HomePage());
+
+    const summary = screen.getByRole("list", { name: "Programs at a glance" });
+    expect(within(summary).getByText("3 programs")).toBeTruthy();
+    expect(within(summary).getByText("1 opening soon")).toBeTruthy();
+    expect(within(summary).getByText("2 with no dates announced")).toBeTruthy();
+  });
+
+  it("links to the full list of programs", async () => {
+    render(await HomePage());
+
+    expect(screen.getByRole("link", { name: "Browse all programs" }).getAttribute("href")).toBe("/programs");
   });
 });
