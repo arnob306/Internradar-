@@ -16,6 +16,7 @@ from internradar_ingest.seed import (
     SeedAts,
     SeedCompany,
     SeedProgram,
+    SeedStage,
     SeedWindow,
 )
 from internradar_ingest.seed_load import LoadSummary, load_catalog
@@ -265,3 +266,51 @@ def test_a_failure_part_way_loads_nothing(admin_db: Connection) -> None:
         load_catalog(admin_db, clash)
 
     assert (count(admin_db, "companies"), count(admin_db, "programs")) == (0, 0)
+
+
+def make_stage(**changes: Any) -> SeedStage:
+    base = SeedStage(
+        name="Online application",
+        description="Your CV and a short form.",
+        source_url="https://careers.example.com.au/graduates",
+    )
+    return replace(base, **changes)
+
+
+def test_application_stages_are_stored_in_the_shape_the_site_reads(admin_db: Connection) -> None:
+    stages = (make_stage(), make_stage(name="Video interview", description=None))
+    load_catalog(admin_db, make_catalog(make_program(application_stages=stages)))
+
+    assert program_row(admin_db)["application_stages"] == [
+        {
+            "name": "Online application",
+            "description": "Your CV and a short form.",
+            "sourceUrl": "https://careers.example.com.au/graduates",
+        },
+        {
+            "name": "Video interview",
+            "description": None,
+            "sourceUrl": "https://careers.example.com.au/graduates",
+        },
+    ]
+
+
+def test_a_program_with_no_stages_stores_an_empty_list_and_reloads_unchanged(
+    admin_db: Connection,
+) -> None:
+    load_catalog(admin_db, make_catalog())
+    second = load_catalog(admin_db, make_catalog())
+
+    assert program_row(admin_db)["application_stages"] == []
+    assert second == LoadSummary(inserted=0, updated=0, unchanged=3, skipped=0)
+
+
+def test_changed_stages_update_the_program_in_place(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(application_stages=(make_stage(),))))
+    summary = load_catalog(
+        admin_db,
+        make_catalog(make_program(application_stages=(make_stage(name="Assessment centre"),))),
+    )
+
+    assert program_row(admin_db)["application_stages"][0]["name"] == "Assessment centre"
+    assert summary.updated == 1
