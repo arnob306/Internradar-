@@ -91,6 +91,18 @@ companies:
           - cycle_year: 2027
             status: unknown
             source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
+          # Page, 2026 July round (read from a search result on the page, so re-read it when
+          # verifying): graduate and vacationer applications ran 1 to 22 July 2026. Given as the
+          # month only, which is what a past opening can prove. The February/March round has no
+          # stated year or day, so it is not recorded as a window.
+          - cycle_year: 2027
+            window_seq: 2
+            opens_on: 2026-07-01
+            opens_precision: month
+            closes_on: 2026-07-01
+            closes_precision: month
+            status: closed
+            source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
 
   - slug: atlassian
     name: Atlassian
@@ -201,6 +213,29 @@ companies:
             closes_precision: month
             status: upcoming
             source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
+      - slug: summer-intern-program
+        name: NAB Summer Intern Program
+        program_type: vacationer
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+        # Page (read from a search result on it, so re-read when verifying): undergraduate and
+        # postgraduate students in their second last year of study. The citizenship rule has not
+        # been read yet, so none is recorded.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: penultimate}
+        windows:
+          # Page: the 2026 applications opened Monday 6 July and closed 11:59pm AEST on Sunday
+          # 9 August 2026. The program itself runs late November to late January (not checked).
+          - cycle_year: 2026
+            opens_on: 2026-07-06
+            opens_precision: day
+            closes_on: 2026-08-09
+            closes_precision: day
+            status: closed
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
 
   - slug: anz
     name: ANZ
@@ -252,3 +287,81 @@ companies:
             closes_precision: estimated
             status: unknown
             source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+
+  - slug: kpmg-australia
+    name: KPMG Australia
+    careers_url: https://kpmg.com/au/en/careers/graduates.html
+    programs:
+      - slug: vacationer-program
+        name: KPMG Vacationer Program
+        program_type: vacationer
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+        # Page: second last year of an undergraduate or postgraduate degree; available full time
+        # for 3 to 8 weeks over the summer break.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: penultimate}
+        windows:
+          # The page says applications for 2026/27 have closed and gives no dates, and that the
+          # 2027/28 opening is not announced. The dates below are the AUTHOR'S research
+          # (2026-10-12: main intake opened 16 February and closed 3 October 2026, program
+          # starting November 2026), NOT something the page states, so they are given as months
+          # only (approximate) and must be checked before this program is verified.
+          - cycle_year: 2026
+            opens_on: 2026-02-01
+            opens_precision: month
+            closes_on: 2026-10-01
+            closes_precision: month
+            status: closed
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+      - slug: graduate-program
+        name: KPMG Graduate Program
+        program_type: graduate
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://kpmg.com/au/en/careers/graduates.html
+        # Eligibility has not been read from the page yet, so only the schema version is set.
+        eligibility_rules:
+          schemaVersion: 1
+        windows:
+          # Page: "We are accepting applications for our graduate program rolling intake"; the
+          # program starts in February each year. No closing date is stated. The author's
+          # research (2026-10-12) says it stays open until 31 October 2026, but the page does not
+          # say so, so no close date is recorded.
+          - cycle_year: 2027
+            status: open
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+
+  - slug: australian-public-service
+    name: Australian Public Service
+    careers_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs
+    programs:
+      - slug: data-stream
+        name: Australian Government Graduate Program, Data Stream
+        program_type: graduate
+        # Cities not confirmed from the page: roles are spread across agencies. Check before verifying.
+        cities: [canberra]
+        disciplines: []
+        source_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream
+        # Page (read from a search result on it, so re-read when verifying): Australian citizen
+        # who completes a bachelor degree or higher between 1 January 2022 and 31 December 2026.
+        # The window is for ONE intake and must be re-derived each cycle.
+        eligibility_rules:
+          schemaVersion: 1
+          graduationWindow:
+            earliest: {year: 2022, month: 1}
+            latest: {year: 2026, month: 12}
+          citizenship: {allowed: [au_citizen]}
+        windows:
+          # Page: "Applications will open 1 March 2027". No closing date is stated there; a 2024
+          # post gave a close about a month after opening, but that is not this cycle's date.
+          # The program starts the February after (2028).
+          - cycle_year: 2028
+            opens_on: 2027-03-01
+            opens_precision: day
+            status: upcoming
+            source_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream

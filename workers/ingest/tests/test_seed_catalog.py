@@ -7,7 +7,7 @@ unverified program fails the build instead of reaching the database.
 import json
 from pathlib import Path
 
-from internradar_ingest.seed import parse_catalog
+from internradar_ingest.seed import SeedProgram, parse_catalog
 
 REPO = Path(__file__).parents[3]
 CATALOG = REPO / "data" / "seed" / "catalog.yaml"
@@ -51,7 +51,7 @@ def test_nothing_is_published_without_a_verification_date() -> None:
             assert program.verified_on is not None or not program.is_published
 
 
-def _program(slug_company: str, slug_program: str):  # type: ignore[no-untyped-def]
+def _program(slug_company: str, slug_program: str) -> SeedProgram:
     catalog = parse_catalog(CATALOG.read_text(encoding="utf-8"), rules_schema=RULES_SCHEMA)
     for company in catalog.companies:
         if company.slug == slug_company:
@@ -77,7 +77,7 @@ def test_kpmgs_last_vacationer_round_is_given_only_as_months() -> None:
 
 
 def test_kpmgs_graduate_rolling_intake_is_open_with_no_closing_date() -> None:
-    """KPMG's page says the rolling intake is open but gives no closing date, so none is recorded."""
+    """KPMG's page says the rolling intake is open with no closing date, so none is recorded."""
     program = _program("kpmg-australia", "graduate-program")
 
     assert program.program_type == "graduate"
