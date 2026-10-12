@@ -31,6 +31,35 @@ describe("getProgram (as the anonymous role, through row-level security)", () =>
     expect(program?.status).toBe("upcoming");
   });
 
+  it("reads the application stages, in order, and drops a stage with no safe source", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, {
+        company: "acme",
+        slug: "grad",
+        name: "Acme Graduate Program",
+        applicationStages: [
+          { name: "Online application", description: "A short form.", sourceUrl: "https://acme.example/apply" },
+          { name: "Hidden source", sourceUrl: "javascript:alert(1)" },
+          { name: "Video interview", sourceUrl: "https://acme.example/process" },
+        ],
+      });
+    });
+
+    const program = await getProgram(anonClient(), company("acme"), "grad", TODAY);
+
+    expect(program?.applicationStages.map((stage) => stage.name)).toEqual(["Online application", "Video interview"]);
+  });
+
+  it("has no stages for a program that published none", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, { company: "acme", slug: "grad", name: "Acme Graduate Program" });
+    });
+
+    const program = await getProgram(anonClient(), company("acme"), "grad", TODAY);
+
+    expect(program?.applicationStages).toEqual([]);
+  });
+
   it("finds the right program when several employers use the same program slug", async () => {
     await withAdmin(async (db) => {
       await insertProgram(db, { company: "one", slug: "graduate-program", name: "One's Program" });

@@ -68,6 +68,7 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
       },
     ]);
     expect(Object.keys(item ?? {}).sort()).toEqual([
+      "applicationStages",
       "cities",
       "company",
       "disciplines",

@@ -2,6 +2,7 @@ import type { ProgramType } from "@internradar/domain";
 import type { QueryData, SupabaseClient } from "@supabase/supabase-js";
 import type { WindowStatus } from "../../components/StatusChip";
 import type { ProgramsQuery } from "../../features/programs/programs-query";
+import { parseStages, type ApplicationStage } from "../../features/programs/application-stages";
 import { programStatus, type StatusWindow } from "../../features/programs/window-status";
 import type { Database, Json } from "../db/database.types";
 
@@ -34,6 +35,8 @@ export interface ProgramListItem {
   readonly eligibilityRules: Json;
   /** False until a person has checked the rules, so the engine answers "check requirements". */
   readonly rulesVerified: boolean;
+  /** The steps the employer's own page describes, each with its source. Empty when none are published. */
+  readonly applicationStages: readonly ApplicationStage[];
   /** Which revision of the rules this is, so a result can say what it was judged against. */
   readonly rulesVersion: number;
 }
@@ -46,7 +49,7 @@ export interface ProgramsPage {
 // Explicit columns, never `select *`: only what the feed needs is ever read.
 const COLUMNS = `
   id, slug, name, program_type, cities, disciplines, source_url,
-  eligibility_rules, eligibility_rules_version, eligibility_verified_at,
+  eligibility_rules, eligibility_rules_version, eligibility_verified_at, application_stages,
   companies!inner ( slug, name, careers_url ),
   program_windows ( cycle_year, window_seq, opens_on, opens_precision, closes_on,
                     closes_precision, program_starts_on, program_ends_on, status, source_url )
@@ -113,6 +116,7 @@ function toListItem(row: ProgramRow, today: string): ProgramListItem {
     windows,
     eligibilityRules: row.eligibility_rules,
     rulesVerified: row.eligibility_verified_at !== null,
+    applicationStages: parseStages(row.application_stages),
     rulesVersion: row.eligibility_rules_version,
   };
 }

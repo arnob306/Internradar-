@@ -114,17 +114,30 @@ export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved 
               </ul>
             )}
           </section>
-        </div>
 
-        <aside className="detail-side">
-          <div className="detail-panel">
-            {prompt === "sign-in" ? (
-              <Link href={`/login?next=${encodeURIComponent(path)}`}>Sign in to save this program</Link>
+          <section className="detail-panel" aria-labelledby="prepare-heading">
+            <h2 id="prepare-heading">How to prepare and apply</h2>
+            {program.applicationStages.length === 0 ? (
+              <p>The employer&apos;s application stages aren&apos;t published here yet. Read the process on their page.</p>
             ) : (
-              <SaveProgramButton programId={program.id} initiallySaved={saved} />
+              <>
+                <p className="muted">
+                  The steps the employer describes, in their order. Confirm on the employer&apos;s page, because
+                  employers change them.
+                </p>
+                <ol className="detail-windows" aria-label="Application stages">
+                  {program.applicationStages.map((stage) => (
+                    <li key={stage.name}>
+                      <strong>{stage.name}</strong>
+                      {stage.description !== null && <span>{stage.description}</span>}
+                      <a className="detail-note" href={stage.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        Where this is described
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </>
             )}
-          </div>
-          <div className="detail-panel">
             {applyUrl === null ? (
               <p>We couldn&apos;t show a safe link to the employer&apos;s page.</p>
             ) : (
@@ -134,6 +147,16 @@ export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved 
                 </a>
                 <p className="muted">Opens the employer&apos;s own page in a new tab.</p>
               </>
+            )}
+          </section>
+        </div>
+
+        <aside className="detail-side">
+          <div className="detail-panel">
+            {prompt === "sign-in" ? (
+              <Link href={`/login?next=${encodeURIComponent(path)}`}>Sign in to save this program</Link>
+            ) : (
+              <SaveProgramButton programId={program.id} initiallySaved={saved} />
             )}
           </div>
           <div className="detail-panel">

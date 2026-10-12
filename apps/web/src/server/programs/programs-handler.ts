@@ -18,6 +18,7 @@ export interface PublicProgram {
   readonly status: ProgramListItem["status"];
   readonly windows: readonly ProgramWindowItem[];
   readonly rulesVerified: boolean;
+  readonly applicationStages: ProgramListItem["applicationStages"];
 }
 
 export interface ProgramsHandlerDeps {
@@ -61,6 +62,7 @@ export function toPublicProgram(item: ProgramListItem): PublicProgram {
     status: item.status,
     windows: item.windows,
     rulesVerified: item.rulesVerified,
+    applicationStages: item.applicationStages,
   };
 }
 
