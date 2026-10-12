@@ -52,6 +52,25 @@ the exact dates on the page before anything is written to the seed.
 | ANZ summer internship June to July | **Not found** | [ANZ](https://www.anz.com.au/careers/programs/summer-intern/) | Eligibility (penultimate year) is stated; I found no dates. |
 | Data and Digital Cadet opens 1 April; student placements open 1 December; Treasury and Defence internships | **Not checked** | | Check on APS Jobs and each department's page. |
 
+### KPMG details pasted on 2026-10-12
+
+You pasted: a main vacationer intake opened 16 February 2026 and closed 3 October 2026 (November 2026
+start), and a rolling graduate intake open until 31 October 2026 (February 2027 start). I read KPMG's
+two pages ([vacationer](https://kpmg.com/au/en/careers/graduates/vacation-program.html),
+[graduates](https://kpmg.com/au/en/careers/graduates.html)):
+
+| Pasted detail | What KPMG's pages say |
+|---|---|
+| Vacationer applications closed | **Matches:** "applications for 2026/27 have closed", and the 2027/28 opening is not announced. |
+| Opened 16 February, closed 3 October 2026 | **Not stated** on either page. Possibly right (the close would be consistent with it being closed now), but unconfirmed. |
+| Graduate rolling intake is open | **Matches:** the page says it is accepting applications for the graduate rolling intake. |
+| Rolling intake open until 31 October 2026 | **Not stated.** No closing date is given. |
+| Graduate program starts in February | **Matches in general:** the program starts in February each year. |
+
+So KPMG's open/closed state is confirmed, but the specific dates are not, and **none of them should go
+into the seed yet.** If you have the source for them (an email, a university careers page, or a KPMG
+page I did not see), send me the address and I will check it.
+
 ### What this means for the catalogue
 
 - **Programs missing from the seed:** KPMG (graduate and vacationer), and the Australian Government
