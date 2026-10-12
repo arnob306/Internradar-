@@ -379,7 +379,9 @@ def test_a_stage_must_say_where_it_came_from() -> None:
 
 
 def test_a_stage_may_not_cite_an_aggregator() -> None:
-    problems = problems_for(catalog_with_stages([stage(source_url="https://www.seek.com.au/job/1")]))
+    problems = problems_for(
+        catalog_with_stages([stage(source_url="https://www.seek.com.au/job/1")])
+    )
 
     assert any("not an allowed URL" in p for p in problems)
 
@@ -396,4 +398,6 @@ def test_stages_must_be_a_short_list() -> None:
 
 
 def test_a_stage_description_must_be_text() -> None:
-    assert any("description" in p for p in problems_for(catalog_with_stages([stage(description=5)])))
+    assert any(
+        "description" in p for p in problems_for(catalog_with_stages([stage(description=5)]))
+    )

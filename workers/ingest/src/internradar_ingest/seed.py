@@ -49,7 +49,10 @@ _PROGRAM_KEYS = {
     "verified_on",
     "is_published",
     "windows",
+    "application_stages",
 }
+_STAGE_KEYS = {"name", "description", "source_url"}
+_MAX_STAGES = 12
 _WINDOW_KEYS = {
     "cycle_year",
     "window_seq",
@@ -93,6 +96,15 @@ class SeedWindow:
 
 
 @dataclass(frozen=True)
+class SeedStage:
+    """One step of the employer's application process, with the page that describes it."""
+
+    name: str
+    description: str | None
+    source_url: str
+
+
+@dataclass(frozen=True)
 class SeedProgram:
     slug: str
     name: str
@@ -104,6 +116,7 @@ class SeedProgram:
     verified_on: date | None
     is_published: bool
     windows: tuple[SeedWindow, ...]
+    application_stages: tuple[SeedStage, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -295,6 +308,32 @@ def _verification(data: Mapping[str, Any], where: str, ctx: _Context) -> tuple[d
     return verified_on, is_published
 
 
+def _stage(raw: object, where: str, ctx: _Context) -> SeedStage:
+    data = _mapping(raw, where, _STAGE_KEYS, ctx)
+    description = data.get("description")
+    if description is not None and not isinstance(description, str):
+        ctx.fail(where, "description must be text")
+        description = None
+    return SeedStage(
+        name=_text(data, "name", where, ctx),
+        description=description.strip() or None if isinstance(description, str) else None,
+        source_url=_url(data, "source_url", where, ctx),
+    )
+
+
+def _stages(raw: object, where: str, ctx: _Context) -> tuple[SeedStage, ...]:
+    """The steps in the employer's order. Each must cite the page that describes it."""
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        ctx.fail(where, "application_stages must be a list")
+        return ()
+    if len(raw) > _MAX_STAGES:
+        ctx.fail(where, f"application_stages has {len(raw)} items; at most {_MAX_STAGES}")
+        return ()
+    return tuple(_stage(item, f"{where} stage {i + 1}", ctx) for i, item in enumerate(raw))
+
+
 def _program(raw: object, where: str, ctx: _Context) -> SeedProgram:
     data = _mapping(raw, where, _PROGRAM_KEYS, ctx)
     verified_on, is_published = _verification(data, where, ctx)
@@ -310,6 +349,7 @@ def _program(raw: object, where: str, ctx: _Context) -> SeedProgram:
         verified_on=verified_on,
         is_published=is_published,
         windows=_windows(data.get("windows"), where, ctx),
+        application_stages=_stages(data.get("application_stages"), where, ctx),
     )
 
 
