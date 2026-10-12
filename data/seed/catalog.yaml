@@ -41,6 +41,20 @@ companies:
             earliest: {year: 2024, month: 3}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as CommBank's "How to apply" page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: A short form of about 10 minutes. Have your resume and latest transcript ready, and choose the area you are most interested in.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Online assessment
+            description: If your application is successful you are invited to three assessments, a Talent Screener, Numerical Reasoning and Inductive Reasoning.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Digital interview
+            description: Short pre-recorded questions answered to the camera on your computer or phone.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Assessment centre
+            description: Group activities and interviews with business leaders, held virtually or in person.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
         windows:
           # Page: "Applications open March and August", program starts mid-February after.
           - cycle_year: 2027
@@ -176,6 +190,21 @@ companies:
             earliest: {year: 2024, month: 10}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as EY's student application hub describes them (read 2026-10-13). EY says the
+        # process "may include" these steps, which vary by role; it takes about four to six weeks.
+        application_stages:
+          - name: Online application
+            description: Submit your CV, academic transcript and photo ID, and confirm you meet the eligibility requirements.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Motivation survey
+            description: Eligible candidates may be asked about their interests and why they applied to EY.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Online assessment or job simulation
+            description: Realistic scenarios with multiple choice, rank order, sliders and video. It has no time limit and usually takes 45 to 60 minutes.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Interview or recruitment day
+            description: Shortlisted candidates may have a 45 to 60 minute interview with one or two EY people, and may do a group activity or case study.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
         windows:
           # Page: "Our 2027 Graduate Program is open for applications"; reviewed on a rolling
           # basis and roles may close once filled, so no closing date.
@@ -202,6 +231,20 @@ companies:
             earliest: {year: 2025, month: 1}
             latest: {year: 2028, month: 1}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as NAB's graduate application process page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: Share your academic and work experience and choose the business area you want to join.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Online assessment
+            description: Done at home. It covers personality, verbal reasoning, numerical reasoning and logical reasoning.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Video interview
+            description: You record answers to a few questions on a secure site, at a time and place that suits you.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Engagement Centre
+            description: NAB's final stage, with interactive activities and time with the early careers team, current graduates and business leaders.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
         windows:
           # Page, 2028 program: "Applications open: February 2027; close: March 2027". The
           # same page also says applications "are now open", which contradicts those dates:
