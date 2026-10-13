@@ -73,6 +73,31 @@ date text ("Open now. No closing date listed.") and again in the advice ("No clo
 |---|---|
 | `7b948f6`: 3 tests failed (the advice text, a row assertion, and a new "says it once" test) | `3fe8f04`: the advice is now "Apply soon."; the affected files pass, then lint, typecheck, 947 unit tests (97.11% statements, 95.86% branches), build and the 11 guard tests all exit 0 |
 
+## A compact top for the home page (so the chart is on screen)
+
+The chart's first row started below the fold at 1280x720. The intro, five summary pills, the filters, a separate
+link, a three-line note and the legend all sat above it. Layout is CSS, which jsdom cannot measure, so the
+RED/GREEN here is two parts: structure and copy guarded by unit tests, and the position measured in Chrome.
+
+| | RED (`c3f2be8`) | GREEN |
+|---|---|---|
+| Guard tests | 2 failed: the intro was over 160 characters, and the filters and the "Browse all programs" link were not in one toolbar | `page.test.tsx` 18 of 18, `accessibility.test.tsx` 7 of 7 |
+| First chart row, top edge at 1280x720 | 727 px (below the 720 px fold) | 451 px; the first two rows end by 690 px |
+| At 1440x900 | (not measured before) | first row at 451 px, 3 rows fully visible |
+| Page height (full-page screenshot) | 3897 px | 3458 px |
+
+What changed: the intro is one sentence (the solid-versus-dashed explanation stays in the chart note, which a test
+protects), the summary is a single line of text above the filters, the filters and the link to all programs share a
+toolbar, and spacing is tighter. The rules are scoped to `.timeline-page`, so the programs feed is unchanged.
+
+A bug I introduced and fixed on the way: the separator between summary items was written as a CSS escape that was
+saved with a NUL byte, so the browser showed "b7" with a replacement character. Seen in the screenshot, replaced
+with a literal middle dot, and confirmed in the browser (`::before` content is a middle dot).
+
+After the change: `pnpm lint`, `pnpm typecheck`, the build and the guards (11) exit 0; 949 unit tests, 97.11%
+statements, 95.86% branches. Lighthouse accessibility is 100 on `/` for desktop and mobile, so the quieter summary
+text keeps its contrast. No page-level horizontal scroll at 501 px, the narrowest the browser window would go.
+
 ## Known gaps
 
 - Lighthouse was run on three pages, not every page. Tab order and focus rings were not walked by hand in the
