@@ -50,10 +50,33 @@ The file was restored and 9 of 9 passed again.
 - `pnpm test:coverage` at the filter's GREEN commit: 939 tests, 97.11% statements, 95.86% branches.
 - `pnpm --filter @internradar/web build`: exit 0. `pnpm --filter @internradar/guards test`: 11 passed.
 
+## Live check and the rest of the gates (Docker Desktop on, 2026-10-14)
+
+- Database reset, then `pnpm --filter @internradar/db test:db`: 169 pgTAP tests pass, `types:check` up to date.
+- `pnpm test:integration --coverage` in `apps/web`: 78 tests, 91.47% statements, 80.23% branches.
+- Python from `workers`: `ruff check`, `ruff format --check` and `mypy` clean, 408 tests plus 92 database-backed tests pass.
+- App run against the local database with the draft catalogue loaded and published. `/` shows 13 programs
+  (8 on the chart, 5 under "No date yet"); `/?type=graduate` shows 10; `/?type=vacationer` shows 3, and the summary
+  counts follow. The current link carries `aria-current`. `/?type=internship` ignores the type and shows the
+  notice; `/?utm_source=club` shows no notice. `/timeline` redirects (308). The CommBank page lists its four
+  stages with source links.
+- Lighthouse in Chrome (navigation mode): accessibility 100 on `/` (desktop), `/?type=vacationer` (mobile) and
+  the CommBank program page (desktop), with best practices, SEO and agentic browsing also 100. This includes the
+  colour-contrast checks jsdom cannot run.
+
+## A fix found by looking at the real page
+
+The first look at the running page showed the open rows saying "No closing date listed" twice: once in the
+date text ("Open now. No closing date listed.") and again in the advice ("No closing date listed. Apply soon.").
+
+| RED | GREEN |
+|---|---|
+| `7b948f6`: 3 tests failed (the advice text, a row assertion, and a new "says it once" test) | `3fe8f04`: the advice is now "Apply soon."; the affected files pass, then lint, typecheck, 947 unit tests (97.11% statements, 95.86% branches), build and the 11 guard tests all exit 0 |
+
 ## Known gaps
 
-- **Not run:** the integration tests, the database (pgTAP) tests, and the Python tests, because Docker
-  Desktop was off. No database or Python code changed in this work.
-- **Not checked in a browser:** the filter and the pages have not been seen running. jsdom cannot
-  check colour contrast, focus rings or layout, so those still need a pass in a real browser.
-- The axe checks cover components, not full pages with the header and layout.
+- Lighthouse was run on three pages, not every page. Tab order and focus rings were not walked by hand in the
+  browser; the keyboard test covers tab order for the filter bar in jsdom only.
+- The axe component checks cover components, not full pages with the header and layout.
+- The draft catalogue shown in the screenshots is unverified. Dates labelled "Confirmed" in it still need
+  checking against the employers' pages before anything is published.

@@ -12,6 +12,12 @@ A web app for Australian university students applying for internships and gradua
 - **Check eligibility** from year level, graduation date and citizenship, answered as eligible, ineligible or unknown with reasons.
 - **Save programs to a tracker** and badge them on the timeline.
 
+![The home timeline: a year chart with solid, dashed and not-announced rows](docs/images/timeline.png)
+
+![A program page with its sourced application stages and the apply link](docs/images/program-page.png)
+
+*Screenshots of the app running locally on the unverified draft catalogue. The dates and stages shown are drafts that a person still has to check against each employer's page, so they are not published facts.*
+
 The accessibility checks for these screens (axe rules for WCAG A and AA, and keyboard order through the filters) are tests that run with the rest of the suite.
 
 ## Why I'm building this
