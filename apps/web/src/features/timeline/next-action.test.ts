@@ -60,11 +60,9 @@ describe("nextAction: a program that is open now", () => {
     );
   });
 
-  it("says there is no closing date when there is none, or only a guess at one", () => {
-    expect(nextAction(open(), TODAY)).toBe("No closing date listed. Apply soon.");
-    expect(nextAction(open({ closesOn: "2027-03-01", closesPrecision: "estimated" }), TODAY)).toBe(
-      "No closing date listed. Apply soon.",
-    );
+  it("only says to apply soon when there is no closing date, or only a guess at one, because the row already says so", () => {
+    expect(nextAction(open(), TODAY)).toBe("Apply soon.");
+    expect(nextAction(open({ closesOn: "2027-03-01", closesPrecision: "estimated" }), TODAY)).toBe("Apply soon.");
   });
 });
 

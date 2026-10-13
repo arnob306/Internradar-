@@ -149,7 +149,14 @@ describe("TimelineChart: how sure each date is, and what to do next", () => {
 
     const row = screen.getByRole("row", { name: /Program a/ });
     expect(within(row).getByText("Confirmed")).toBeTruthy();
-    expect(within(row).getByText("No closing date listed. Apply soon.")).toBeTruthy();
+    expect(within(row).getByText("Apply soon.")).toBeTruthy();
+  });
+
+  it("says there is no closing date once, not again in the advice", () => {
+    show([program("a", [window({ status: "open" })])]);
+
+    const row = screen.getByRole("row", { name: /Program a/ });
+    expect(row.textContent?.match(/No closing date listed/g)).toHaveLength(1);
   });
 
   it("marks a guess from past cycles estimated and gives only the advice, not a second date", () => {
