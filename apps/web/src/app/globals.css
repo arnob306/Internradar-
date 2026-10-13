@@ -880,7 +880,7 @@ a {
 
 /* Timeline: one page of everything opening. A stated date has a solid border, a guess a dashed one. */
 .timeline-page {
-  padding-top: 72px;
+  padding-top: 40px;
   padding-bottom: 96px;
 }
 .timeline {
@@ -1003,6 +1003,49 @@ a {
 }
 .timeline-page .timeline {
   overflow-x: auto;
+}
+
+/* The top of the home page is kept compact so the chart is the first thing on screen. */
+.timeline-page .home-lede {
+  margin-top: 8px;
+  font-size: 1.0625rem;
+}
+.timeline-page .summary {
+  margin-top: 12px;
+  gap: 4px 0;
+}
+.timeline-page .summary li {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--color-muted);
+}
+.timeline-page .summary li + li::before {
+  content: "·";
+  margin: 0 10px;
+}
+.timeline-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 16px;
+}
+.timeline-page .filters {
+  margin-top: 0;
+}
+.timeline-page .timeline {
+  gap: 16px;
+  margin-top: 16px;
+}
+.timeline-page .timeline-key {
+  max-width: 100ch;
+  font-size: 0.875rem;
+}
+.timeline-page .chart-key {
+  margin: 0 0 4px;
 }
 .chart th,
 .chart td {

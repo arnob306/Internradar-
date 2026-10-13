@@ -94,9 +94,7 @@ export default async function HomePage({
     <main className="page timeline-page">
       <h1 className="home-title">{HEADLINE}</h1>
       <p className="home-lede muted">
-        Large employers rarely announce when they open. Each bar shows when a program&apos;s applications are
-        open, so you can see what to prepare for and when. Where an employer hasn&apos;t published dates, the bar
-        shows when they were open in past years.
+        Large employers rarely announce when they open. See each program&apos;s window and when to start preparing.
       </p>
       <ul className="summary" aria-label="Programs at a glance">
         <li>{count(summary.total, "program", "programs")}</li>
@@ -105,15 +103,15 @@ export default async function HomePage({
         <li>{summary.estimated} estimated from earlier years</li>
         <li>{summary.notAnnounced} with no dates announced</li>
       </ul>
-      <TimelineFilters current={filter.type} />
+      <div className="timeline-toolbar">
+        <TimelineFilters current={filter.type} />
+        <Link href="/programs">Browse all programs</Link>
+      </div>
       {!filter.isValid && (
         <p className="notice">
           The filter in that link wasn&apos;t valid, so it was ignored. <Link href="/">Show all programs</Link>
         </p>
       )}
-      <p>
-        <Link href="/programs">Browse all programs</Link>
-      </p>
       {page.items.length < page.total && (
         <p className="notice">
           Showing the first {page.items.length} of {page.total} programs.
