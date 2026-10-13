@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { TimelineChart } from "../components/TimelineChart";
+import { TimelineFilters } from "../components/TimelineFilters";
 import { melbourneDate } from "../features/programs/melbourne-date";
 import { MAX_LIMIT } from "../features/programs/programs-query";
 import { buildTimeline } from "../features/timeline/build-timeline";
 import { summariseTimeline } from "../features/timeline/summarise";
 import { chartFor } from "../features/timeline/timeline-bars";
+import { parseTimelineFilter } from "../features/timeline/timeline-filter";
 import { listApplications } from "../server/applications/applications-repo";
 import { sessionClientForRequest } from "../server/auth/request-session";
 import { logFailure } from "../server/log";
@@ -19,6 +21,7 @@ export const metadata: Metadata = { title: "When applications open" };
 export const dynamic = "force-dynamic";
 
 type Client = Awaited<ReturnType<typeof sessionClientForRequest>>;
+type SearchParams = Record<string, string | string[] | undefined>;
 
 const HEADLINE = "Never miss an application window.";
 
@@ -43,7 +46,24 @@ async function savedProgramIds(client: Client): Promise<string[]> {
 
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
-export default async function HomePage(): Promise<ReactElement> {
+function toParams(raw: SearchParams): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(raw)) {
+    for (const item of Array.isArray(value) ? value : [value]) {
+      if (item !== undefined) {
+        params.append(key, item);
+      }
+    }
+  }
+  return params;
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<SearchParams>;
+}): Promise<ReactElement> {
+  const filter = parseTimelineFilter(toParams(await searchParams));
   const today = melbourneDate(new Date());
 
   let page: ProgramsPage;
@@ -52,7 +72,7 @@ export default async function HomePage(): Promise<ReactElement> {
     const client = await sessionClientForRequest();
     page = await listPrograms(
       client,
-      { limit: MAX_LIMIT, offset: 0, type: undefined, discipline: undefined, openNow: false },
+      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, openNow: false },
       today,
     );
     saved = await savedProgramIds(client);
@@ -85,6 +105,12 @@ export default async function HomePage(): Promise<ReactElement> {
         <li>{summary.estimated} estimated from earlier years</li>
         <li>{summary.notAnnounced} with no dates announced</li>
       </ul>
+      <TimelineFilters current={filter.type} />
+      {!filter.isValid && (
+        <p className="notice">
+          The filter in that link wasn&apos;t valid, so it was ignored. <Link href="/">Show all programs</Link>
+        </p>
+      )}
       <p>
         <Link href="/programs">Browse all programs</Link>
       </p>
@@ -93,7 +119,13 @@ export default async function HomePage(): Promise<ReactElement> {
           Showing the first {page.items.length} of {page.total} programs.
         </p>
       )}
-      <TimelineChart chart={chart} />
+      {filter.type !== undefined && page.items.length === 0 ? (
+        <p className="notice">
+          No {filter.type} programs to show yet. <Link href="/">Show all programs</Link>
+        </p>
+      ) : (
+        <TimelineChart chart={chart} />
+      )}
       <p className="home-footnote muted">
         Dates change: always confirm on the employer&apos;s own page before you plan around one.
       </p>
