@@ -25,7 +25,7 @@ function whileOpen(entry: ConfirmedEntry): string {
   if (entry.closesOn !== null && entry.closesPrecision === "month") {
     return `Applications close in ${shortMonth(entry.closesOn)}. Apply early.`;
   }
-  return "No closing date listed. Apply soon.";
+  return "Apply soon.";
 }
 
 /** Preparation starts four weeks before the earliest day it could open. An estimated opening is not used. */
