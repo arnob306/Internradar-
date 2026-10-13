@@ -60,6 +60,7 @@ Before writing code I wrote a plan and had it reviewed from two angles: system a
 | [ADRs](docs/adr/README.md) | 15 records of technical decisions, with alternatives and trade-offs |
 | [Test plan](docs/testing/test-plan.md) | The tests for every phase, written before the code |
 | [Data sourcing and privacy policy](docs/ethics-policy.md) | What I fetch, how politely, and how personal data is handled |
+| [Public API spec](docs/api/openapi.yaml) | OpenAPI 3.1 for the two public program routes: fields, filters, errors, caching and the rate limit. A test keeps it in step with the code |
 | [Demo script](docs/demo-script.md) | A two-minute walkthrough, what not to claim, and answers to likely questions |
 | [Evidence reports](docs/testing/timeline-filter.tdd.md) | What each test-first change proved, with the failing and passing runs (also [application stages](docs/testing/application-stages.tdd.md)) |
 
