@@ -218,4 +218,23 @@ describe("the home page", () => {
     expect(screen.getByText(/no vacationer programs to show/i)).toBeTruthy();
     expect(screen.getAllByRole("link", { name: "Show all programs" })[0]?.getAttribute("href")).toBe("/");
   });
+
+  it("keeps the opening text to a sentence or two, so the chart stays near the top of the page", async () => {
+    render(await home());
+
+    const intro = screen.getByRole("heading", { level: 1 }).nextElementSibling;
+    expect(intro?.tagName).toBe("P");
+    expect((intro?.textContent ?? "").length).toBeLessThanOrEqual(160);
+  });
+
+  it("puts the summary above the filters, and the filters beside the link to all programs", async () => {
+    render(await home());
+
+    const summary = screen.getByRole("list", { name: "Programs at a glance" });
+    const filters = screen.getByRole("navigation", { name: "Filter the timeline" });
+    const browse = screen.getByRole("link", { name: "Browse all programs" });
+    expect(summary.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(filters.parentElement).not.toBeNull();
+    expect(filters.parentElement).toBe(browse.parentElement);
+  });
 });
