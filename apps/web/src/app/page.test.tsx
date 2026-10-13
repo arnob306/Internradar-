@@ -21,6 +21,10 @@ vi.mock("../server/applications/applications-repo", () => ({
 
 import HomePage from "./page";
 
+type Params = Record<string, string | string[] | undefined>;
+
+const home = (params: Params = {}) => HomePage({ searchParams: Promise.resolve(params) });
+
 function item(slug: string, overrides: Partial<ProgramListItem> = {}): ProgramListItem {
   return {
     id: `id-${slug}`,
@@ -66,7 +70,7 @@ beforeEach(() => {
 
 describe("the home page", () => {
   it("shows a visitor the timeline without asking for an account or looking up a tracker", async () => {
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByRole("heading", { level: 1, name: "Never miss an application window." })).toBeTruthy();
     expect(within(screen.getByRole("table", { name: "Applications over the next twelve months" })).getByText("Program a")).toBeTruthy();
@@ -74,7 +78,7 @@ describe("the home page", () => {
   });
 
   it("reads all programs as whoever is asking, using today's Melbourne date", async () => {
-    render(await HomePage());
+    render(await home());
 
     expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ marker: "session-client" }),
@@ -87,7 +91,7 @@ describe("the home page", () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
     listApplications.mockResolvedValue([{ programId: "id-a" }]);
 
-    render(await HomePage());
+    render(await home());
 
     expect(within(screen.getByRole("row", { name: /Program a/ })).getByText("Saved")).toBeTruthy();
   });
@@ -96,7 +100,7 @@ describe("the home page", () => {
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
     listApplications.mockRejectedValue(new Error("db password=hunter2"));
 
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
     expect(screen.queryByText("Saved")).toBeNull();
@@ -107,7 +111,7 @@ describe("the home page", () => {
   it("treats a session that cannot be read as a visitor", async () => {
     getUser.mockRejectedValue(new Error("session store down"));
 
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByRole("row", { name: /Program a/ })).toBeTruthy();
     expect(listApplications).not.toHaveBeenCalled();
@@ -117,7 +121,7 @@ describe("the home page", () => {
   it("says so, and logs only a safe summary, when programs cannot be loaded", async () => {
     listPrograms.mockRejectedValue(new Error("db password=hunter2"));
 
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByText(/couldn't load the timeline/i)).toBeTruthy();
     expect(logFailure).toHaveBeenCalledWith("page.timeline.load", expect.any(Error));
@@ -127,13 +131,13 @@ describe("the home page", () => {
   it("says when the list was cut short, rather than silently leaving programs out", async () => {
     listPrograms.mockResolvedValue({ items: [item("a")], total: 150 });
 
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByText(/first 1 of 150 programs/i)).toBeTruthy();
   });
 
   it("reminds students to confirm on the employer's page", async () => {
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByText(/confirm on the employer's own page/i)).toBeTruthy();
   });
@@ -144,7 +148,7 @@ describe("the home page", () => {
       total: 3,
     });
 
-    render(await HomePage());
+    render(await home());
 
     const summary = screen.getByRole("list", { name: "Programs at a glance" });
     expect(within(summary).getByText("3 programs")).toBeTruthy();
@@ -153,8 +157,65 @@ describe("the home page", () => {
   });
 
   it("links to the full list of programs", async () => {
-    render(await HomePage());
+    render(await home());
 
     expect(screen.getByRole("link", { name: "Browse all programs" }).getAttribute("href")).toBe("/programs");
+  });
+
+  it("filters to one type when the address asks for it", async () => {
+    render(await home({ type: "vacationer" }));
+
+    expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      expect.objectContaining({ type: "vacationer", limit: 100, offset: 0 }),
+      "2026-10-04",
+    );
+  });
+
+  it("offers All programs, Graduate and Vacationer as plain links, with the current one marked", async () => {
+    render(await home({ type: "graduate" }));
+
+    const filters = screen.getByRole("navigation", { name: "Filter the timeline" });
+    const links = within(filters).getAllByRole("link");
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["All programs", "/"],
+      ["Graduate", "/?type=graduate"],
+      ["Vacationer", "/?type=vacationer"],
+    ]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, "true", null]);
+  });
+
+  it("marks All programs as current when nothing is filtered", async () => {
+    render(await home());
+
+    const filters = screen.getByRole("navigation", { name: "Filter the timeline" });
+    expect(within(filters).getByRole("link", { name: "All programs" }).getAttribute("aria-current")).toBe("true");
+  });
+
+  it("ignores a type it does not offer, and says so with a way back", async () => {
+    render(await home({ type: "internship" }));
+
+    expect(screen.getByText(/filter in that link wasn't valid/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Show all programs" }).getAttribute("href")).toBe("/");
+    expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      expect.objectContaining({ type: undefined }),
+      "2026-10-04",
+    );
+  });
+
+  it("does not show the invalid-filter notice for a link with only tracking codes", async () => {
+    render(await home({ utm_source: "club" }));
+
+    expect(screen.queryByText(/wasn't valid/i)).toBeNull();
+  });
+
+  it("says plainly when a filter leaves no programs, with a link back to all of them", async () => {
+    listPrograms.mockResolvedValue({ items: [], total: 0 });
+
+    render(await home({ type: "vacationer" }));
+
+    expect(screen.getByText(/no vacationer programs to show/i)).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Show all programs" })[0]?.getAttribute("href")).toBe("/");
   });
 });
