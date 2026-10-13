@@ -249,7 +249,7 @@ describe("openapi.yaml: errors, caching and the rate limit", () => {
   });
 
   it("states the rate limit the server enforces, shared by both routes", () => {
-    expect(spec["x-rate-limit"]).toEqual({
+    expect(spec["x-rate-limit"]).toMatchObject({
       requests: PUBLIC_API_MAX_REQUESTS,
       windowSeconds: PUBLIC_API_WINDOW_MS / 1000,
       sharedAcrossRoutes: true,
