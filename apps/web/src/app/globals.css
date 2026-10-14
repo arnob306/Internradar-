@@ -1022,7 +1022,7 @@ a {
   color: var(--color-muted);
 }
 .timeline-page .summary li + li::before {
-  content: "·";
+  content: "·" / "";
   margin: 0 10px;
 }
 .timeline-toolbar {
