@@ -70,6 +70,22 @@ companies:
           schemaVersion: 1
           yearLevel: {preset: penultimate}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # CommBank's "How to apply" page gives one process for all its programs, graduate and
+        # intern alike (read 2026-10-15), so the stages repeat the graduate row's. The page
+        # adds extra team interviews for the Global Markets Summer Analyst program only.
+        application_stages:
+          - name: Online application
+            description: A short form of about 10 minutes. Have your resume and latest transcript ready, and choose the area you are most interested in.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Online assessment
+            description: If your application is successful you are invited to an online assessment that shows your strengths and capabilities.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Digital interview
+            description: Short pre-recorded questions answered to the camera. You get an email invite with 48 hours to finish.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Assessment centre
+            description: Activities and interviews with business leaders, held virtually or in person.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
         windows:
           # Page: "Applications open 12 August to 8 September, 2026"; program November 2026
           # to January 2027.
@@ -298,6 +314,21 @@ companies:
         eligibility_rules:
           schemaVersion: 1
           yearLevel: {preset: penultimate}
+        # Stages as NAB's Summer Intern page lists them (read 2026-10-15). The page also says
+        # offers are expected in early October, and that engagement centres are held by business area.
+        application_stages:
+          - name: Online application
+            description: Complete the form, choose the business area you prefer and upload your academic transcript.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Online assessment
+            description: If your application is successful you are invited to an online assessment and testing stage.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Video interview
+            description: A recorded interview that NAB reviews after the assessment closes.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Engagement Centre
+            description: The final stage, organised by business area.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
         windows:
           # Page: the 2026 applications opened Monday 6 July and closed 11:59pm AEST on Sunday
           # 9 August 2026. The program itself runs late November to late January (not checked).
@@ -408,6 +439,24 @@ companies:
         eligibility_rules:
           schemaVersion: 1
           yearLevel: {preset: penultimate}
+        # Stages as KPMG's Vacation program page describes them (read 2026-10-15). The page says
+        # some teams may ask for a transcript or other testing, so the steps can vary by team.
+        application_stages:
+          - name: Online application
+            description: A form of about five minutes. Upload a CV under two pages and give basic details about your studies and preferences. No cover letter is needed, and one application covers several roles.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Online assessments
+            description: Two online assessments, one on cognitive abilities and one on your values and leadership approach. Together they take about 45 minutes to an hour.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Shortlisting
+            description: KPMG reviews your application and results and matches your preferences to teams. It is competitive, and you may be asked for a transcript.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Interview
+            description: Selected candidates meet members of a team they could join, and may complete other testing.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Outcome
+            description: KPMG tells you the outcome. Successful candidates are told the next steps, and others receive feedback.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
         windows:
           # The page says applications for 2026/27 have closed and gives no dates, and that the
           # 2027/28 opening is not announced. The dates below are the AUTHOR'S research
