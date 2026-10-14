@@ -7,6 +7,7 @@ import {
   parseProgramsQuery,
   type ProgramsQuery,
 } from "../../features/programs/programs-query";
+import { toSearchParams, type PageSearchParams } from "../../features/programs/search-params";
 import { sessionClientForRequest } from "../../server/auth/request-session";
 import { logFailure } from "../../server/log";
 import { listPrograms, type ProgramsPage } from "../../server/programs/list-programs";
@@ -16,8 +17,6 @@ import { viewerFor, type Viewer } from "../../server/programs/viewer";
 // The feed reads the database on every request, so it is always current.
 export const dynamic = "force-dynamic";
 
-type SearchParams = Record<string, string | string[] | undefined>;
-
 const DEFAULT_QUERY: ProgramsQuery = {
   limit: DEFAULT_LIMIT,
   offset: 0,
@@ -26,24 +25,12 @@ const DEFAULT_QUERY: ProgramsQuery = {
   openNow: false,
 };
 
-function toParams(raw: SearchParams): URLSearchParams {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(raw)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (item !== undefined) {
-        params.append(key, item);
-      }
-    }
-  }
-  return params;
-}
-
 export default async function ProgramsPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<SearchParams>;
+  readonly searchParams: Promise<PageSearchParams>;
 }): Promise<ReactElement> {
-  const parsed = parseProgramsQuery(toParams(await searchParams));
+  const parsed = parseProgramsQuery(toSearchParams(await searchParams));
   const query = parsed.ok ? parsed.value : DEFAULT_QUERY;
   const today = melbourneDate(new Date());
 

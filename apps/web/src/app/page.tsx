@@ -5,10 +5,11 @@ import { TimelineChart } from "../components/TimelineChart";
 import { TimelineFilters } from "../components/TimelineFilters";
 import { melbourneDate } from "../features/programs/melbourne-date";
 import { MAX_LIMIT } from "../features/programs/programs-query";
+import { toSearchParams, type PageSearchParams } from "../features/programs/search-params";
 import { buildTimeline } from "../features/timeline/build-timeline";
 import { summariseTimeline } from "../features/timeline/summarise";
 import { chartFor } from "../features/timeline/timeline-bars";
-import { parseTimelineFilter } from "../features/timeline/timeline-filter";
+import { parseTimelineFilter, type TimelineFilter } from "../features/timeline/timeline-filter";
 import { listApplications } from "../server/applications/applications-repo";
 import { sessionClientForRequest } from "../server/auth/request-session";
 import { logFailure } from "../server/log";
@@ -21,7 +22,6 @@ export const metadata: Metadata = { title: "When applications open" };
 export const dynamic = "force-dynamic";
 
 type Client = Awaited<ReturnType<typeof sessionClientForRequest>>;
-type SearchParams = Record<string, string | string[] | undefined>;
 
 const HEADLINE = "Never miss an application window.";
 
@@ -46,50 +46,20 @@ async function savedProgramIds(client: Client): Promise<string[]> {
 
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
-function toParams(raw: SearchParams): URLSearchParams {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(raw)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (item !== undefined) {
-        params.append(key, item);
-      }
-    }
-  }
-  return params;
-}
-
-export default async function HomePage({
-  searchParams,
+/** The headline, the summary, the filters and the chart for one page of programs. */
+function TimelineView({
+  filter,
+  page,
+  today,
+  saved,
 }: {
-  readonly searchParams: Promise<SearchParams>;
-}): Promise<ReactElement> {
-  const filter = parseTimelineFilter(toParams(await searchParams));
-  const today = melbourneDate(new Date());
-
-  let page: ProgramsPage;
-  let saved: string[];
-  try {
-    const client = await sessionClientForRequest();
-    page = await listPrograms(
-      client,
-      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, openNow: false },
-      today,
-    );
-    saved = await savedProgramIds(client);
-  } catch (error) {
-    // Only a safe summary is logged. A visitor needs to know to try again, not why.
-    logFailure("page.timeline.load", error);
-    return (
-      <main className="page timeline-page">
-        <h1 className="home-title">{HEADLINE}</h1>
-        <p className="notice">We couldn&apos;t load the timeline right now. Please try again in a moment.</p>
-      </main>
-    );
-  }
-
+  readonly filter: TimelineFilter;
+  readonly page: ProgramsPage;
+  readonly today: string;
+  readonly saved: readonly string[];
+}): ReactElement {
   const timeline = buildTimeline(page.items.map(toPublicProgram), today, saved);
   const summary = summariseTimeline(timeline);
-  const chart = chartFor(timeline, today);
   return (
     <main className="page timeline-page">
       <h1 className="home-title">{HEADLINE}</h1>
@@ -122,11 +92,43 @@ export default async function HomePage({
           No {filter.type} programs to show yet. <Link href="/">Show all programs</Link>
         </p>
       ) : (
-        <TimelineChart chart={chart} />
+        <TimelineChart chart={chartFor(timeline, today)} />
       )}
       <p className="home-footnote muted">
         Dates change: always confirm on the employer&apos;s own page before you plan around one.
       </p>
     </main>
   );
+}
+
+export default async function HomePage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<PageSearchParams>;
+}): Promise<ReactElement> {
+  const filter = parseTimelineFilter(toSearchParams(await searchParams));
+  const today = melbourneDate(new Date());
+
+  let page: ProgramsPage;
+  let saved: string[];
+  try {
+    const client = await sessionClientForRequest();
+    page = await listPrograms(
+      client,
+      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, openNow: false },
+      today,
+    );
+    saved = await savedProgramIds(client);
+  } catch (error) {
+    // Only a safe summary is logged. A visitor needs to know to try again, not why.
+    logFailure("page.timeline.load", error);
+    return (
+      <main className="page timeline-page">
+        <h1 className="home-title">{HEADLINE}</h1>
+        <p className="notice">We couldn&apos;t load the timeline right now. Please try again in a moment.</p>
+      </main>
+    );
+  }
+
+  return <TimelineView filter={filter} page={page} today={today} saved={saved} />;
 }
