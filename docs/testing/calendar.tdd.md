@@ -65,3 +65,18 @@ After restoring: 8 of 8 passed.
   data question, not a calendar one.
 - Only opening and closing days are included. A "start preparing" reminder (the 4-week lead) is not.
 - The integration, database and Python suites were not rerun: nothing they cover changed.
+
+## Follow-up (2026-10-15): a start-preparing day
+
+The calendar file now also holds a "start preparing" day four weeks before a day-precise opening
+(`PREP_LEAD_DAYS`, D22). RED `a78a484` (5 tests failed) and `test: the calendar note ...` (1 failed),
+GREEN `6b1cba1`.
+
+- It is derived only from an opening the source gives to the day, so a month-only or estimated opening
+  gives no preparing day. It is dropped once its own day has passed, but kept on the day itself.
+- An opening that is still ahead keeps its opening event even when the preparing day has passed.
+- The page note now says the file includes this day.
+- Mutation: removing the "not already passed" check failed 2 tests; restored, 10 of 10 pass.
+- Gates: `pnpm lint`, `typecheck`, `build` and the guards exit 0; 979 unit tests, 97.19% statements,
+  96.21% branches.
+- Still not tried in a real browser or calendar app.
