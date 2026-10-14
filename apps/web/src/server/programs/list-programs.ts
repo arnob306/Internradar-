@@ -4,15 +4,16 @@ import type { WindowStatus } from "../../components/StatusChip";
 import type { ProgramsQuery } from "../../features/programs/programs-query";
 import { parseStages, type ApplicationStage } from "../../features/programs/application-stages";
 import { programStatus, type StatusWindow } from "../../features/programs/window-status";
+import type { DatePrecision } from "../../features/programs/window-vocabulary";
 import type { Database, Json } from "../db/database.types";
 
 export interface ProgramWindowItem {
   readonly cycleYear: number;
   readonly windowSeq: number;
   readonly opensOn: string | null;
-  readonly opensPrecision: "day" | "month" | "estimated" | null;
+  readonly opensPrecision: DatePrecision | null;
   readonly closesOn: string | null;
-  readonly closesPrecision: "day" | "month" | "estimated" | null;
+  readonly closesPrecision: DatePrecision | null;
   /** The program's own dates, which year level is judged against. Null when not published. */
   readonly programStartsOn: string | null;
   readonly programEndsOn: string | null;

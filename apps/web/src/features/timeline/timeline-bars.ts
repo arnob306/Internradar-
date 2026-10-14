@@ -1,4 +1,5 @@
 import type { ConfirmedEntry, MonthInYear, NoDateEntry, Timeline, UsualEntry } from "./build-timeline";
+import type { DatePrecision } from "../programs/window-vocabulary";
 
 export interface AxisMonth {
   readonly year: number;
@@ -40,7 +41,7 @@ const MONTHS_SHOWN = 12;
 // A window of a single day would be a hairline; this keeps every bar visible.
 const MIN_WIDTH_PCT = 1;
 
-type Precision = "day" | "month" | "estimated" | null;
+type Precision = DatePrecision | null;
 
 const monthIndex = (year: number, month: number): number => year * 12 + (month - 1);
 

@@ -1,8 +1,9 @@
 import type { WindowStatus } from "../../components/StatusChip";
 import type { PublicProgram } from "../../server/programs/programs-handler";
 import { headlineWindow } from "../programs/headline-window";
+import type { DatePrecision } from "../programs/window-vocabulary";
 
-type Precision = "day" | "month" | "estimated" | null;
+type Precision = DatePrecision | null;
 
 /** The parts of an application window the timeline needs. Dates are ISO `YYYY-MM-DD` strings. */
 export interface TimelineWindow {
