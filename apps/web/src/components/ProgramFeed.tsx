@@ -77,7 +77,7 @@ export function ProgramFeed({ programs, total, query, eligibility, prompt }: Pro
       {programs.length === 0 ? (
         <div className="feed-empty">
           <p>No programs match these filters.</p>
-          <Link href="/">Clear filters</Link>
+          <Link href="/programs">Clear filters</Link>
         </div>
       ) : (
         <div className="program-grid">

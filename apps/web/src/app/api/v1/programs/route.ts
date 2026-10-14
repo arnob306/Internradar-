@@ -1,5 +1,6 @@
 import { createProgramsHandler } from "../../../../server/programs/programs-handler";
 import { listPrograms } from "../../../../server/programs/list-programs";
+import { publicApiLimiter } from "../../../../server/programs/public-limiter";
 import { createPublicClient } from "../../../../server/public-client";
 
 // Reads the database on every request; the handler's own Cache-Control lets a CDN hold a good
@@ -8,5 +9,6 @@ export const dynamic = "force-dynamic";
 
 export const GET = createProgramsHandler({
   list: (query, today) => listPrograms(createPublicClient(), query, today),
+  limit: publicApiLimiter,
   now: () => new Date(),
 });
