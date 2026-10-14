@@ -262,3 +262,32 @@ describe("ProgramDetail: how to prepare and apply", () => {
     expect(apply.getAttribute("href")).toBe("https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities");
   });
 });
+
+describe("ProgramDetail: add the dates to a calendar", () => {
+  const NOW = new Date("2026-10-03T03:00:00Z");
+  const dated = windowOf({ opensOn: "2026-11-15", opensPrecision: "day", closesOn: "2026-12-15", closesPrecision: "day", status: "upcoming" });
+
+  it("offers a calendar file for the dates the employer gives to the day", () => {
+    render(<ProgramDetail program={program({ windows: [dated] })} now={NOW} />);
+
+    const link = screen.getByRole("link", { name: "Add these dates to your calendar" });
+    expect(link.getAttribute("download")).toBe("ey-australia-graduate-program.ics");
+    const href = link.getAttribute("href") ?? "";
+    expect(href.startsWith("data:text/calendar;charset=utf-8,")).toBe(true);
+    expect(decodeURIComponent(href)).toContain("SUMMARY:EY Graduate Program: applications open");
+    expect(screen.getByText("Only dates the employer gives to the day are included.")).toBeTruthy();
+  });
+
+  it("offers nothing when no date is known to the day, rather than a calendar with guesses in it", () => {
+    const guessed = windowOf({ opensOn: "2026-11-01", opensPrecision: "month", closesOn: "2026-12-01", closesPrecision: "estimated" });
+    render(<ProgramDetail program={program({ windows: [guessed] })} now={NOW} />);
+
+    expect(screen.queryByRole("link", { name: "Add these dates to your calendar" })).toBeNull();
+  });
+
+  it("offers nothing when the dates have passed", () => {
+    render(<ProgramDetail program={program({ windows: [dated] })} now={new Date("2027-01-10T00:00:00Z")} />);
+
+    expect(screen.queryByRole("link", { name: "Add these dates to your calendar" })).toBeNull();
+  });
+});
