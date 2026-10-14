@@ -335,3 +335,69 @@ def test_wrongly_shaped_values_are_reported_not_crashed_on(
 
 def test_a_company_that_is_not_a_mapping_is_reported() -> None:
     assert any("must be a mapping" in p for p in problems_for("companies:\n  - just text\n"))
+
+
+def stage(**changes: Any) -> dict[str, Any]:
+    base = {
+        "name": "Online application",
+        "description": "Your CV and a short form.",
+        "source_url": "https://careers.example.com.au/graduates",
+    }
+    return {**base, **changes}
+
+
+def catalog_with_stages(stages: object) -> str:
+    entry = company()
+    entry["programs"][0]["application_stages"] = stages
+    return catalog(entry)
+
+
+def test_a_program_can_list_its_application_stages_in_order() -> None:
+    parsed = parse_catalog(
+        catalog_with_stages([stage(), stage(name="Video interview", description=None)]),
+        rules_schema=RULES_SCHEMA,
+    )
+
+    (stages,) = (p.application_stages for c in parsed.companies for p in c.programs)
+    assert [s.name for s in stages] == ["Online application", "Video interview"]
+    assert stages[0].description == "Your CV and a short form."
+    assert stages[1].description is None
+    assert stages[0].source_url == "https://careers.example.com.au/graduates"
+
+
+def test_a_program_without_stages_has_none() -> None:
+    parsed = parse_catalog(catalog(), rules_schema=RULES_SCHEMA)
+
+    assert parsed.companies[0].programs[0].application_stages == ()
+
+
+def test_a_stage_must_say_where_it_came_from() -> None:
+    entry = stage()
+    del entry["source_url"]
+
+    assert any("source_url" in p for p in problems_for(catalog_with_stages([entry])))
+
+
+def test_a_stage_may_not_cite_an_aggregator() -> None:
+    problems = problems_for(
+        catalog_with_stages([stage(source_url="https://www.seek.com.au/job/1")])
+    )
+
+    assert any("not an allowed URL" in p for p in problems)
+
+
+def test_a_stage_needs_a_name_and_nothing_unknown() -> None:
+    assert any("name" in p for p in problems_for(catalog_with_stages([stage(name="  ")])))
+    assert any("unknown key" in p for p in problems_for(catalog_with_stages([stage(salary="x")])))
+
+
+def test_stages_must_be_a_short_list() -> None:
+    assert any("list" in p for p in problems_for(catalog_with_stages({"name": "x"})))
+    many = [stage(name=f"Stage {i}") for i in range(13)]
+    assert any("at most 12" in p for p in problems_for(catalog_with_stages(many)))
+
+
+def test_a_stage_description_must_be_text() -> None:
+    assert any(
+        "description" in p for p in problems_for(catalog_with_stages([stage(description=5)]))
+    )
