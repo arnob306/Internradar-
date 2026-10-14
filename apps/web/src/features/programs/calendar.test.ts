@@ -36,7 +36,7 @@ describe("buildCalendar", () => {
 
     expect(calendar).not.toBeNull();
     expect(lines(calendar)).toEqual(expect.arrayContaining(["BEGIN:VCALENDAR", "VERSION:2.0", "END:VCALENDAR"]));
-    expect(eventCount(calendar)).toBe(2);
+    expect(eventCount(calendar)).toBe(3);
     expect(lines(calendar)).toEqual(
       expect.arrayContaining([
         "DTSTART;VALUE=DATE:20261115",
@@ -47,6 +47,28 @@ describe("buildCalendar", () => {
         "SUMMARY:Example Graduate Program: applications close",
       ]),
     );
+  });
+
+  it("adds a start-preparing day four weeks before a day-precise opening", () => {
+    const calendar = buildCalendar(program([window()]), NOW);
+
+    expect(lines(calendar)).toEqual(
+      expect.arrayContaining([
+        "DTSTART;VALUE=DATE:20261018",
+        "DTEND;VALUE=DATE:20261019",
+        "SUMMARY:Example Graduate Program: start preparing",
+      ]),
+    );
+  });
+
+  it("keeps the preparing day when it is today and drops it once it has passed, but still adds the opening", () => {
+    const prepToday = buildCalendar(program([window({ opensOn: "2026-10-31" })]), NOW);
+    const prepPassed = buildCalendar(program([window({ opensOn: "2026-10-10" })]), NOW);
+
+    expect(prepToday).toContain("start preparing");
+    expect(prepToday).toContain("DTSTART;VALUE=DATE:20261003");
+    expect(prepPassed).not.toContain("start preparing");
+    expect(eventCount(prepPassed)).toBe(2);
   });
 
   it("separates lines with CRLF, as the calendar format requires", () => {
@@ -62,7 +84,7 @@ describe("buildCalendar", () => {
 
     expect(buildCalendar(program([monthOnly]), NOW)).toBeNull();
     const calendar = buildCalendar(program([dayOpenOnly]), NOW);
-    expect(eventCount(calendar)).toBe(1);
+    expect(eventCount(calendar)).toBe(2);
     expect(calendar).toContain("applications open");
     expect(calendar).not.toContain("applications close");
   });
@@ -108,8 +130,8 @@ describe("buildCalendar", () => {
     const later = buildCalendar(program([window()]), new Date("2026-10-05T00:00:00Z"));
     const uids = (first ?? "").match(/UID:.+/g) ?? [];
 
-    expect(uids).toHaveLength(2);
-    expect(new Set(uids).size).toBe(2);
+    expect(uids).toHaveLength(3);
+    expect(new Set(uids).size).toBe(3);
     expect(later?.match(/UID:.+/g)).toEqual(uids);
   });
 });
