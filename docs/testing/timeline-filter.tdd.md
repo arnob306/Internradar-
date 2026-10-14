@@ -111,7 +111,7 @@ text keeps its contrast. No page-level horizontal scroll at 501 px, the narrowes
 | Finding | RED | GREEN |
 |---|---|---|
 | `toParams` was copied in two pages, and `HomePage` was 72 lines | `957c680`: the shared helper did not exist | `8b7c188`: `toSearchParams` shared, view split out; 965 unit tests |
-| The "·" between summary items could be read aloud by screen readers | `7e9de3e`: the CSS rule had no text alternative | the next commit: `content: "·" / ""`; 966 unit tests. The built CSS keeps it. |
+| The "·" between summary items could be read aloud by screen readers | `7e9de3e`: the CSS rule had no text alternative | `5a5a2f3`: `content: "·" / ""`; 966 unit tests. The built CSS keeps it. |
 
 Each GREEN had lint, typecheck, coverage (97.1% statements, 96.13% branches), build and the 11 guard tests at exit 0.
 Not verified: whether a particular screen reader skips the dot. The CSS is the standard way to mark it as decoration.
