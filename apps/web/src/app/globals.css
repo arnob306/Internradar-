@@ -1160,3 +1160,8 @@ a {
 .chart-name .timeline-head {
   align-items: baseline;
 }
+
+.detail-calendar {
+  display: inline-block;
+  margin-top: 12px;
+}

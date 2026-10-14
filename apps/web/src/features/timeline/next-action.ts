@@ -10,7 +10,7 @@ const NOT_ANNOUNCED = "Dates not announced. Check the employer's page.";
 const pad = (value: number): string => String(value).padStart(2, "0");
 
 /** The ISO date `days` before another. Plain calendar arithmetic, so no time zone is involved. */
-function daysBefore(isoDate: string, days: number): string {
+export function daysBefore(isoDate: string, days: number): string {
   const earlier = new Date(Date.UTC(Number(isoDate.slice(0, 4)), Number(isoDate.slice(5, 7)) - 1, Number(isoDate.slice(8, 10)) - days));
   return `${earlier.getUTCFullYear()}-${pad(earlier.getUTCMonth() + 1)}-${pad(earlier.getUTCDate())}`;
 }

@@ -2,6 +2,7 @@ import { isDiscipline } from "@internradar/domain";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { reasonText, verdictLabel } from "../features/eligibility/reason-text";
+import { buildCalendar } from "../features/programs/calendar";
 import { safeExternalUrl } from "../features/programs/detail-guards";
 import { describeWindows } from "../features/programs/window-text";
 import { DISCIPLINE_LABELS, PROGRAM_TYPE_LABELS } from "../features/vocabulary-labels";
@@ -18,6 +19,8 @@ interface ProgramDetailProps {
   readonly prompt?: "sign-in" | "profile";
   /** Whether this student already has the program in their tracker. */
   readonly saved?: boolean;
+  /** The moment the page is shown, which decides which dates are still ahead. Defaults to now. */
+  readonly now?: Date;
 }
 
 function capitalise(text: string): string {
@@ -39,9 +42,16 @@ function precisionNote(window: WindowItem, estimated: boolean): string | null {
   return precision === "day" ? "to the day" : precision === "month" ? "to the month" : null;
 }
 
-export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved = false }: ProgramDetailProps): ReactElement {
+export function ProgramDetail({
+  program,
+  eligibility,
+  prompt = "sign-in",
+  saved = false,
+  now = new Date(),
+}: ProgramDetailProps): ReactElement {
   const path = `/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`;
   const applyUrl = safeExternalUrl(program.sourceUrl);
+  const calendar = buildCalendar(program, now);
   const areas = program.disciplines.filter(isDiscipline).map((discipline) => DISCIPLINE_LABELS[discipline]);
 
   return (
@@ -112,6 +122,18 @@ export function ProgramDetail({ program, eligibility, prompt = "sign-in", saved 
                   );
                 })}
               </ul>
+            )}
+            {calendar !== null && (
+              <>
+                <a
+                  className="detail-calendar"
+                  href={`data:text/calendar;charset=utf-8,${encodeURIComponent(calendar)}`}
+                  download={`${program.company.slug}-${program.slug}.ics`}
+                >
+                  Add these dates to your calendar
+                </a>
+                <p className="muted">Only dates the employer gives to the day are included.</p>
+              </>
             )}
           </section>
 
