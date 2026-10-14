@@ -9,6 +9,7 @@ A web app for Australian university students applying for internships and gradua
 - **See when applications open.** The home page is a year chart with one bar per program. Solid bars are dates the employer published. Dashed bars are guesses from earlier years, labelled "Estimated" and sourced. A program with no information says "Not announced" instead of guessing. Each row says when to start preparing, using a 4-week lead (decision D22).
 - **Narrow it to Graduate or Vacationer** with plain links that work without JavaScript (decision D26).
 - **Read how the process works.** Each program page has a "How to prepare and apply" section: the steps the employer's own page describes (for example online application, online assessment, video interview, assessment centre), each with a link to where it is described. Eight programs have stages so far. The rest say they aren't published rather than invent any (decision D25).
+- **Add the dates to a calendar.** A program page can download a calendar file with its opening and closing dates, but only the ones the employer gives to the day and that are still ahead. Month-only and estimated dates are left out. It is a one-off download, not an alert (decision D27).
 - **Check eligibility** from year level, graduation date and citizenship, answered as eligible, ineligible or unknown with reasons.
 - **Save programs to a tracker** and badge them on the timeline.
 
