@@ -15,7 +15,7 @@ both routes). It was written from the handlers, not from memory.
 
 A spec is a second copy of facts that live in the code, so a contract test holds it to the code:
 `apps/web/src/server/programs/openapi.test.ts` (13 tests). It parses the YAML and compares it with the real
-things: the fields returned by `toPublicProgram`, the window and stage types, the program-type and discipline lists,
+things: the fields returned by `toPublicProgram`, the window and stage types, the program-type, discipline, window-status and date-precision lists,
 the query parser, the slug rule, the status and precision values, the errors the two handlers really send (run with
 fakes), and the rate-limit constants. A field, enum value, error code or limit that changes in only one place fails.
 
@@ -70,3 +70,10 @@ its "13 passed" lines were discarded. It was redone with the backup beside the s
 - Integration, database and Python suites were not rerun: no code they cover changed.
 - The API is not hosted and the catalogue is an unverified draft, which the spec says in its description.
 - Not documented, because it has not been checked: CORS behaviour and what a non-GET method returns (a 405).
+
+## Follow-up from a code review
+
+The review found the window status and date precision values were typed into the test by hand, so a new status in the
+code would not have failed it. They now live in one module (`features/programs/window-vocabulary.ts`), the types use it,
+and the test imports it. RED `a7b9c4a`, GREEN `49838f0`. Mutation: adding a `paused` status to the code only made the
+test fail; restoring it passed 13 of 13. The slug-pattern check still samples three strings rather than the full rule.
