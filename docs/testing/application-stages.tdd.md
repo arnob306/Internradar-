@@ -53,3 +53,37 @@ removed again. I did not see the page in a browser.
   program page shows "stages aren't published here yet" until stages are written into
   `data/seed/catalog.yaml` from each employer's own page.
 - `application_stages` is returned by the public API, so `openapi.yaml` (not yet written) must list it.
+
+## Follow-up (2026-10-15): the vacation and intern programs
+
+Plan: "more sourced application stages", approved by the author in chat. Decision: D25 (unchanged).
+RED `65b5356` (three catalog tests failed with `[] == [...]`), GREEN `68d5502`.
+
+| Program | Stages | Page read (2026-10-15) |
+|---|---|---|
+| KPMG Vacationer | 5: online application, online assessments, shortlisting, interview, outcome | `kpmg.com/au/en/careers/graduates/vacation-program.html` |
+| NAB Summer Intern | 4: online application, online assessment, video interview, Engagement Centre | `nab.com.au/.../early-careers/summer-intern-program` |
+| CommBank Summer Intern | 4, the same as the graduate row | `commbank.com.au/.../graduate-intern-programs/how-to-apply.html` |
+
+Wording notes:
+
+- CommBank's page gives one process for all its programs, so the intern row repeats the graduate one.
+  It adds team interviews for the Global Markets Summer Analyst program only, which is not this row.
+- KPMG says teams may ask for a transcript or other testing, so the row's comment says steps can vary.
+- I left out KPMG's "research" step (advice, not a stage) and NAB's "offers" line (dates, not a stage).
+
+Not added, and why:
+
+- **Atlassian Graduate:** its early-careers page does not describe graduate steps, and the only
+  graduate-specific text I found is an old blog post. The engineering interview guides are for
+  experienced roles. No stages are better than guessed ones.
+- **APS Data stream:** a search summary of the page lists five stages (application, online assessment,
+  interview, reference checks, offer), but two direct fetches of the page timed out. I have not read
+  the page myself, so nothing was added. Read it, then add the stages.
+
+Checks: `test_seed_catalog.py` 12 passed; `workers` pytest 411 passed (92 database tests need the
+local database), `ruff check`, `ruff format --check` and `mypy` exit 0. Live: after reseeding, the API
+returns the stages for all three programs in order. I did not rerun the web, integration or pgTAP
+suites, since no code changed. I did not see the pages in a browser.
+
+Still open: the Westpac stages came from a search result only and are unverified.
