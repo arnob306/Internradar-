@@ -122,3 +122,52 @@ def test_the_government_data_stream_opens_on_1_march_2027_and_states_no_close() 
     assert window.status == "upcoming"
     assert (str(window.opens_on), window.opens_precision) == ("2027-03-01", "day")
     assert window.closes_on is None
+
+
+def _stage_names(program: SeedProgram) -> list[str]:
+    return [stage.name for stage in program.application_stages]
+
+
+def test_kpmgs_vacationer_stages_come_from_its_vacation_program_page() -> None:
+    program = _program("kpmg-australia", "vacationer-program")
+
+    assert _stage_names(program) == [
+        "Online application",
+        "Online assessments",
+        "Shortlisting",
+        "Interview",
+        "Outcome",
+    ]
+    for stage in program.application_stages:
+        assert stage.source_url == "https://kpmg.com/au/en/careers/graduates/vacation-program.html"
+
+
+def test_nabs_summer_intern_stages_come_from_its_summer_intern_page() -> None:
+    program = _program("nab", "summer-intern-program")
+
+    assert _stage_names(program) == [
+        "Online application",
+        "Online assessment",
+        "Video interview",
+        "Engagement Centre",
+    ]
+    for stage in program.application_stages:
+        assert stage.source_url == (
+            "https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program"
+        )
+
+
+def test_commbanks_summer_intern_uses_the_how_to_apply_page_it_shares_with_graduates() -> None:
+    """CommBank's page gives one process for all its programs, so the intern row cites it too."""
+    program = _program("commbank", "summer-intern-program")
+
+    assert _stage_names(program) == [
+        "Online application",
+        "Online assessment",
+        "Digital interview",
+        "Assessment centre",
+    ]
+    for stage in program.application_stages:
+        assert stage.source_url == (
+            "https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html"
+        )
