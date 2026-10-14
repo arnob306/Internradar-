@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { ApplicationStage } from "../../features/programs/application-stages";
 import { slugFromPath } from "../../features/programs/detail-guards";
 import { DEFAULT_LIMIT, MAX_LIMIT, parseProgramsQuery, PROGRAM_TYPES } from "../../features/programs/programs-query";
+import { DATE_PRECISIONS, WINDOW_STATUSES } from "../../features/programs/window-vocabulary";
 import type { ProgramListItem, ProgramsPage, ProgramWindowItem } from "./list-programs";
 import { createProgramHandler } from "./program-handler";
 import { createProgramsHandler, toPublicProgram } from "./programs-handler";
@@ -199,9 +200,11 @@ describe("openapi.yaml: the response", () => {
   it("names the same allowed values for program type, window status and date precision as the code", () => {
     const programProperties = asNode(schema("Program")["properties"]);
     expect(resolve(programProperties["programType"])["enum"]).toEqual([...PROGRAM_TYPES]);
-    expect(resolve(programProperties["status"])["enum"]).toEqual(["upcoming", "open", "closed", "unknown"]);
+    expect([...(resolve(programProperties["status"])["enum"] as string[])].sort()).toEqual([...WINDOW_STATUSES].sort());
     const windowProperties = asNode(schema("Window")["properties"]);
-    expect(asNode(windowProperties["opensPrecision"])["enum"]).toEqual(["day", "month", "estimated", null]);
+    for (const field of ["opensPrecision", "closesPrecision"]) {
+      expect(asNode(windowProperties[field])["enum"]).toEqual([...DATE_PRECISIONS, null]);
+    }
   });
 
   it("wraps every answer in the success / data / error / meta envelope", () => {
