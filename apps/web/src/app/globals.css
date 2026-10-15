@@ -1030,11 +1030,19 @@ a {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px 24px;
+  gap: 8px 24px;
   margin-top: 16px;
 }
 .timeline-page .filters {
   margin-top: 0;
+}
+/* The industry row sits under the type row, so the link to all programs stays beside the type row. */
+.timeline-page .industry-filters {
+  order: 2;
+  flex-basis: 100%;
+}
+.timeline-page .industry-filters .filter {
+  min-height: 36px;
 }
 .timeline-page .timeline {
   gap: 16px;

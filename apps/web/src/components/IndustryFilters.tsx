@@ -15,7 +15,7 @@ export function IndustryFilters({
   readonly type: TimelineType | undefined;
 }): ReactElement {
   return (
-    <nav className="filters" aria-label="Filter by industry">
+    <nav className="filters industry-filters" aria-label="Filter by industry">
       {INDUSTRY_FILTERS.map(({ industry, label }) => (
         <Link
           key={label}
