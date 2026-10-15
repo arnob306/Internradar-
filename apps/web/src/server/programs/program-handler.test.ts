@@ -15,6 +15,7 @@ const found: ProgramListItem = {
   programType: "graduate",
   cities: ["melbourne"],
   disciplines: [],
+  industry: null,
   sourceUrl: "https://careers.example.com.au/graduates",
   company: { slug: "example-co", name: "Example Co", careersUrl: "https://careers.example.com.au" },
   status: "open",

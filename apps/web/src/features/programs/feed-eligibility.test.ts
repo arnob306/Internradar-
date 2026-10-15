@@ -20,6 +20,7 @@ function program(id: string, overrides: Partial<ProgramListItem> = {}): ProgramL
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://example.com/x",
     company: { slug: "example-co", name: "Example Co", careersUrl: "https://example.com" },
     status: "open",

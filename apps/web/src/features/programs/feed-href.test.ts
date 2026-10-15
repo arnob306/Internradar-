@@ -3,7 +3,7 @@ import { feedHref } from "./feed-href";
 import type { ProgramsQuery } from "./programs-query";
 
 function query(overrides: Partial<ProgramsQuery> = {}): ProgramsQuery {
-  return { limit: 20, offset: 0, type: undefined, discipline: undefined, openNow: false, ...overrides };
+  return { limit: 20, offset: 0, type: undefined, discipline: undefined, industry: undefined, openNow: false, ...overrides };
 }
 
 describe("feedHref", () => {

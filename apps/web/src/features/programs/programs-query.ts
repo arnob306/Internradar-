@@ -1,4 +1,11 @@
-import { isDiscipline, type Discipline, type FieldError, type ProgramType } from "@internradar/domain";
+import {
+  isDiscipline,
+  isIndustry,
+  type Discipline,
+  type FieldError,
+  type Industry,
+  type ProgramType,
+} from "@internradar/domain";
 
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 100;
@@ -17,6 +24,7 @@ export interface ProgramsQuery {
   readonly offset: number;
   readonly type: ProgramType | undefined;
   readonly discipline: Discipline | undefined;
+  readonly industry: Industry | undefined;
   readonly openNow: boolean;
 }
 
@@ -29,6 +37,7 @@ const ALLOWED_KEYS: ReadonlySet<string> = new Set([
   "offset",
   "type",
   "discipline",
+  "industry",
   "openNow",
 ]);
 
@@ -111,6 +120,16 @@ export function parseProgramsQuery(params: URLSearchParams): ProgramsQueryResult
     }
   }
 
+  let industry: Industry | undefined;
+  const rawIndustry = usable("industry");
+  if (rawIndustry !== undefined) {
+    if (isIndustry(rawIndustry)) {
+      industry = rawIndustry;
+    } else {
+      fail("industry", "industry is not a recognised industry.");
+    }
+  }
+
   let openNow = false;
   const rawOpenNow = usable("openNow");
   if (rawOpenNow !== undefined) {
@@ -123,5 +142,5 @@ export function parseProgramsQuery(params: URLSearchParams): ProgramsQueryResult
 
   return errors.length > 0
     ? { ok: false, fields: errors }
-    : { ok: true, value: { limit, offset, type, discipline, openNow } };
+    : { ok: true, value: { limit, offset, type, discipline, industry, openNow } };
 }

@@ -33,6 +33,8 @@ function item(slug: string, overrides: Partial<ProgramListItem> = {}): ProgramLi
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+
+    industry: null,
     sourceUrl: "https://example.com/p",
     company: { slug: `co-${slug}`, name: `Company ${slug}`, careersUrl: "https://example.com" },
     status: "unknown",

@@ -13,6 +13,7 @@ function program(name: string): PublicProgram {
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://example.com/x",
     company: { slug: "example-co", name: "Example Co", careersUrl: "https://example.com" },
     status: "open",
@@ -23,7 +24,7 @@ function program(name: string): PublicProgram {
 }
 
 function query(overrides: Partial<ProgramsQuery> = {}): ProgramsQuery {
-  return { limit: 20, offset: 0, type: undefined, discipline: undefined, openNow: false, ...overrides };
+  return { limit: 20, offset: 0, type: undefined, discipline: undefined, industry: undefined, openNow: false, ...overrides };
 }
 
 function hrefOf(name: string | RegExp): string | null {

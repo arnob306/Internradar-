@@ -115,7 +115,7 @@ export default async function HomePage({
     const client = await sessionClientForRequest();
     page = await listPrograms(
       client,
-      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, openNow: false },
+      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, industry: undefined, openNow: false },
       today,
     );
     saved = await savedProgramIds(client);

@@ -1,4 +1,4 @@
-import type { ProgramType } from "@internradar/domain";
+import type { Industry, ProgramType } from "@internradar/domain";
 import type { QueryData, SupabaseClient } from "@supabase/supabase-js";
 import type { WindowStatus } from "../../components/StatusChip";
 import type { ProgramsQuery } from "../../features/programs/programs-query";
@@ -28,6 +28,8 @@ export interface ProgramListItem {
   readonly programType: ProgramType;
   readonly cities: readonly string[];
   readonly disciplines: readonly string[];
+  /** The kind of employer, or null when the program has not been tagged. */
+  readonly industry: Industry | null;
   readonly sourceUrl: string;
   readonly company: { readonly slug: string; readonly name: string; readonly careersUrl: string };
   /** Whether applications are open, derived from the windows' dates as far as they prove it. */
@@ -49,7 +51,7 @@ export interface ProgramsPage {
 
 // Explicit columns, never `select *`: only what the feed needs is ever read.
 const COLUMNS = `
-  id, slug, name, program_type, cities, disciplines, source_url,
+  id, slug, name, program_type, cities, disciplines, industry, source_url,
   eligibility_rules, eligibility_rules_version, eligibility_verified_at, application_stages,
   companies!inner ( slug, name, careers_url ),
   program_windows ( cycle_year, window_seq, opens_on, opens_precision, closes_on,
@@ -107,6 +109,7 @@ function toListItem(row: ProgramRow, today: string): ProgramListItem {
     programType: row.program_type,
     cities: row.cities,
     disciplines: row.disciplines,
+    industry: row.industry,
     sourceUrl: row.source_url,
     company: {
       slug: row.companies.slug,
@@ -142,6 +145,10 @@ export async function listPrograms(
   }
   if (query.discipline !== undefined) {
     request = request.contains("disciplines", [query.discipline]);
+  }
+
+  if (query.industry !== undefined) {
+    request = request.eq("industry", query.industry);
   }
 
   const { data, error } = await request;
