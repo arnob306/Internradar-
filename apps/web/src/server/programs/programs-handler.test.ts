@@ -23,6 +23,7 @@ function item(name: string): ProgramListItem {
     eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["au_citizen"] } },
     rulesVerified: true,
     applicationStages: [],
+    industry: null,
     rulesVersion: 1,
   };
 }
@@ -84,6 +85,16 @@ describe("GET /api/v1/programs", () => {
     );
   });
 
+  it("passes an industry filter on and shows each program's industry", async () => {
+    const tagged = { ...item("Consulting Graduate Program"), industry: "consulting" as const };
+    const { handler, list } = setup({ items: [tagged], total: 1 });
+
+    const { body } = await call(handler, "?industry=consulting");
+
+    expect(list).toHaveBeenCalledWith(expect.objectContaining({ industry: "consulting" }), expect.any(String));
+    expect(body.success ? body.data[0]?.industry : undefined).toBe("consulting");
+  });
+
   it("exposes a public view of each program, never the raw eligibility rules", async () => {
     const { handler } = setup();
 
@@ -96,6 +107,7 @@ describe("GET /api/v1/programs", () => {
       "company",
       "disciplines",
       "id",
+      "industry",
       "name",
       "programType",
       "rulesVerified",

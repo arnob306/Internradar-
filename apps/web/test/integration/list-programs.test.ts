@@ -13,6 +13,7 @@ function query(overrides: Partial<ProgramsQuery> = {}): ProgramsQuery {
     offset: 0,
     type: "cadetship",
     discipline: undefined,
+    industry: undefined,
     openNow: false,
     ...overrides,
   };
@@ -74,6 +75,7 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
       "disciplines",
       "eligibilityRules",
       "id",
+      "industry",
       "name",
       "programType",
       "rulesVerified",
@@ -127,6 +129,23 @@ describe("listPrograms (as the anonymous role, through row-level security)", () 
     const { items } = await listPrograms(anonClient(), query({ discipline: "physics" }), TODAY);
 
     expect(items.map((item) => item.name)).toEqual(["Physics One"]);
+  });
+
+  it("filters by industry, and an untagged program matches no industry", async () => {
+    await withAdmin(async (db) => {
+      await insertProgram(db, { company: "bank", name: "Bank One", industry: "banking_finance" });
+      await insertProgram(db, { company: "firm", name: "Firm One", industry: "consulting" });
+      await insertProgram(db, { company: "none", name: "Untagged One" });
+    });
+
+    const { items, total } = await listPrograms(anonClient(), query({ industry: "consulting" }), TODAY);
+    const everything = await listPrograms(anonClient(), query(), TODAY);
+
+    expect(items.map((item) => item.name)).toEqual(["Firm One"]);
+    expect(items[0]?.industry).toBe("consulting");
+    expect(total).toBe(1);
+    expect(everything.items.find((item) => item.name === "Untagged One")?.industry).toBeNull();
+    expect(everything.total).toBe(3);
   });
 
   it("filters by program type", async () => {
