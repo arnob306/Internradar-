@@ -401,3 +401,27 @@ def test_a_stage_description_must_be_text() -> None:
     assert any(
         "description" in p for p in problems_for(catalog_with_stages([stage(description=5)]))
     )
+
+
+def catalog_with_industry(industry: object) -> str:
+    entry = company()
+    entry["programs"][0]["industry"] = industry
+    return catalog(entry)
+
+
+def test_a_program_can_name_its_industry() -> None:
+    parsed = parse_catalog(catalog_with_industry("consulting"), rules_schema=RULES_SCHEMA)
+
+    assert parsed.companies[0].programs[0].industry == "consulting"
+
+
+def test_a_program_without_an_industry_has_none() -> None:
+    parsed = parse_catalog(catalog(), rules_schema=RULES_SCHEMA)
+
+    assert parsed.companies[0].programs[0].industry is None
+
+
+def test_an_industry_outside_the_list_is_reported() -> None:
+    for wrong in ("professional_services", "Consulting", "mining"):
+        problems = problems_for(catalog_with_industry(wrong))
+        assert any("industry" in p and "must be one of" in p for p in problems), wrong
