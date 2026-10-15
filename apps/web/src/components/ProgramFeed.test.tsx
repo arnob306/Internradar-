@@ -184,3 +184,12 @@ describe("ProgramFeed: industry", () => {
     expect(within(industries()).getByRole("link", { name: "Consulting" }).getAttribute("href")).toBe("/programs");
   });
 });
+
+describe("ProgramFeed: headings", () => {
+  it("titles each card with a level 2 heading, so the page goes from its h1 straight to them", () => {
+    render(<ProgramFeed programs={[program("Alpha"), program("Beta")]} total={2} query={query()} />);
+
+    const headings = screen.getAllByRole("heading");
+    expect(headings.map((heading) => heading.tagName)).toEqual(["H2", "H2"]);
+  });
+});
