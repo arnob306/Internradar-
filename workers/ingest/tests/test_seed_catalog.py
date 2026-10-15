@@ -195,4 +195,7 @@ def test_every_program_carries_its_employers_industry() -> None:
     assert {company.slug for company in catalog.companies} == set(INDUSTRY_OF_COMPANY)
     for company in catalog.companies:
         for program in company.programs:
-            assert program.industry == INDUSTRY_OF_COMPANY[company.slug], (company.slug, program.slug)
+            assert program.industry == INDUSTRY_OF_COMPANY[company.slug], (
+                company.slug,
+                program.slug,
+            )

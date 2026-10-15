@@ -29,6 +29,7 @@ companies:
       - slug: graduate-program
         name: CommBank Graduate Program
         program_type: graduate
+        industry: banking_finance
         cities: [melbourne]
         disciplines: []
         source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
@@ -63,6 +64,7 @@ companies:
       - slug: summer-intern-program
         name: CommBank Summer Intern Program
         program_type: vacationer
+        industry: banking_finance
         cities: [melbourne]
         disciplines: []
         source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs.html
@@ -104,6 +106,7 @@ companies:
       - slug: graduate-program
         name: Deloitte Graduate Program
         program_type: graduate
+        industry: consulting
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: []
@@ -156,6 +159,7 @@ companies:
       - slug: graduate-program
         name: Atlassian Graduate Program
         program_type: graduate
+        industry: technology
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: [computer_science, software_engineering]
@@ -184,6 +188,7 @@ companies:
       - slug: graduate-program
         name: PwC Graduate Program
         program_type: graduate
+        industry: consulting
         cities: [melbourne]
         disciplines: []
         source_url: https://jobs-au.pwc.com/au/en/graduate-program
@@ -223,6 +228,7 @@ companies:
       - slug: graduate-program
         name: EY Graduate Program
         program_type: graduate
+        industry: consulting
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: []
@@ -264,6 +270,7 @@ companies:
       - slug: graduate-program
         name: NAB Graduate Program
         program_type: graduate
+        industry: banking_finance
         cities: [melbourne]
         disciplines: []
         source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
@@ -304,6 +311,7 @@ companies:
       - slug: summer-intern-program
         name: NAB Summer Intern Program
         program_type: vacationer
+        industry: banking_finance
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: []
@@ -347,6 +355,7 @@ companies:
       - slug: graduate-program
         name: ANZ Graduate Program
         program_type: graduate
+        industry: banking_finance
         cities: [melbourne]
         disciplines: []
         source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
@@ -386,6 +395,7 @@ companies:
       - slug: graduate-program
         name: Westpac Graduate Program
         program_type: graduate
+        industry: banking_finance
         # Page: most positions are in Sydney, select programs in VIC, QLD, SA and WA.
         cities: [melbourne]
         disciplines: []
@@ -430,6 +440,7 @@ companies:
       - slug: vacationer-program
         name: KPMG Vacationer Program
         program_type: vacationer
+        industry: consulting
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: []
@@ -473,6 +484,7 @@ companies:
       - slug: graduate-program
         name: KPMG Graduate Program
         program_type: graduate
+        industry: consulting
         # Cities not confirmed from the page: check before verifying.
         cities: [melbourne]
         disciplines: []
@@ -511,6 +523,7 @@ companies:
       - slug: data-stream
         name: Australian Government Graduate Program, Data Stream
         program_type: graduate
+        industry: government_defence
         # Cities not confirmed from the page: roles are spread across agencies. Check before verifying.
         cities: [canberra]
         disciplines: []
