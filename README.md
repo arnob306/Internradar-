@@ -8,8 +8,9 @@ A web app for Australian university students applying for internships and gradua
 
 - **See when applications open.** The home page is a year chart with one bar per program. Solid bars are dates the employer published. Dashed bars are guesses from earlier years, labelled "Estimated" and sourced. A program with no information says "Not announced" instead of guessing. Each row says when to start preparing, using a 4-week lead (decision D22).
 - **Narrow it to Graduate or Vacationer** with plain links that work without JavaScript (decision D26).
-- **Read how the process works.** Each program page has a "How to prepare and apply" section: the steps the employer's own page describes (for example online application, online assessment, video interview, assessment centre), each with a link to where it is described. Eight programs have stages so far. The rest say they aren't published rather than invent any (decision D25).
-- **Add the dates to a calendar.** A program page can download a calendar file with its opening and closing dates, but only the ones the employer gives to the day and that are still ahead. Month-only and estimated dates are left out. It is a one-off download, not an alert (decision D27).
+- **Narrow it by industry** (banking and finance, consulting, technology, and so on). The industry row combines with the type filter, on the timeline and on the Programs list, and the public API takes the same filter (decision D23).
+- **Read how the process works.** Each program page has a "How to prepare and apply" section: the steps the employer's own page describes (for example online application, online assessment, video interview, assessment centre), each with a link to where it is described. Eleven of the thirteen programs have stages so far. The rest say they aren't published rather than invent any (decision D25).
+- **Add the dates to a calendar.** A program page can download a calendar file with its opening and closing dates, but only the ones the employer gives to the day and that are still ahead. It adds a "start preparing" day four weeks before an opening. Month-only and estimated dates are left out. It is a one-off download, not an alert (decision D27).
 - **Check eligibility** from year level, graduation date and citizenship, answered as eligible, ineligible or unknown with reasons.
 - **Save programs to a tracker** and badge them on the timeline.
 
@@ -63,7 +64,7 @@ Before writing code I wrote a plan and had it reviewed from two angles: system a
 | [Data sourcing and privacy policy](docs/ethics-policy.md) | What I fetch, how politely, and how personal data is handled |
 | [Public API spec](docs/api/openapi.yaml) | OpenAPI 3.1 for the two public program routes: fields, filters, errors, caching and the rate limit. A test keeps it in step with the code |
 | [Demo script](docs/demo-script.md) | A two-minute walkthrough, what not to claim, and answers to likely questions |
-| [Evidence reports](docs/testing/timeline-filter.tdd.md) | What each test-first change proved, with the failing and passing runs (also [application stages](docs/testing/application-stages.tdd.md)) |
+| [Evidence reports](docs/testing/timeline-filter.tdd.md) | What each test-first change proved, with the failing and passing runs (also [application stages](docs/testing/application-stages.tdd.md), [industry filter](docs/testing/industry-filter.tdd.md)) |
 
 I use test-driven development: write a failing test, write the minimum code to pass it, then tidy up. Phase 0 followed that loop, and it caught real problems (see [What went wrong](#what-went-wrong-and-what-i-learned)).
 
