@@ -132,6 +132,7 @@ def _program_values(program: SeedProgram) -> dict[str, Any]:
             {"name": s.name, "description": s.description, "sourceUrl": s.source_url}
             for s in program.application_stages
         ],
+        "industry": program.industry,
     }
 
 
@@ -156,8 +157,8 @@ def _load_program(
             connection,
             "insert into public.programs (company_id, slug, name, program_type, cities, "
             "disciplines, source_url, eligibility_rules, eligibility_verified_at, is_published, "
-            "application_stages) "
-            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id",
+            "application_stages, industry) "
+            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id",
             (company_id, program.slug, *_program_params(values)),
         )
         return program_id, INSERTED
@@ -166,7 +167,8 @@ def _load_program(
     connection.execute(
         "update public.programs set name = %s, program_type = %s, cities = %s, "
         "disciplines = %s, source_url = %s, eligibility_rules = %s, "
-        "eligibility_verified_at = %s, is_published = %s, application_stages = %s where id = %s",
+        "eligibility_verified_at = %s, is_published = %s, application_stages = %s, "
+        "industry = %s where id = %s",
         (*_program_params(values), row["id"]),
     )
     return row["id"], UPDATED

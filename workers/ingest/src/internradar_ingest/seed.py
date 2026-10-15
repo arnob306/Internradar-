@@ -23,11 +23,20 @@ from jsonschema import Draft202012Validator
 RESERVED_SLUG_PREFIX = "dbtest-"
 
 ProgramType = Literal["internship", "vacationer", "graduate", "cadetship", "discovery"]
+Industry = Literal[
+    "banking_finance",
+    "consulting",
+    "technology",
+    "engineering_resources",
+    "government_defence",
+    "other",
+]
 Precision = Literal["day", "month", "estimated"]
 WindowStatus = Literal["upcoming", "open", "closed", "unknown"]
 AtsKind = Literal["greenhouse", "lever", "workday"]
 
 _PROGRAM_TYPES = frozenset(get_args(ProgramType))
+_INDUSTRIES = frozenset(get_args(Industry))
 _PRECISIONS = frozenset(get_args(Precision))
 _STATUSES = frozenset(get_args(WindowStatus))
 _ATS_KINDS = frozenset(get_args(AtsKind))
@@ -50,6 +59,7 @@ _PROGRAM_KEYS = {
     "is_published",
     "windows",
     "application_stages",
+    "industry",
 }
 _STAGE_KEYS = {"name", "description", "source_url"}
 _MAX_STAGES = 12
@@ -117,6 +127,7 @@ class SeedProgram:
     is_published: bool
     windows: tuple[SeedWindow, ...]
     application_stages: tuple[SeedStage, ...] = ()
+    industry: Industry | None = None
 
 
 @dataclass(frozen=True)
@@ -334,6 +345,13 @@ def _stages(raw: object, where: str, ctx: _Context) -> tuple[SeedStage, ...]:
     return tuple(_stage(item, f"{where} stage {i + 1}", ctx) for i, item in enumerate(raw))
 
 
+def _industry(data: Mapping[str, Any], where: str, ctx: _Context) -> Industry | None:
+    """Optional: an untagged program shows only under "All" on the site."""
+    if data.get("industry") is None:
+        return None
+    return _choice(data, "industry", _INDUSTRIES, where, ctx)  # type: ignore[no-any-return]
+
+
 def _program(raw: object, where: str, ctx: _Context) -> SeedProgram:
     data = _mapping(raw, where, _PROGRAM_KEYS, ctx)
     verified_on, is_published = _verification(data, where, ctx)
@@ -350,6 +368,7 @@ def _program(raw: object, where: str, ctx: _Context) -> SeedProgram:
         is_published=is_published,
         windows=_windows(data.get("windows"), where, ctx),
         application_stages=_stages(data.get("application_stages"), where, ctx),
+        industry=_industry(data, where, ctx),
     )
 
 
