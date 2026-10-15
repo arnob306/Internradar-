@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseTimelineFilter, timelineHref, TIMELINE_FILTERS } from "./timeline-filter";
+import { INDUSTRY_FILTERS, parseTimelineFilter, timelineHref, TIMELINE_FILTERS } from "./timeline-filter";
 
 const params = (text: string): URLSearchParams => new URLSearchParams(text);
 
@@ -51,6 +51,59 @@ describe("TIMELINE_FILTERS", () => {
       { type: undefined, label: "All programs" },
       { type: "graduate", label: "Graduate" },
       { type: "vacationer", label: "Vacationer" },
+    ]);
+  });
+});
+
+describe("parseTimelineFilter: industry", () => {
+  it.each(["banking_finance", "consulting", "technology", "engineering_resources", "government_defence", "other"] as const)(
+    "accepts industry=%s",
+    (industry) => {
+      expect(parseTimelineFilter(params(`industry=${industry}`))).toEqual({
+        type: undefined,
+        industry,
+        isValid: true,
+      });
+    },
+  );
+
+  it("combines with a type", () => {
+    expect(parseTimelineFilter(params("type=graduate&industry=consulting"))).toEqual({
+      type: "graduate",
+      industry: "consulting",
+      isValid: true,
+    });
+  });
+
+  it("ignores an industry it does not offer, keeps a valid type, and says the link was not valid", () => {
+    for (const bad of ["industry=mining", "industry=Consulting", "industry=", "industry=consulting&industry=other"]) {
+      expect(parseTimelineFilter(params(`type=graduate&${bad}`))).toEqual({
+        type: "graduate",
+        industry: undefined,
+        isValid: false,
+      });
+    }
+  });
+});
+
+describe("timelineHref: industry", () => {
+  it("puts the type, then the industry, in the address", () => {
+    expect(timelineHref(undefined, "consulting")).toBe("/?industry=consulting");
+    expect(timelineHref("graduate", "consulting")).toBe("/?type=graduate&industry=consulting");
+    expect(timelineHref("graduate", undefined)).toBe("/?type=graduate");
+  });
+});
+
+describe("INDUSTRY_FILTERS", () => {
+  it("offers all industries first, then each industry with its plain label", () => {
+    expect(INDUSTRY_FILTERS).toEqual([
+      { industry: undefined, label: "All industries" },
+      { industry: "banking_finance", label: "Banking and finance" },
+      { industry: "consulting", label: "Consulting" },
+      { industry: "technology", label: "Technology" },
+      { industry: "engineering_resources", label: "Engineering and resources" },
+      { industry: "government_defence", label: "Government and defence" },
+      { industry: "other", label: "Other" },
     ]);
   });
 });

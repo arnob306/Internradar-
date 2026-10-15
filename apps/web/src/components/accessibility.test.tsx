@@ -8,6 +8,7 @@ import { chartFor } from "../features/timeline/timeline-bars";
 import type { PublicProgram } from "../server/programs/programs-handler";
 import { ProgramDetail } from "./ProgramDetail";
 import { TimelineChart } from "./TimelineChart";
+import { IndustryFilters } from "./IndustryFilters";
 import { TimelineFilters } from "./TimelineFilters";
 
 const TODAY = "2026-10-08";
@@ -75,6 +76,15 @@ describe("accessibility: the timeline", () => {
     expect(await violationsIn(graduate.container)).toEqual([]);
   });
 
+  it("has no violations in the industry filter, with or without an industry chosen", async () => {
+    const all = render(<IndustryFilters current={undefined} type={undefined} />);
+    expect(await violationsIn(all.container)).toEqual([]);
+    all.unmount();
+
+    const consulting = render(<IndustryFilters current="consulting" type="graduate" />);
+    expect(await violationsIn(consulting.container)).toEqual([]);
+  });
+
   it("has no violations in a chart with every kind of row", async () => {
     const programs = [
       timelineProgram("confirmed", [
@@ -113,6 +123,28 @@ describe("accessibility: the timeline", () => {
 
     expect(reached).toEqual(["All programs", "Graduate", "Vacationer"]);
   });
+
+  it("lets a keyboard reach every industry in reading order", async () => {
+    const user = userEvent.setup();
+    const { getAllByRole } = render(<IndustryFilters current={undefined} type={undefined} />);
+
+    const reached: (string | null)[] = [];
+    for (let i = 0; i < getAllByRole("link").length; i += 1) {
+      await user.tab();
+      reached.push(document.activeElement?.textContent ?? null);
+    }
+
+    expect(reached).toEqual([
+      "All industries",
+      "Banking and finance",
+      "Consulting",
+      "Technology",
+      "Engineering and resources",
+      "Government and defence",
+      "Other",
+    ]);
+  });
+
 });
 
 describe("accessibility: a program page", () => {
