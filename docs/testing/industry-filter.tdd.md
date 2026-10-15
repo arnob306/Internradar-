@@ -18,7 +18,7 @@ Decision: D23.
 | Behaviour | RED | GREEN |
 |---|---|---|
 | `programs.industry`: a nullable enum of six values | `774aa22` (pgTAP 009 failed: no column) | `4020224` (pgTAP 176 pass) |
-| Domain list `INDUSTRIES`, `isIndustry`, plain labels | `a?` see below | `d7aeb44` |
+| Domain list `INDUSTRIES`, `isIndustry`, plain labels | `e2df486` (the list and labels were missing) | `d7aeb44` |
 | Seed parser and loader carry `industry` | `8d8d0f9` (3 parse and 2 load tests failed) | `6a31dcd` |
 | Query parameter, listing filter, `industry` on the public view | `cbe1888` (9 unit and 2 integration failed) | `b80b6ff` (with `openapi.yaml`) |
 | Home timeline filter, combined with the type | `a06b8f6` (18 failed) | `9f810e1` |
@@ -27,8 +27,6 @@ Decision: D23.
 | Seed tags for the 13 programs | `12d5b2d` (test failed: untagged) | `99c5ad1` |
 | Card titles are level 2 headings (found by the audit) | `d436490` | `d2bc823` |
 
-The vocabulary RED commit is the one titled "test: the industry vocabulary and its plain labels (RED: not defined
-yet)", just before `d7aeb44`.
 
 The `openapi.yaml` change was driven by the contract test: once the API returned `industry`, `openapi.test.ts`
 failed until the file described the field, the parameter and the enum, so it sits in the same GREEN commit as the API.
