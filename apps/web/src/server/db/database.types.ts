@@ -287,13 +287,13 @@ isOneToOne: false
                   ]
                 },"programs": {
                   Row: {
-                    "application_stages": NonNullable<Json>,"cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
+                    "application_stages": NonNullable<Json>,"cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"industry": Database["public"]['Enums']["industry"] | null,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
                   }
                   Insert: {
-                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"] | null,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
                   }
                   Update: {
-                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"] | null,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -350,7 +350,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_status": "saved"|"applied"|"online_assessment"|"interview"|"offer"|"rejected","ats_kind": "greenhouse"|"lever"|"workday","citizenship": "au_citizen"|"au_pr"|"nz_citizen"|"intl_student"|"other","date_precision": "day"|"month"|"estimated","degree_level": "undergraduate"|"honours"|"masters_coursework"|"masters_research"|"phd","program_type": "internship"|"vacationer"|"graduate"|"cadetship"|"discovery","provenance": "seed"|"ats"|"monitor"|"admin","window_status": "upcoming"|"open"|"closed"|"unknown"
+            "app_status": "saved"|"applied"|"online_assessment"|"interview"|"offer"|"rejected","ats_kind": "greenhouse"|"lever"|"workday","citizenship": "au_citizen"|"au_pr"|"nz_citizen"|"intl_student"|"other","date_precision": "day"|"month"|"estimated","degree_level": "undergraduate"|"honours"|"masters_coursework"|"masters_research"|"phd","industry": "banking_finance"|"consulting"|"technology"|"engineering_resources"|"government_defence"|"other","program_type": "internship"|"vacationer"|"graduate"|"cadetship"|"discovery","provenance": "seed"|"ats"|"monitor"|"admin","window_status": "upcoming"|"open"|"closed"|"unknown"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -466,7 +466,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_status": ["saved", "applied", "online_assessment", "interview", "offer", "rejected"],"ats_kind": ["greenhouse", "lever", "workday"],"citizenship": ["au_citizen", "au_pr", "nz_citizen", "intl_student", "other"],"date_precision": ["day", "month", "estimated"],"degree_level": ["undergraduate", "honours", "masters_coursework", "masters_research", "phd"],"program_type": ["internship", "vacationer", "graduate", "cadetship", "discovery"],"provenance": ["seed", "ats", "monitor", "admin"],"window_status": ["upcoming", "open", "closed", "unknown"]
+            "app_status": ["saved", "applied", "online_assessment", "interview", "offer", "rejected"],"ats_kind": ["greenhouse", "lever", "workday"],"citizenship": ["au_citizen", "au_pr", "nz_citizen", "intl_student", "other"],"date_precision": ["day", "month", "estimated"],"degree_level": ["undergraduate", "honours", "masters_coursework", "masters_research", "phd"],"industry": ["banking_finance", "consulting", "technology", "engineering_resources", "government_defence", "other"],"program_type": ["internship", "vacationer", "graduate", "cadetship", "discovery"],"provenance": ["seed", "ats", "monitor", "admin"],"window_status": ["upcoming", "open", "closed", "unknown"]
           }
         }
 } as const
