@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactElement } from "react";
+import { IndustryFilters } from "../components/IndustryFilters";
 import { TimelineChart } from "../components/TimelineChart";
 import { TimelineFilters } from "../components/TimelineFilters";
+import { INDUSTRY_LABELS } from "../features/vocabulary-labels";
 import { melbourneDate } from "../features/programs/melbourne-date";
 import { MAX_LIMIT } from "../features/programs/programs-query";
 import { toSearchParams, type PageSearchParams } from "../features/programs/search-params";
@@ -46,6 +48,14 @@ async function savedProgramIds(client: Client): Promise<string[]> {
 
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
+/** What to say when the chosen filters leave nothing, naming each filter that is on. */
+function nothingToShow({ type, industry }: TimelineFilter): string {
+  const kind = type === undefined ? "programs" : `${type} programs`;
+  return industry === undefined
+    ? `No ${kind} to show yet.`
+    : `No ${kind} in ${INDUSTRY_LABELS[industry]} to show yet.`;
+}
+
 /** The headline, the summary, the filters and the chart for one page of programs. */
 function TimelineView({
   filter,
@@ -74,7 +84,8 @@ function TimelineView({
         <li>{summary.notAnnounced} with no dates announced</li>
       </ul>
       <div className="timeline-toolbar">
-        <TimelineFilters current={filter.type} />
+        <TimelineFilters current={filter.type} industry={filter.industry} />
+        <IndustryFilters current={filter.industry} type={filter.type} />
         <Link href="/programs">Browse all programs</Link>
       </div>
       {!filter.isValid && (
@@ -87,9 +98,9 @@ function TimelineView({
           Showing the first {page.items.length} of {page.total} programs.
         </p>
       )}
-      {filter.type !== undefined && page.items.length === 0 ? (
+      {(filter.type !== undefined || filter.industry !== undefined) && page.items.length === 0 ? (
         <p className="notice">
-          No {filter.type} programs to show yet. <Link href="/">Show all programs</Link>
+          {nothingToShow(filter)} <Link href="/">Show all programs</Link>
         </p>
       ) : (
         <TimelineChart chart={chartFor(timeline, today)} />
@@ -115,7 +126,7 @@ export default async function HomePage({
     const client = await sessionClientForRequest();
     page = await listPrograms(
       client,
-      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, industry: undefined, openNow: false },
+      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, industry: filter.industry, openNow: false },
       today,
     );
     saved = await savedProgramIds(client);
