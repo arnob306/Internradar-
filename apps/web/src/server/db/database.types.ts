@@ -361,7 +361,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "is_admin":
+            "alert_recipient_email":
+{ Args: { "alert_id": string }; Returns: string
+                           },
+"is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "log_event":

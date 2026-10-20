@@ -2,7 +2,7 @@
 -- decide who is owed an alert, writes only alerts, and gets a student's email address one pending
 -- alert at a time, never by reading the accounts table.
 begin;
-select plan(24);
+select plan(29);
 
 grant notify_worker to postgres;
 grant usage on schema extensions to notify_worker;
@@ -21,7 +21,7 @@ insert into public.program_windows (id, program_id, cycle_year, window_seq, stat
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1',
    2027, 1, 'unknown', 'seed', 'https://acme.example/grad');
 insert into public.profiles (user_id, email_alerts, citizenship) values
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', true, 'domestic');
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', true, 'au_citizen');
 insert into public.program_follows (user_id, program_id) values
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-0000000000a1');
 insert into public.alerts (id, user_id, program_id, program_window_id, kind, dedupe_key, status, sent_at) values
@@ -86,6 +86,25 @@ select throws_ok($$select email from auth.users$$, '42501', null,
   'reading the accounts table directly is refused');
 select throws_ok($$update public.alerts set user_id = user_id$$, '42501', null,
   'rewriting who an alert is for is refused');
+
+select is((select count(*)::int from public.alerts), 1,
+  'the worker sees only alerts still waiting to be sent');
+select throws_ok(
+  $$insert into public.alerts (user_id, program_id, program_window_id, kind, dedupe_key, status, sent_at)
+    values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-0000000000a1',
+            '00000000-0000-0000-0000-0000000000b1', 'opened', 'event:7', 'sent', now())$$,
+  '42501', null, 'the worker cannot queue an alert that is already marked sent');
+select is_empty(
+  $$update public.alerts set attempts = 9 where id = '22222222-2222-2222-2222-222222222222' returning 1$$,
+  'the worker cannot change an alert that was already sent');
+select is((select count(*)::int from public.program_follows), 1, 'the worker sees follows that ask for email');
+
+reset role;
+update public.program_follows set notify = false;
+update public.profiles set email_alerts = false;
+set local role notify_worker;
+select is((select count(*)::int from public.program_follows), 0, 'the worker does not see a follow with notify off');
+select is((select count(*)::int from public.profiles), 0, 'the worker does not see a student who turned email off');
 
 reset role;
 select * from finish();
