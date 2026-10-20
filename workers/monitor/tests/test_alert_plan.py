@@ -130,6 +130,15 @@ def test_changed_dates_on_an_upcoming_window_alert() -> None:
     assert [d.kind for d in alerts_for_event(upcoming, PROGRAM, (ALICE,))] == ["dates_changed"]
 
 
+def test_dates_set_in_the_same_update_that_opens_the_window_are_not_a_second_alert() -> None:
+    together = replace(
+        event("dates_changed", before=snapshot(status="unknown", closes_on=None)),
+        opened_in_same_update=True,
+    )
+
+    assert alerts_for_event(together, PROGRAM, (ALICE,)) == ()
+
+
 def test_an_event_nobody_follows_makes_no_alerts() -> None:
     assert alerts_for_event(event("opened"), PROGRAM, ()) == ()
 
