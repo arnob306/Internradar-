@@ -225,7 +225,7 @@ def _load_window(connection: Connection, program_id: UUID, window: SeedWindow) -
         f"update public.program_windows set {assignments} where id = %s",  # noqa: S608 - fixed names
         (*values.values(), row["id"]),
     )
-    _record_event(connection, row["id"], "corrected", before, values)
+    # status and date changes are recorded by a trigger on program_windows (D28), not here
     return UPDATED
 
 

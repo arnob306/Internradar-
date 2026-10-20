@@ -200,7 +200,7 @@ def test_verification_is_stored_as_a_melbourne_date_and_can_be_withdrawn(
 def test_a_changed_window_leaves_one_history_event_written_by_the_database(
     admin_db: Connection,
 ) -> None:
-    """The database records status and date changes itself (D28), so the loader adds none of its own."""
+    """The database records status and date changes itself (D28); the loader adds none."""
     load_catalog(admin_db, make_catalog())
 
     summary = load_catalog(
