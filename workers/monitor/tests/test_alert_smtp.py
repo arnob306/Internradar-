@@ -126,6 +126,16 @@ def test_no_error_carries_the_address_or_the_server_text() -> None:
     assert "alice" not in str(caught.value) + repr(caught.value)
 
 
+def test_the_servers_own_error_is_not_chained_where_a_log_would_print_it() -> None:
+    busy = smtplib.SMTPResponseException(451, b"try again later for alice@example.test")
+
+    with pytest.raises(SendError) as caught:
+        notifier(FakeSmtp(busy)).send(EMAIL)
+
+    assert caught.value.__suppress_context__
+    assert caught.value.__cause__ is None
+
+
 def test_a_recipient_with_a_line_break_is_refused_not_turned_into_a_header() -> None:
     sneaky = OutgoingEmail(
         to="alice@example.test\r\nBcc: someone@example.test",
