@@ -1,4 +1,4 @@
-"""Sending one alert (D29): success, retry with backoff, giving up, and never storing error detail."""
+"""Sending one alert (D29): success, retry with backoff, giving up, no error detail kept."""
 
 from datetime import UTC, datetime, timedelta
 
