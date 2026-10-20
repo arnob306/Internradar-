@@ -1,7 +1,7 @@
 -- Window events: every real change to an application window leaves a history row, because email
 -- alerts are built from this history (D28). A row that changes nothing leaves none.
 begin;
-select plan(13);
+select plan(14);
 
 insert into public.companies (id, slug, name, careers_url) values
   ('00000000-0000-0000-0000-0000000000c1', 'acme', 'Acme', 'https://acme.example/careers');
@@ -109,6 +109,17 @@ select is(
     where program_window_id = '00000000-0000-0000-0000-0000000000b2'),
   array['opened'],
   'a window added already open records an opened event');
+
+-- Going back to "upcoming" or "unknown" says nothing a student should be emailed about, and it must
+-- never be mistaken for the window closing.
+update public.program_windows set status = 'upcoming' where id = '00000000-0000-0000-0000-0000000000b2';
+update public.program_windows set status = 'unknown' where id = '00000000-0000-0000-0000-0000000000b2';
+
+select is(
+  (select array_agg(event_type order by id) from public.program_window_events
+    where program_window_id = '00000000-0000-0000-0000-0000000000b2'),
+  array['opened'],
+  'a window that goes back to upcoming or unknown records no new event');
 
 select * from finish();
 rollback;
