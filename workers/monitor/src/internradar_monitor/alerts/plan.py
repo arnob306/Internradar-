@@ -48,6 +48,8 @@ class WindowEvent:
     event_type: str
     before: WindowSnapshot | None
     after: WindowSnapshot
+    # the history records both an opening and its dates; the student is told once, about the opening
+    opened_in_same_update: bool = False
 
 
 @dataclass(frozen=True)
@@ -111,7 +113,9 @@ def alerts_for_event(
     kind = _EVENT_ALERT_KIND.get(event.event_type)
     if kind is None:
         return ()
-    if kind == "dates_changed" and event.after.status not in _STILL_LIVE:
+    if kind == "dates_changed" and (
+        event.after.status not in _STILL_LIVE or event.opened_in_same_update
+    ):
         return ()
     details = _details(program, event.after)
     if kind == "dates_changed" and event.before is not None:

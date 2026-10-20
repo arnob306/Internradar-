@@ -4,19 +4,21 @@ It turns window events into alerts, then claims due alerts, sends them and recor
 """
 
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
 import psycopg
 import pytest
+from internradar_common.clock import SystemClock
 from internradar_monitor.alerts.send import OutgoingEmail, SendError
 from internradar_monitor.alerts.store import create_alerts, send_due
 
 pytestmark = pytest.mark.db
 
 Connection = psycopg.Connection[tuple[Any, ...]]
-NOW = datetime.now(UTC)
+# a little ahead of the database clock, so alerts the database just stamped are already due
+NOW = SystemClock().now() + timedelta(minutes=5)
 TODAY = NOW.date()
 
 

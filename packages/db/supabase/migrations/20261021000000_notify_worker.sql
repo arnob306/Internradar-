@@ -30,8 +30,10 @@ create policy follows_notify_read on public.program_follows
   for select to notify_worker using (notify);
 create policy profiles_notify_read on public.profiles
   for select to notify_worker using (email_alerts);
-create policy alerts_notify_read on public.alerts
-  for select to notify_worker using (status = 'pending');
+-- Postgres also checks an updated row against the select policy, so the worker must still see an
+-- alert after marking it sent. Recent history is enough; older rows are out of its reach.
+create policy alerts_notify_read on public.alerts for select to notify_worker
+  using (status = 'pending' or created_at > now() - interval '30 days');
 create policy alerts_notify_insert on public.alerts for insert to notify_worker
   with check (status = 'pending' and attempts = 0 and sent_at is null);
 create policy alerts_notify_update on public.alerts for update to notify_worker

@@ -31,6 +31,10 @@ insert into public.alerts (id, user_id, program_id, program_window_id, kind, ded
   ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
    '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000b1',
    'dates_changed', 'event:2', 'sent', now());
+insert into public.alerts (user_id, program_id, program_window_id, kind, dedupe_key, status, sent_at, created_at) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-0000000000a1',
+   '00000000-0000-0000-0000-0000000000b1', 'closing_soon', 'closing:old', 'sent',
+   now() - interval '100 days', now() - interval '100 days');
 
 -- What it may read ---------------------------------------------------------------------------
 select ok(has_table_privilege('notify_worker', 'public.program_window_events', 'select'),
@@ -87,8 +91,8 @@ select throws_ok($$select email from auth.users$$, '42501', null,
 select throws_ok($$update public.alerts set user_id = user_id$$, '42501', null,
   'rewriting who an alert is for is refused');
 
-select is((select count(*)::int from public.alerts), 1,
-  'the worker sees only alerts still waiting to be sent');
+select is((select count(*)::int from public.alerts), 2,
+  'the worker sees pending alerts and recent history, but not old sent alerts');
 select throws_ok(
   $$insert into public.alerts (user_id, program_id, program_window_id, kind, dedupe_key, status, sent_at)
     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '00000000-0000-0000-0000-0000000000a1',

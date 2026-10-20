@@ -44,7 +44,9 @@ def notify_db(admin_db: Connection) -> Iterator[Connection]:
 
 def add_student(db: Connection, name: str, *, email_alerts: bool = True) -> tuple[UUID, str]:
     email = f"{TEST_SLUG_PREFIX}{name}@example.test"
-    user = db.execute("insert into auth.users (email) values (%s) returning id", (email,))
+    user = db.execute(
+        "insert into auth.users (id, email) values (gen_random_uuid(), %s) returning id", (email,)
+    )
     row = user.fetchone()
     assert row is not None
     db.execute(
@@ -74,12 +76,14 @@ def follow_program(admin_db: Connection) -> Callable[..., None]:
 @pytest.fixture
 def world(admin_db: Connection) -> World:
     company = admin_db.execute(
-        "insert into public.companies (slug, name, careers_url) values (%s, 'Acme', %s) returning id",
+        "insert into public.companies (slug, name, careers_url) "
+        "values (%s, 'Acme', %s) returning id",
         (f"{TEST_SLUG_PREFIX}acme", "https://acme.example/careers"),
     ).fetchone()
     assert company is not None
     program = admin_db.execute(
-        "insert into public.programs (company_id, slug, name, program_type, source_url, is_published) "
+        "insert into public.programs "
+        "(company_id, slug, name, program_type, source_url, is_published) "
         "values (%s, %s, 'Graduate Program', 'graduate', 'https://acme.example/grad', true) "
         "returning id",
         (company[0], f"{TEST_SLUG_PREFIX}acme-grad"),
