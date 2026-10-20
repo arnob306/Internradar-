@@ -33,7 +33,9 @@ def mailpit(path: str, *, method: str = "GET", body: dict[str, Any] | None = Non
         f"{API}{path}", data=data, method=method, headers={"Content-Type": "application/json"}
     )
     with urllib.request.urlopen(request, timeout=5) as response:  # noqa: S310
-        return json.loads(response.read() or b"null")
+        raw = response.read().decode()
+    # Mailpit answers a delete with the plain word "ok"
+    return json.loads(raw) if raw.startswith(("{", "[")) else raw
 
 
 @pytest.fixture

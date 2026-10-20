@@ -8,11 +8,15 @@ is never passed on.
 import smtplib
 from collections.abc import Callable
 from email.message import EmailMessage
+from email.policy import SMTP
 from typing import Any
 
 from internradar_monitor.alerts.send import OutgoingEmail, SendError
 
 _TEMPORARY_REPLY = range(400, 500)
+# Header lines may run to the RFC limit. At the default 78, a link with no spaces cannot be folded
+# and is turned into an encoded word, which mail clients cannot follow for one-click unsubscribe.
+_POLICY = SMTP.clone(max_line_length=998)
 
 
 class SmtpNotifier:
@@ -30,7 +34,7 @@ class SmtpNotifier:
         self._login = login
 
     def _message(self, email: OutgoingEmail) -> EmailMessage:
-        message = EmailMessage()
+        message = EmailMessage(policy=_POLICY)
         try:
             message["To"] = email.to
         except ValueError:
