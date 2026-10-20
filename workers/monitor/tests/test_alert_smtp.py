@@ -1,6 +1,7 @@
 """The SMTP notifier (D29): right headers, safe error codes, and no address in an error."""
 
 import smtplib
+from dataclasses import replace
 from email.message import EmailMessage
 from typing import Any
 
@@ -70,6 +71,17 @@ def test_the_message_offers_one_click_unsubscribe_and_names_its_alert() -> None:
     assert message["List-Unsubscribe"] == "<https://internradar.example/unsubscribe?token=abc>"
     assert message["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
     assert message["X-InternRadar-Alert"] == "alert-1"
+
+
+def test_a_long_unsubscribe_link_stays_readable_in_the_sent_message() -> None:
+    long_link = "https://internradar.example/unsubscribe?alert=" + "0123456789abcdef" * 4
+    smtp = FakeSmtp()
+
+    notifier(smtp).send(replace(EMAIL, unsubscribe_url=long_link))
+
+    (message,) = smtp.sent
+    # on the wire the link must be a plain <url>, not an encoded word a mail client cannot follow
+    assert f"List-Unsubscribe: <{long_link}>".encode() in message.as_bytes()
 
 
 def test_a_secure_login_is_used_only_when_asked_for() -> None:
