@@ -21,10 +21,10 @@ ADMIN_URL = os.environ.get(
 WORKER_TEST_PASSWORD = "local-test-only"  # noqa: S105 - set only on a local throwaway database
 _LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
-# ALTER ROLE from several threads at once fails ("tuple concurrently updated"), so the
-# password is set once per process, under a lock.
+# ALTER ROLE from several threads at once fails ("tuple concurrently updated"), so each
+# role's password is set once per process, under a lock.
 _password_lock = Lock()
-_password_set = False
+_roles_with_password: set[str] = set()
 
 
 # Test data is recognisable, so cleanup deletes only it and never real local data (such as
@@ -56,6 +56,8 @@ def clean_test_data(connection: psycopg.Connection[tuple[Any, ...]]) -> None:
     )
     connection.execute("delete from public.companies where slug like %s", (pattern,))
     connection.execute("delete from public.fetch_claims where fetch_day < %s", (TEST_CLAIM_CUTOFF,))
+    # test students: their profiles, follows and alerts go with them by cascade
+    connection.execute("delete from auth.users where email like %s", (f"{TEST_SLUG_PREFIX}%",))
 
 
 def _require_local(url: str) -> None:
@@ -71,27 +73,35 @@ def admin_connection() -> psycopg.Connection[tuple[Any, ...]]:
     return psycopg.connect(ADMIN_URL, autocommit=True)
 
 
-def _ensure_worker_password() -> None:
-    global _password_set  # noqa: PLW0603 - a once-per-process flag
+def _ensure_role_password(role: str) -> None:
     with _password_lock:
-        if _password_set:
+        if role in _roles_with_password:
             return
         with admin_connection() as admin:
             admin.execute(
-                sql.SQL("alter role ingest_worker with password {}").format(
-                    sql.Literal(WORKER_TEST_PASSWORD)
+                sql.SQL("alter role {} with password {}").format(
+                    sql.Identifier(role), sql.Literal(WORKER_TEST_PASSWORD)
                 )
             )
-        _password_set = True
+        _roles_with_password.add(role)
+
+
+def _role_conninfo(role: str) -> str:
+    _require_local(ADMIN_URL)
+    _ensure_role_password(role)
+    return make_conninfo(ADMIN_URL, user=role, password=WORKER_TEST_PASSWORD)
 
 
 def worker_conninfo() -> str:
     """The connection string for the restricted ingest_worker login role (local only)."""
-    _require_local(ADMIN_URL)
-    _ensure_worker_password()
-    return make_conninfo(ADMIN_URL, user="ingest_worker", password=WORKER_TEST_PASSWORD)
+    return _role_conninfo("ingest_worker")
 
 
 def worker_connection(*, autocommit: bool = True) -> psycopg.Connection[tuple[Any, ...]]:
     """A connection as the restricted ingest_worker login role."""
     return psycopg.connect(worker_conninfo(), autocommit=autocommit)
+
+
+def notify_connection(*, autocommit: bool = True) -> psycopg.Connection[tuple[Any, ...]]:
+    """A connection as the restricted notify_worker login role (local only)."""
+    return psycopg.connect(_role_conninfo("notify_worker"), autocommit=autocommit)
