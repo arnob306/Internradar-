@@ -63,15 +63,82 @@ Each defence was removed in turn and the tests were run. Every removal made a te
   unsubscribe header, logging in when not asked, and chaining the server's error. The last survived and
   `283f953` closes it.
 
-## Known gaps
+## Known gaps (first half)
 
-- Nothing creates alerts from events yet, and nothing claims and sends them. That needs a restricted
-  `notify_worker` database role (as `ingest_worker` has), a controlled way to read a student's email address,
-  and a command to run it. The worker should not connect as `postgres` once the site is hosted.
 - No follow button, unsubscribe page, or profile switch. Until they exist, no page may mention alerts.
 - No hosted sender. Resend is planned behind the same `Notifier` interface and needs an account and a verified
   domain. Its idempotency-key support (ADR-010) is still to be checked against its documentation.
 - The alert code sits in the `monitor` package because a new workspace package needs a regenerated `uv.lock`, and
   `uv` is not installed on this machine. It can be split out later.
-- Nothing has sent a real email yet. The SMTP sender has only been tested with a fake connection, not against
-  Mailpit.
+
+# Second half: the restricted role, the store and the command (D30)
+
+This half connects the pieces. A worker that logs in as a restricted database role makes alerts from window
+events, sends the due ones, and records only a safe result. A real email goes through Mailpit.
+
+## User journeys
+
+- As the author, I want the sender to hold only the access it needs, so a leaked credential cannot list students.
+- As a student who follows a program, I want one email when it opens, even if the employer also set the closing date
+  in the same edit.
+- As a student who turned email off after an alert was queued, I want it not to be sent.
+- As the author, I want two workers, or a repeated run, never to send the same email twice.
+
+## Task report
+
+| Behaviour | RED | GREEN |
+|---|---|---|
+| `notify_worker` role, scoped policies, one-address-at-a-time lookup | `e446ea4` (role did not exist) | `a022f6e` |
+| Create alerts from events and closing dates, claim and send due alerts, record a safe code | `ff61699` (no store) | `36a6d80` |
+| A date set in the update that opens a window is not a second email | `b7fe42e` | `36a6d80` |
+| The command: settings, counts only, crash by type name, Melbourne day; a real email through Mailpit | `cccdbd0` | `d676b69` |
+| A long unsubscribe link stays a plain `<url>` on the wire | `c7433a5` | `d676b69` |
+
+Three things the tests found while the GREEN code was being written, all fixed:
+
+- The repo's own guard in `000_meta` rejected `using (true)` policies on student tables. The policies now have real
+  conditions: follows with notify on, profiles with email on, alerts that are pending or recent.
+- Postgres checks an updated row against the select policy, so a worker that could only see pending alerts could not
+  mark one sent. The select policy now also allows alerts from the last 30 days.
+- Opening a window and setting its closing date in one edit queued two emails. The history keeps both events; the
+  planner now alerts once, about the opening.
+
+The first real send also found that a long unsubscribe link was encoded in the header, which mail clients cannot
+follow. The fake-connection tests could not have seen that.
+
+## Results on this branch (all exit 0)
+
+| Check | Result |
+|---|---|
+| `pnpm lint`, `typecheck`, `test:coverage`, web `build`, guards | pass (run after the migration; no web code has changed since) |
+| `pnpm test:integration --coverage` | 79 tests pass |
+| `pnpm --filter @internradar/db test:db` on a freshly reset database | 232 tests pass (was 203): 29 new for the role |
+| `types:check` | up to date after `types:write` added the lookup function |
+| Workers: `pytest` | 477 pass, plus 109 database tests (13 store, 1 Mailpit); `ruff check`, `ruff format --check`, `mypy` clean |
+
+The Mailpit test needs the dev stack (`db:start:dev`) and the SMTP port `smtp_port = 54325` in `config.toml`, which
+this branch turns on. Without Mailpit the test is skipped and says why; CI does not start Mailpit, so it is skipped
+there.
+
+## Mutation checks
+
+- **Database role (13 mutations, all caught):** reading the accounts table, changing who an alert is for, changing
+  what it says, reading citizenship, letting students call the lookup, a lookup that ignores status, opening the
+  profiles, follows, alerts-read, alerts-insert and alerts-update policies, writing window events, and deleting
+  alerts. Each was applied to the live local database and the pgTAP suite failed every time.
+- **Python store, command and sender (16 planned, not completed):** the run was stopped by the machine after the
+  first mutation because the system ran short of memory, and it has not been restarted. The tree was checked and
+  restored to the commit. **These mutations still need running**: no `skip locked`, no unique-reason rule, ignoring
+  the switches at send time, sending with no address, unpublished programs, month-precision reminders, the
+  same-update rule, not-due alerts, outcome not recorded, error text kept, UTC day instead of Melbourne, crash
+  message printed, password not required, and the header line limit.
+
+## Known gaps
+
+- The Python mutation checks above are unfinished, so the store, command and sender are tested but not yet
+  mutation-checked.
+- The sender is not wired to run on a schedule. Nothing calls `alerts.run` yet.
+- Delivery is at least once, not exactly once (see D30).
+- The unsubscribe link is a placeholder until the web half exists: no follow button, no unsubscribe page, no profile
+  switch. The site still says nothing about alerts.
+- No hosted sender (Resend), and no role password outside the local test helper.
