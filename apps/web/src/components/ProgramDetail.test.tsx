@@ -219,6 +219,35 @@ describe("ProgramDetail: saving to the tracker", () => {
   });
 });
 
+describe("ProgramDetail: following for email updates", () => {
+  it("says nothing about following while alerts are off", () => {
+    render(<ProgramDetail program={program()} prompt="profile" saved={false} />);
+
+    expect(screen.queryByRole("button", { name: /follow/i })).toBeNull();
+    expect(screen.queryByText(/follow|alert|email me/i)).toBeNull();
+  });
+
+  it("offers a signed-in student a way to follow once alerts are on", () => {
+    render(<ProgramDetail program={program()} prompt="profile" following={false} />);
+
+    expect(screen.getByRole("button", { name: "Follow this program" })).toBeTruthy();
+  });
+
+  it("shows a program the student already follows as followed", () => {
+    render(<ProgramDetail program={program()} prompt="profile" following />);
+
+    expect(screen.getByText("You follow this program")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Stop following" })).toBeTruthy();
+  });
+
+  it("offers a visitor no follow button, only the way to sign in", () => {
+    render(<ProgramDetail program={program()} following={false} />);
+
+    expect(screen.queryByRole("button", { name: /follow/i })).toBeNull();
+    expect(screen.getByRole("link", { name: "Sign in to save this program" })).toBeTruthy();
+  });
+});
+
 describe("ProgramDetail: how to prepare and apply", () => {
   const stages = [
     { name: "Online application", description: "Your CV and a short form.", sourceUrl: "https://www.ey.com/apply" },

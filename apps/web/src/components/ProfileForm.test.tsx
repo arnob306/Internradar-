@@ -39,8 +39,8 @@ function sentBody(fetchMock: ReturnType<typeof answer>): unknown {
   return JSON.parse(init.body as string);
 }
 
-function show(initial: ProfileInput = EMPTY) {
-  render(<ProfileForm initial={initial} currentYear={2026} />);
+function show(initial: ProfileInput = EMPTY, showAlerts = false) {
+  render(<ProfileForm initial={initial} currentYear={2026} showAlerts={showAlerts} />);
   return userEvent.setup();
 }
 
@@ -48,7 +48,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("ProfileForm: what it asks", () => {
   it("shows what was saved before", () => {
-    show(SAVED);
+    show(SAVED, true);
 
     expect((screen.getByLabelText("Graduation month") as HTMLSelectElement).value).toBe("6");
     expect((screen.getByLabelText("Graduation year") as HTMLSelectElement).value).toBe("2027");
@@ -106,6 +106,33 @@ describe("ProfileForm: what it asks", () => {
     const rest = within(group).getAllByRole("checkbox").slice(6) as HTMLInputElement[];
     expect(rest.every((box) => box.disabled)).toBe(true);
     expect(screen.getByText("You can pick up to 6.")).toBeTruthy();
+  });
+});
+
+describe("ProfileForm: email alerts", () => {
+  it("says nothing about email alerts unless they are switched on", () => {
+    show(EMPTY);
+
+    expect(screen.queryByLabelText(/Email me when/)).toBeNull();
+    expect(screen.queryByText(/alert|follow/i)).toBeNull();
+  });
+
+  it("shows the switch, set as it was saved, once alerts are on", () => {
+    show(EMPTY, true);
+
+    expect((screen.getByLabelText(/Email me when/) as HTMLInputElement).checked).toBe(true);
+  });
+
+  it.each([
+    ["on", EMPTY, true],
+    ["off", SAVED, false],
+  ])("keeps the stored setting (%s) when saving with the switch hidden", async (_name, initial, expected) => {
+    const fetchMock = answer(200, { success: true });
+    const user = show(initial);
+
+    await user.click(screen.getByRole("button", { name: "Save profile" }));
+
+    expect(sentBody(fetchMock)).toMatchObject({ emailAlerts: expected });
   });
 });
 

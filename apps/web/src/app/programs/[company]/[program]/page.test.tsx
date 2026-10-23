@@ -6,6 +6,8 @@ import type { ProgramListItem } from "../../../../server/programs/list-programs"
 const getProgram = vi.fn();
 const viewerFor = vi.fn();
 const hasApplicationFor = vi.fn();
+const isFollowing = vi.fn();
+const alertsEnabled = vi.fn();
 const logFailure = vi.fn();
 const notFound = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
@@ -22,6 +24,10 @@ vi.mock("../../../../server/programs/list-programs", () => ({
 vi.mock("../../../../server/applications/applications-repo", () => ({
   hasApplicationFor: (...args: unknown[]) => hasApplicationFor(...args),
 }));
+vi.mock("../../../../server/follows/follows-repo", () => ({
+  isFollowing: (...args: unknown[]) => isFollowing(...args),
+}));
+vi.mock("../../../../server/alerts-switch", () => ({ alertsEnabled: () => alertsEnabled() }));
 vi.mock("../../../../server/programs/viewer", () => ({ viewerFor: (...args: unknown[]) => viewerFor(...args) }));
 
 import ProgramPage, { generateMetadata } from "./page";
@@ -58,6 +64,8 @@ beforeEach(() => {
   getProgram.mockReset().mockResolvedValue(item());
   viewerFor.mockReset().mockResolvedValue({ prompt: "sign-in" });
   hasApplicationFor.mockReset().mockResolvedValue(false);
+  isFollowing.mockReset().mockResolvedValue(false);
+  alertsEnabled.mockReset().mockReturnValue(false);
   logFailure.mockReset();
   notFound.mockClear();
 });
@@ -198,5 +206,52 @@ describe("the program page: the tracker", () => {
     expect(screen.getByRole("heading", { level: 1, name: "EY Graduate Program" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save to my tracker" })).toBeTruthy();
     expect(logFailure).toHaveBeenCalledWith("page.program.saved", expect.any(Error));
+  });
+});
+
+describe("the program page: following", () => {
+  it("asks nothing and shows nothing about following while alerts are off", async () => {
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    render(await ProgramPage(params()));
+
+    expect(isFollowing).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /follow/i })).toBeNull();
+  });
+
+  it("offers a signed-in student a Follow button once alerts are on", async () => {
+    alertsEnabled.mockReturnValue(true);
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    render(await ProgramPage(params()));
+
+    expect(isFollowing).toHaveBeenCalledExactlyOnceWith({ marker: "session-client" }, "p1");
+    expect(screen.getByRole("button", { name: "Follow this program" })).toBeTruthy();
+  });
+
+  it("shows it as followed when the student already follows it", async () => {
+    alertsEnabled.mockReturnValue(true);
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    isFollowing.mockResolvedValue(true);
+    render(await ProgramPage(params()));
+
+    expect(screen.getByText("You follow this program")).toBeTruthy();
+  });
+
+  it("does not ask a visitor's session about follows, even with alerts on", async () => {
+    alertsEnabled.mockReturnValue(true);
+    render(await ProgramPage(params()));
+
+    expect(isFollowing).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /follow/i })).toBeNull();
+  });
+
+  it("still shows the program, and logs only a safe summary, when the lookup fails", async () => {
+    alertsEnabled.mockReturnValue(true);
+    viewerFor.mockResolvedValue({ prompt: "profile" });
+    isFollowing.mockRejectedValue(new Error("db password=hunter2"));
+    render(await ProgramPage(params()));
+
+    expect(screen.getByRole("heading", { level: 1, name: "EY Graduate Program" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Follow this program" })).toBeTruthy();
+    expect(logFailure).toHaveBeenCalledWith("page.program.following", expect.any(Error));
   });
 });
