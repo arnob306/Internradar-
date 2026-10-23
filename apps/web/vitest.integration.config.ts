@@ -21,6 +21,7 @@ export default defineConfig({
         "src/server/profile/profile-repo.ts",
         "src/server/programs/list-programs.ts",
         "src/server/applications/applications-repo.ts",
+        "src/server/follows/follows-repo.ts",
       ],
       thresholds: { lines: 90, statements: 90, functions: 90, branches: 75 },
     },
