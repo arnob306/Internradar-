@@ -64,7 +64,7 @@ def test_an_alert_arrives_in_mailpit_with_the_unsubscribe_headers(
         notifier,
         now=NOW,
         today=NOW.date(),
-        unsubscribe_base="https://internradar.example/unsubscribe",
+        site_url="https://internradar.example",
     )
 
     found = mailpit(f"/search?query=to:{world.email}")["messages"]
@@ -75,8 +75,9 @@ def test_an_alert_arrives_in_mailpit_with_the_unsubscribe_headers(
         headers = mailpit(f"/message/{message['ID']}/headers")
         assert headers["List-Unsubscribe-Post"] == ["List-Unsubscribe=One-Click"]
         unsubscribe = headers["List-Unsubscribe"][0]
-        assert unsubscribe.startswith("<https://internradar.example/unsubscribe?alert=")
+        assert unsubscribe.startswith("<https://internradar.example/api/v1/alerts/unsubscribe?alert=")
         text = mailpit(f"/message/{message['ID']}")["Text"]
+        assert "https://internradar.example/unsubscribe?alert=" in text
         assert "Check the employer's page before you apply" in text
     finally:
         mailpit("/messages", method="DELETE", body={"IDs": [m["ID"] for m in found]})
