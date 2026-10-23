@@ -39,12 +39,17 @@ interface ProfileFormProps {
   readonly initial: ProfileInput;
   /** Passed in, not read from the clock, so the list of years is the same on server and client. */
   readonly currentYear: number;
+  /**
+   * Whether to offer the email alerts setting. Off by default: while alerts are not switched on the
+   * form says nothing about them, and a save keeps whatever is stored.
+   */
+  readonly showAlerts?: boolean;
 }
 
 type Status = "idle" | "saving" | "saved" | "signed-out";
 type Problems = Readonly<Record<string, string>>;
 
-export function ProfileForm({ initial, currentYear }: ProfileFormProps): ReactElement {
+export function ProfileForm({ initial, currentYear, showAlerts = false }: ProfileFormProps): ReactElement {
   const prefix = useId();
   const [month, setMonth] = useState(initial.expectedGraduation?.month.toString() ?? "");
   const [year, setYear] = useState(initial.expectedGraduation?.year.toString() ?? "");
@@ -264,10 +269,12 @@ export function ProfileForm({ initial, currentYear }: ProfileFormProps): ReactEl
           </p>
           {fieldProblem("citizenship")}
         </div>
-        <label className="check">
-          <input type="checkbox" checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} />
-          Email me when a program I follow opens or changes
-        </label>
+        {showAlerts && (
+          <label className="check">
+            <input type="checkbox" checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} />
+            Email me when a program I follow opens or changes
+          </label>
+        )}
       </fieldset>
 
       {formProblem !== null && (
