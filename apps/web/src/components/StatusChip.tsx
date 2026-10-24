@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
+import type { WindowStatus } from "../features/programs/window-vocabulary";
 
-export type WindowStatus = "open" | "upcoming" | "closed" | "unknown";
+export type { WindowStatus };
 
 const LABELS: Readonly<Record<WindowStatus, string>> = {
   open: "Open",

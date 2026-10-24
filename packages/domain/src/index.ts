@@ -56,6 +56,7 @@ export type {
   Discipline,
   DisciplineGroup,
   DisciplineTerm,
+  Industry,
 } from "./eligibility/vocabulary";
 export {
   CITIZENSHIPS,
@@ -63,5 +64,15 @@ export {
   DISCIPLINE_GROUPS,
   DISCIPLINES,
   expandDisciplines,
+  INDUSTRIES,
   isDiscipline,
+  isIndustry,
 } from "./eligibility/vocabulary";
+export type { ApplicationStatus, StatusChange, TransitionResult } from "./applications/transition";
+export {
+  APPLICATION_STATUSES,
+  isApplicationStatus,
+  nextStatuses,
+  transition,
+  undoTarget,
+} from "./applications/transition";

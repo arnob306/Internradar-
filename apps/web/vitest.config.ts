@@ -21,12 +21,17 @@ export default defineConfig({
         "src/app/layout.tsx",
         "src/app/**/route.ts",
         "src/server/auth/request-session.ts",
+        "src/server/applications/request-handlers.ts",
+        "src/server/follows/request-handlers.ts",
         // These talk to the real database and are tested against it, so their coverage is
         // measured by the integration suite (vitest.integration.config.ts), not here.
         "src/server/rate-limit.ts",
         "src/server/auth/session-client.ts",
         "src/server/profile/profile-repo.ts",
         "src/server/programs/list-programs.ts",
+        "src/server/applications/applications-repo.ts",
+        "src/server/follows/follows-repo.ts",
+        "src/server/alerts/unsubscribe-repo.ts",
       ],
       thresholds: { lines: 85, branches: 80, functions: 85, statements: 85 },
     },
