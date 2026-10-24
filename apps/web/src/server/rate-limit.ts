@@ -13,7 +13,7 @@ export class RateLimitError extends Error {
 }
 
 /** The buckets the database knows. It refuses any other, so none can be made up from outside. */
-export type RateLimitBucket = "upload" | "profile" | "feedback" | "log_event";
+export type RateLimitBucket = "upload" | "profile" | "feedback" | "log_event" | "tracker";
 
 /**
  * Count one hit for the signed-in student in a named bucket, and say whether they are still within

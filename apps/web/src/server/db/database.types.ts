@@ -287,13 +287,13 @@ isOneToOne: false
                   ]
                 },"programs": {
                   Row: {
-                    "cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
+                    "application_stages": NonNullable<Json>,"cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
                   }
                   Insert: {
-                    "cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
                   }
                   Update: {
-                    "cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {

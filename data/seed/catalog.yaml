@@ -41,6 +41,20 @@ companies:
             earliest: {year: 2024, month: 3}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as CommBank's "How to apply" page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: A short form of about 10 minutes. Have your resume and latest transcript ready, and choose the area you are most interested in.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Online assessment
+            description: If your application is successful you are invited to three assessments, a Talent Screener, Numerical Reasoning and Inductive Reasoning.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Digital interview
+            description: Short pre-recorded questions answered to the camera on your computer or phone.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Assessment centre
+            description: Group activities and interviews with business leaders, held virtually or in person.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
         windows:
           # Page: "Applications open March and August", program starts mid-February after.
           - cycle_year: 2027
@@ -56,6 +70,22 @@ companies:
           schemaVersion: 1
           yearLevel: {preset: penultimate}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # CommBank's "How to apply" page gives one process for all its programs, graduate and
+        # intern alike (read 2026-10-15), so the stages repeat the graduate row's. The page
+        # adds extra team interviews for the Global Markets Summer Analyst program only.
+        application_stages:
+          - name: Online application
+            description: A short form of about 10 minutes. Have your resume and latest transcript ready, and choose the area you are most interested in.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Online assessment
+            description: If your application is successful you are invited to an online assessment that shows your strengths and capabilities.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Digital interview
+            description: Short pre-recorded questions answered to the camera. You get an email invite with 48 hours to finish.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
+          - name: Assessment centre
+            description: Activities and interviews with business leaders, held virtually or in person.
+            source_url: https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html
         windows:
           # Page: "Applications open 12 August to 8 September, 2026"; program November 2026
           # to January 2027.
@@ -86,10 +116,37 @@ companies:
           graduationWindow:
             earliest: {year: 2024, month: 7}
             latest: {year: 2026, month: 12}
+        # Stages as Deloitte's "How we hire" page describes them (read 2026-10-13). Some roles
+        # use a job simulation in place of the digital interview.
+        application_stages:
+          - name: Apply
+            description: Submit your CV and answer screening questions for the role you choose.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Online assessment
+            description: An immersive set of virtual activities that shows your strengths and gives you feedback on them.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Digital interview
+            description: Three quick video questions about your achievements and interests, with one chance to re-record.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
+          - name: Assessment day
+            description: In person or virtual, with information sessions, networking, a group case study and a 1:1 interview with a leader.
+            source_url: https://www.deloitte.com/au/en/careers/students/how-we-hire.html
         windows:
           # Page: "We open Program applications twice a year: in February/March and in July".
           - cycle_year: 2027
             status: unknown
+            source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
+          # Page, 2026 July round (read from a search result on the page, so re-read it when
+          # verifying): graduate and vacationer applications ran 1 to 22 July 2026. Given as the
+          # month only, which is what a past opening can prove. The February/March round has no
+          # stated year or day, so it is not recorded as a window.
+          - cycle_year: 2027
+            window_seq: 2
+            opens_on: 2026-07-01
+            opens_precision: month
+            closes_on: 2026-07-01
+            closes_precision: month
+            status: closed
             source_url: https://www.deloitte.com/au/en/careers/students/graduate-program-careers.html
 
   - slug: atlassian
@@ -139,6 +196,20 @@ companies:
             earliest: {year: 2023, month: 1}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as PwC's graduate program page describes them (read 2026-10-13).
+        application_stages:
+          - name: Apply online
+            description: Submit your CV and academic transcript through the online portal.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: Online assessments
+            description: Four assessments on your behaviours, skills and emotional intelligence, about 50 minutes in total, to submit within 48 hours.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: Digital interview and team preference
+            description: Two recorded questions, then your team preferences. It takes about 10 minutes and you have 48 hours to finish.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
+          - name: In-person assessment centre
+            description: A group case study in the morning, then an individual interview with a senior and a junior team member.
+            source_url: https://jobs-au.pwc.com/au/en/graduate-program
         windows:
           # Page shows "Applications closed" (2026-10-03); start generally January or February.
           - cycle_year: 2027
@@ -164,6 +235,21 @@ companies:
             earliest: {year: 2024, month: 10}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as EY's student application hub describes them (read 2026-10-13). EY says the
+        # process "may include" these steps, which vary by role; it takes about four to six weeks.
+        application_stages:
+          - name: Online application
+            description: Submit your CV, academic transcript and photo ID, and confirm you meet the eligibility requirements.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Motivation survey
+            description: Eligible candidates may be asked about their interests and why they applied to EY.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Online assessment or job simulation
+            description: Realistic scenarios with multiple choice, rank order, sliders and video. It has no time limit and usually takes 45 to 60 minutes.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
+          - name: Interview or recruitment day
+            description: Shortlisted candidates may have a 45 to 60 minute interview with one or two EY people, and may do a group activity or case study.
+            source_url: https://www.ey.com/en_au/careers/early-careers-recruitment-hub
         windows:
           # Page: "Our 2027 Graduate Program is open for applications"; reviewed on a rolling
           # basis and roles may close once filled, so no closing date.
@@ -190,6 +276,20 @@ companies:
             earliest: {year: 2025, month: 1}
             latest: {year: 2028, month: 1}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as NAB's graduate application process page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: Share your academic and work experience and choose the business area you want to join.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Online assessment
+            description: Done at home. It covers personality, verbal reasoning, numerical reasoning and logical reasoning.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Video interview
+            description: You record answers to a few questions on a secure site, at a time and place that suits you.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
+          - name: Engagement Centre
+            description: NAB's final stage, with interactive activities and time with the early careers team, current graduates and business leaders.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers/application-process
         windows:
           # Page, 2028 program: "Applications open: February 2027; close: March 2027". The
           # same page also says applications "are now open", which contradicts those dates:
@@ -201,6 +301,44 @@ companies:
             closes_precision: month
             status: upcoming
             source_url: https://www.nab.com.au/about-us/careers/early-careers/graduate-careers
+      - slug: summer-intern-program
+        name: NAB Summer Intern Program
+        program_type: vacationer
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+        # Page (read from a search result on it, so re-read when verifying): undergraduate and
+        # postgraduate students in their second last year of study. The citizenship rule has not
+        # been read yet, so none is recorded.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: penultimate}
+        # Stages as NAB's Summer Intern page lists them (read 2026-10-15). The page also says
+        # offers are expected in early October, and that engagement centres are held by business area.
+        application_stages:
+          - name: Online application
+            description: Complete the form, choose the business area you prefer and upload your academic transcript.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Online assessment
+            description: If your application is successful you are invited to an online assessment and testing stage.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Video interview
+            description: A recorded interview that NAB reviews after the assessment closes.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+          - name: Engagement Centre
+            description: The final stage, organised by business area.
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
+        windows:
+          # Page: the 2026 applications opened Monday 6 July and closed 11:59pm AEST on Sunday
+          # 9 August 2026. The program itself runs late November to late January (not checked).
+          - cycle_year: 2026
+            opens_on: 2026-07-06
+            opens_precision: day
+            closes_on: 2026-08-09
+            closes_precision: day
+            status: closed
+            source_url: https://www.nab.com.au/about-us/careers/early-careers/summer-intern-program
 
   - slug: anz
     name: ANZ
@@ -222,6 +360,24 @@ companies:
             earliest: {year: 2023, month: 10}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as ANZ's graduate program page describes them (read 2026-10-13). ANZ says no
+        # resume or cover letter is needed.
+        application_stages:
+          - name: Quick online application
+            description: A short form. ANZ does not ask for a resume or cover letter.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Digital interview and game-based assessment
+            description: Games that help ANZ get to know you, and recorded answers to short video prompts.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Personality questionnaire
+            description: Questions about how you like to work.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Interview preparation
+            description: Tips from past graduates on how to get ready for the interview.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
+          - name: Face to face interview
+            description: A meeting with ANZ leaders, so you can assess each other.
+            source_url: https://www.anz.com.au/careers/career-programs/graduate-program/
 
   - slug: westpac
     name: Westpac Group
@@ -242,6 +398,20 @@ companies:
             earliest: {year: 2023, month: 7}
             latest: {year: 2026, month: 12}
           citizenship: {allowed: [au_citizen, au_pr, nz_citizen]}
+        # Stages as Westpac's "How to apply" page describes them (read 2026-10-13).
+        application_stages:
+          - name: Online application
+            description: About 10 minutes. Answer the pre-screening questions, choose up to three business areas and a location, and upload your resume and transcripts.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Online assessments
+            description: A psychometric assessment you are invited to complete within 48 hours.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Video interview
+            description: Short pre-recorded questions about your motivations. It is not live, and you cannot pause or restart it.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+          - name: Assessment centre
+            description: Usually virtual, with a behavioural interview and a business case study. Westpac tells you in advance if it is in person.
+            source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
         windows:
           # Page: graduate applications open July, close August, assessment centres
           # September to October, start February (no year stated).
@@ -252,3 +422,114 @@ companies:
             closes_precision: estimated
             status: unknown
             source_url: https://www.westpac.com.au/about-westpac/careers/pathways/grad-program/how-to-apply/
+
+  - slug: kpmg-australia
+    name: KPMG Australia
+    careers_url: https://kpmg.com/au/en/careers/graduates.html
+    programs:
+      - slug: vacationer-program
+        name: KPMG Vacationer Program
+        program_type: vacationer
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+        # Page: second last year of an undergraduate or postgraduate degree; available full time
+        # for 3 to 8 weeks over the summer break.
+        eligibility_rules:
+          schemaVersion: 1
+          yearLevel: {preset: penultimate}
+        # Stages as KPMG's Vacation program page describes them (read 2026-10-15). The page says
+        # some teams may ask for a transcript or other testing, so the steps can vary by team.
+        application_stages:
+          - name: Online application
+            description: A form of about five minutes. Upload a CV under two pages and give basic details about your studies and preferences. No cover letter is needed, and one application covers several roles.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Online assessments
+            description: Two online assessments, one on cognitive abilities and one on your values and leadership approach. Together they take about 45 minutes to an hour.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Shortlisting
+            description: KPMG reviews your application and results and matches your preferences to teams. It is competitive, and you may be asked for a transcript.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Interview
+            description: Selected candidates meet members of a team they could join, and may complete other testing.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+          - name: Outcome
+            description: KPMG tells you the outcome. Successful candidates are told the next steps, and others receive feedback.
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+        windows:
+          # The page says applications for 2026/27 have closed and gives no dates, and that the
+          # 2027/28 opening is not announced. The dates below are the AUTHOR'S research
+          # (2026-10-12: main intake opened 16 February and closed 3 October 2026, program
+          # starting November 2026), NOT something the page states, so they are given as months
+          # only (approximate) and must be checked before this program is verified.
+          - cycle_year: 2026
+            opens_on: 2026-02-01
+            opens_precision: month
+            closes_on: 2026-10-01
+            closes_precision: month
+            status: closed
+            source_url: https://kpmg.com/au/en/careers/graduates/vacation-program.html
+      - slug: graduate-program
+        name: KPMG Graduate Program
+        program_type: graduate
+        # Cities not confirmed from the page: check before verifying.
+        cities: [melbourne]
+        disciplines: []
+        source_url: https://kpmg.com/au/en/careers/graduates.html
+        # Eligibility has not been read from the page yet, so only the schema version is set.
+        eligibility_rules:
+          schemaVersion: 1
+        # Stages as KPMG's graduates page describes them (read 2026-10-13). The page names no
+        # separate assessment centre: interview and extra testing are described together.
+        application_stages:
+          - name: Submit your application
+            description: A quick online form of about 5 minutes. Upload a CV under two pages and say which areas you prefer.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Online assessments
+            description: Two assessments, one on cognitive abilities and one on values and leadership, taking 45 minutes to an hour in total.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Shortlisted to business
+            description: Your application and assessment results are reviewed, and you may be asked for your transcript.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+          - name: Interview
+            description: You meet potential team members and complete further testing activities.
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+        windows:
+          # Page: "We are accepting applications for our graduate program rolling intake"; the
+          # program starts in February each year. No closing date is stated. The author's
+          # research (2026-10-12) says it stays open until 31 October 2026, but the page does not
+          # say so, so no close date is recorded.
+          - cycle_year: 2027
+            status: open
+            source_url: https://kpmg.com/au/en/careers/graduates.html
+
+  - slug: australian-public-service
+    name: Australian Public Service
+    careers_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs
+    programs:
+      - slug: data-stream
+        name: Australian Government Graduate Program, Data Stream
+        program_type: graduate
+        # Cities not confirmed from the page: roles are spread across agencies. Check before verifying.
+        cities: [canberra]
+        disciplines: []
+        source_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream
+        # Page (read from a search result on it, so re-read when verifying): Australian citizen
+        # who completes a bachelor degree or higher between 1 January 2022 and 31 December 2026.
+        # The window is for ONE intake and must be re-derived each cycle.
+        eligibility_rules:
+          schemaVersion: 1
+          graduationWindow:
+            earliest: {year: 2022, month: 1}
+            latest: {year: 2026, month: 12}
+          citizenship: {allowed: [au_citizen]}
+        windows:
+          # Page: "Applications will open 1 March 2027". No closing date is stated there; a 2024
+          # post gave a close about a month after opening, but that is not this cycle's date.
+          # The program starts the February after (2028).
+          - cycle_year: 2028
+            opens_on: 2027-03-01
+            opens_precision: day
+            status: upcoming
+            source_url: https://content.apsjobs.gov.au/career-pathways/graduate-programs/data-stream

@@ -17,6 +17,7 @@ function program(overrides: Partial<PublicProgram> = {}): PublicProgram {
     status: "open",
     windows: [],
     rulesVerified: true,
+    applicationStages: [],
     ...overrides,
   };
 }

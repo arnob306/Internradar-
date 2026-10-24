@@ -2,12 +2,15 @@ import { DEFAULT_LIMIT, type ProgramsQuery } from "./programs-query";
 
 export type FeedChange = Partial<Pick<ProgramsQuery, "type" | "discipline" | "openNow" | "offset">>;
 
+/** Where the feed of programs lives: the home page is the timeline. */
+const FEED_PATH = "/programs";
+
 const FILTERS = ["type", "discipline", "openNow"] as const;
 
 /**
  * The URL of the feed with one thing changed. Filters already chosen are kept; changing a filter
  * goes back to the first page, because page 3 of a different list means nothing. Anything at its
- * default is left out, so the unfiltered feed is just "/".
+ * default is left out, so the unfiltered feed is just "/programs".
  */
 export function feedHref(query: ProgramsQuery, change: FeedChange): string {
   const filterChanged = FILTERS.some((key) => key in change);
@@ -33,5 +36,5 @@ export function feedHref(query: ProgramsQuery, change: FeedChange): string {
     params.set("offset", String(offset));
   }
   const text = params.toString();
-  return text === "" ? "/" : `/?${text}`;
+  return text === "" ? FEED_PATH : `${FEED_PATH}?${text}`;
 }
