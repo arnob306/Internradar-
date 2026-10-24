@@ -142,7 +142,9 @@ def test_a_due_alert_is_emailed_and_marked_sent(
     assert email.to == world.email
     assert "now open" in email.subject
     # the header gets the one-click address, the footer the page that asks first
-    assert email.unsubscribe_url.startswith("https://internradar.example/api/v1/alerts/unsubscribe?alert=")
+    assert email.unsubscribe_url.startswith(
+        "https://internradar.example/api/v1/alerts/unsubscribe?alert="
+    )
     assert "https://internradar.example/unsubscribe?alert=" in email.body
 
 
