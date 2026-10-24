@@ -83,6 +83,30 @@ With alerts on:
 
 The test student and their rows were deleted afterwards, and the local database was reseeded (13 programs).
 
+## Security review
+
+AgentShield (`npx ecc-agentshield scan`) graded the project B, 80 out of 100. Secrets, permissions, hooks and MCP
+servers scored 100. Its 12 findings were 11 "missing prompt defense" notes on `CLAUDE.md` (it audits agent
+configuration, not application code, and this app has no model reading user input, so nothing was changed) and one
+info note that pnpm had no release-age gate. That one is fixed: `minimumReleaseAge: 4320` (3 days) in
+`pnpm-workspace.yaml`, with a frozen install still passing and the lockfile unchanged.
+
+A manual review of the unsubscribe path found the alert ids are `gen_random_uuid()` (random, 122 bits), the
+function is the only thing visitors can call, and the public key cannot read `alerts` or `profiles` (both 401). It
+also found four things:
+
+- **The site's rate limit does not cover the database function.** I confirmed that
+  `POST /rest/v1/rpc/unsubscribe_from_alert` works directly with the public key (204), which skips the route's
+  limit. The id's randomness is what protects it. A platform rate limit should be set when hosting is chosen.
+  **Open.**
+- **`SITE_URL` was not checked.** An `http://` value would have put alert ids in clear text links. It must now be
+  https (http only for localhost), with no login, query, fragment or whitespace. Test first: RED `bfe4a55`, GREEN
+  `ca50faf`, and all 8 mutations of the rule were caught. **Fixed.**
+- **The limiter's caller key trusts `x-real-ip` and `x-forwarded-for`.** If the host does not set them, all callers
+  share one bucket of 20 a minute. Confirm the host's behaviour before launch. **Open.**
+- **The id is the capability.** A forwarded email lets its recipient unsubscribe the original student, and ids appear
+  in server and mail-provider logs. Accepted in D31. The worst outcome is one person's alert emails stopping.
+
 ## Deviations from the plan
 
 - `docs/api/openapi.yaml` was not updated. It documents only the public program API, and the existing `/me/*`
