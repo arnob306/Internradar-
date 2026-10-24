@@ -16,6 +16,7 @@ from internradar_ingest.seed import (
     SeedAts,
     SeedCompany,
     SeedProgram,
+    SeedStage,
     SeedWindow,
 )
 from internradar_ingest.seed_load import LoadSummary, load_catalog
@@ -196,7 +197,10 @@ def test_verification_is_stored_as_a_melbourne_date_and_can_be_withdrawn(
     assert program_row(admin_db)["is_published"] is False
 
 
-def test_a_changed_window_is_corrected_with_a_history_event(admin_db: Connection) -> None:
+def test_a_changed_window_leaves_one_history_event_written_by_the_database(
+    admin_db: Connection,
+) -> None:
+    """The database records status and date changes itself (D28); the loader adds none."""
     load_catalog(admin_db, make_catalog())
 
     summary = load_catalog(
@@ -204,11 +208,11 @@ def test_a_changed_window_is_corrected_with_a_history_event(admin_db: Connection
     )
 
     assert summary.updated == 1
-    created, corrected = event_rows(admin_db)
+    created, changed = event_rows(admin_db)
     assert created["event_type"] == "created"
-    assert (corrected["event_type"], corrected["actor"]) == ("corrected", "seed")
-    assert corrected["before"]["closes_on"] == "2025-04-30"
-    assert corrected["after"]["closes_on"] == "2025-05-15"
+    assert (changed["event_type"], changed["actor"]) == ("dates_changed", "seed")
+    assert changed["before"]["closes_on"] == "2025-04-30"
+    assert changed["after"]["closes_on"] == "2025-05-15"
 
 
 def test_a_new_round_is_added_beside_the_existing_window(admin_db: Connection) -> None:
@@ -265,3 +269,73 @@ def test_a_failure_part_way_loads_nothing(admin_db: Connection) -> None:
         load_catalog(admin_db, clash)
 
     assert (count(admin_db, "companies"), count(admin_db, "programs")) == (0, 0)
+
+
+def make_stage(**changes: Any) -> SeedStage:
+    base = SeedStage(
+        name="Online application",
+        description="Your CV and a short form.",
+        source_url="https://careers.example.com.au/graduates",
+    )
+    return replace(base, **changes)
+
+
+def test_application_stages_are_stored_in_the_shape_the_site_reads(admin_db: Connection) -> None:
+    stages = (make_stage(), make_stage(name="Video interview", description=None))
+    load_catalog(admin_db, make_catalog(make_program(application_stages=stages)))
+
+    assert program_row(admin_db)["application_stages"] == [
+        {
+            "name": "Online application",
+            "description": "Your CV and a short form.",
+            "sourceUrl": "https://careers.example.com.au/graduates",
+        },
+        {
+            "name": "Video interview",
+            "description": None,
+            "sourceUrl": "https://careers.example.com.au/graduates",
+        },
+    ]
+
+
+def test_a_program_with_no_stages_stores_an_empty_list_and_reloads_unchanged(
+    admin_db: Connection,
+) -> None:
+    load_catalog(admin_db, make_catalog())
+    second = load_catalog(admin_db, make_catalog())
+
+    assert program_row(admin_db)["application_stages"] == []
+    assert second == LoadSummary(inserted=0, updated=0, unchanged=3, skipped=0)
+
+
+def test_changed_stages_update_the_program_in_place(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(application_stages=(make_stage(),))))
+    summary = load_catalog(
+        admin_db,
+        make_catalog(make_program(application_stages=(make_stage(name="Assessment centre"),))),
+    )
+
+    assert program_row(admin_db)["application_stages"][0]["name"] == "Assessment centre"
+    assert summary.updated == 1
+
+
+def test_an_industry_is_stored_and_a_reload_leaves_it_unchanged(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(industry="consulting")))
+    second = load_catalog(admin_db, make_catalog(make_program(industry="consulting")))
+
+    assert program_row(admin_db)["industry"] == "consulting"
+    assert second == LoadSummary(inserted=0, updated=0, unchanged=3, skipped=0)
+
+
+def test_a_program_without_an_industry_stores_none(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog())
+
+    assert program_row(admin_db)["industry"] is None
+
+
+def test_a_changed_industry_updates_the_program_in_place(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(industry="technology")))
+    summary = load_catalog(admin_db, make_catalog(make_program(industry="banking_finance")))
+
+    assert program_row(admin_db)["industry"] == "banking_finance"
+    assert summary.updated == 1

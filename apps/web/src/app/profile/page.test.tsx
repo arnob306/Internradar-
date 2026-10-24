@@ -15,9 +15,16 @@ vi.mock("../../server/auth/request-session", () => ({
   sessionClientForRequest: () => Promise.resolve({ auth: { getUser } }),
 }));
 vi.mock("../../server/profile/profile-repo", () => ({ loadProfile: (...args: unknown[]) => loadProfile(...args) }));
+const alertsEnabled = vi.fn();
+vi.mock("../../server/alerts-switch", () => ({ alertsEnabled: () => alertsEnabled() }));
 vi.mock("../../components/ProfileForm", () => ({
-  ProfileForm: (props: { initial: { university: string | null }; currentYear: number }) => (
-    <div data-testid="form" data-university={props.initial.university ?? ""} data-year={props.currentYear} />
+  ProfileForm: (props: { initial: { university: string | null }; currentYear: number; showAlerts: boolean }) => (
+    <div
+      data-testid="form"
+      data-university={props.initial.university ?? ""}
+      data-year={props.currentYear}
+      data-show-alerts={String(props.showAlerts)}
+    />
   ),
 }));
 
@@ -30,6 +37,7 @@ beforeEach(() => {
   loadProfile.mockReset().mockResolvedValue(null);
   redirect.mockClear();
   logFailure.mockReset();
+  alertsEnabled.mockReset().mockReturnValue(false);
 });
 
 describe("the profile page", () => {
@@ -55,6 +63,20 @@ describe("the profile page", () => {
     expect(screen.getByTestId("form").dataset["university"]).toBe("Monash University");
     // 14:00 UTC on 3 Oct is already 4 Oct in Melbourne, and still 2026.
     expect(screen.getByTestId("form").dataset["year"]).toBe("2026");
+  });
+
+  it("keeps the email alerts switch out of the form while alerts are off", async () => {
+    render(await ProfilePage());
+
+    expect(screen.getByTestId("form").dataset["showAlerts"]).toBe("false");
+  });
+
+  it("shows the email alerts switch once alerts are on", async () => {
+    alertsEnabled.mockReturnValue(true);
+
+    render(await ProfilePage());
+
+    expect(screen.getByTestId("form").dataset["showAlerts"]).toBe("true");
   });
 
   it("explains the purpose of the page in one sentence", async () => {

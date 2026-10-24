@@ -63,8 +63,11 @@ export interface TestProgram {
   readonly name: string;
   readonly type?: "internship" | "vacationer" | "graduate" | "cadetship" | "discovery";
   readonly disciplines?: readonly string[];
+  readonly industry?: string;
   readonly published?: boolean;
   readonly windows?: readonly TestWindow[];
+  /** What the application_stages column holds. A list by default; tests pass bad data to check it is dropped. */
+  readonly applicationStages?: unknown;
 }
 
 /** Insert a test program (and its company and windows). Published unless said otherwise. */
@@ -77,8 +80,9 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
   );
   const inserted = await db.query<{ id: string }>(
     `insert into public.programs
-       (company_id, slug, name, program_type, cities, disciplines, source_url, is_published)
-     values ($1, $2, $3, $4, '{melbourne}', $5, $6, $7) returning id`,
+       (company_id, slug, name, program_type, cities, disciplines, source_url, is_published,
+        application_stages, industry)
+     values ($1, $2, $3, $4, '{melbourne}', $5, $6, $7, $8::jsonb, $9) returning id`,
     [
       company.rows[0]?.id,
       program.slug ?? "program",
@@ -87,6 +91,8 @@ export async function insertProgram(db: pg.Client, program: TestProgram): Promis
       program.disciplines ?? [],
       `https://careers.${program.company}.example/program`,
       program.published ?? true,
+      JSON.stringify(program.applicationStages ?? []),
+      program.industry ?? null,
     ],
   );
   const programId = inserted.rows[0]?.id ?? "";

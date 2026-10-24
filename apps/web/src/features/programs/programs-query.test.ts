@@ -114,3 +114,24 @@ describe("parseProgramsQuery", () => {
     }
   });
 });
+
+describe("parseProgramsQuery: industry", () => {
+  it("has no industry by default", () => {
+    expect(parse("")).toMatchObject({ ok: true, value: { industry: undefined } });
+  });
+
+  it.each(["banking_finance", "consulting", "technology", "engineering_resources", "government_defence", "other"])(
+    "accepts %s",
+    (industry) => {
+      expect(parse(`industry=${industry}`)).toMatchObject({ ok: true, value: { industry } });
+    },
+  );
+
+  it.each(["professional_services", "Consulting", "mining", ""])("rejects industry=%s", (industry) => {
+    expect(fieldsOf(`industry=${industry}`)).toEqual(["industry"]);
+  });
+
+  it("rejects a repeated industry", () => {
+    expect(fieldsOf("industry=consulting&industry=technology")).toEqual(["industry"]);
+  });
+});
