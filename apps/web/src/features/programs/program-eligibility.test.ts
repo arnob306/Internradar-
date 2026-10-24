@@ -21,6 +21,7 @@ function program(overrides: Partial<EligibilityInput> = {}): EligibilityInput {
     windows: [window()],
     eligibilityRules: { schemaVersion: 1 },
     rulesVerified: true,
+    rulesVersion: 1,
     ...overrides,
   };
 }
@@ -30,6 +31,12 @@ function codes(result: ReturnType<typeof evaluateProgram>): string[] {
 }
 
 describe("evaluateProgram: the engine, run for one student and one program", () => {
+  it("reports the rules version the program actually has, not a fixed one", () => {
+    const result = evaluateProgram(program({ rulesVersion: 3 }), PROFILE, TODAY);
+
+    expect(result.rulesVersion).toBe(3);
+  });
+
   it("says 'check requirements' while a person has not verified the rules, whatever they say", () => {
     const result = evaluateProgram(
       program({ rulesVerified: false, eligibilityRules: { schemaVersion: 1, citizenship: { allowed: ["nz_citizen"] } } }),

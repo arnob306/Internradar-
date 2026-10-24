@@ -127,11 +127,20 @@ def _program_values(program: SeedProgram) -> dict[str, Any]:
         "eligibility_rules": program.eligibility_rules,
         "eligibility_verified_at": _verified_at(program),
         "is_published": program.is_published,
+        # Stored the way the site reads it: camelCase keys, in the employer's order.
+        "application_stages": [
+            {"name": s.name, "description": s.description, "sourceUrl": s.source_url}
+            for s in program.application_stages
+        ],
+        "industry": program.industry,
     }
 
 
+_JSON_COLUMNS = {"eligibility_rules", "application_stages"}
+
+
 def _program_params(values: dict[str, Any]) -> tuple[object, ...]:
-    return tuple(Jsonb(v) if k == "eligibility_rules" else v for k, v in values.items())
+    return tuple(Jsonb(v) if k in _JSON_COLUMNS else v for k, v in values.items())
 
 
 def _load_program(
@@ -147,8 +156,9 @@ def _load_program(
         program_id = _returning_id(
             connection,
             "insert into public.programs (company_id, slug, name, program_type, cities, "
-            "disciplines, source_url, eligibility_rules, eligibility_verified_at, is_published) "
-            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id",
+            "disciplines, source_url, eligibility_rules, eligibility_verified_at, is_published, "
+            "application_stages, industry) "
+            "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id",
             (company_id, program.slug, *_program_params(values)),
         )
         return program_id, INSERTED
@@ -157,7 +167,8 @@ def _load_program(
     connection.execute(
         "update public.programs set name = %s, program_type = %s, cities = %s, "
         "disciplines = %s, source_url = %s, eligibility_rules = %s, "
-        "eligibility_verified_at = %s, is_published = %s where id = %s",
+        "eligibility_verified_at = %s, is_published = %s, application_stages = %s, "
+        "industry = %s where id = %s",
         (*_program_params(values), row["id"]),
     )
     return row["id"], UPDATED
@@ -214,7 +225,7 @@ def _load_window(connection: Connection, program_id: UUID, window: SeedWindow) -
         f"update public.program_windows set {assignments} where id = %s",  # noqa: S608 - fixed names
         (*values.values(), row["id"]),
     )
-    _record_event(connection, row["id"], "corrected", before, values)
+    # status and date changes are recorded by a trigger on program_windows (D28), not here
     return UPDATED
 
 

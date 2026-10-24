@@ -4,13 +4,12 @@ import {
   CITIZENSHIPS,
   DEGREE_LEVELS,
   DISCIPLINES,
-  type Citizenship,
-  type DegreeLevel,
   type Discipline,
   type Month,
 } from "@internradar/domain";
 import { useId, useState, type FormEvent, type ReactElement } from "react";
 import type { ProfileInput } from "../features/profile/profile-input";
+import { CITIZENSHIP_LABELS, DEGREE_LABELS, DISCIPLINE_LABELS } from "../features/vocabulary-labels";
 
 const MONTHS = [
   "January",
@@ -27,42 +26,6 @@ const MONTHS = [
   "December",
 ] as const;
 
-// Records, so a new term in the vocabulary is a compile error until it has a label here.
-const DISCIPLINE_LABELS: Readonly<Record<Discipline, string>> = {
-  computer_science: "Computer science",
-  software_engineering: "Software engineering",
-  information_systems: "Information systems",
-  data_science: "Data science",
-  mathematics_statistics: "Mathematics and statistics",
-  physics: "Physics",
-  engineering_electrical: "Electrical engineering",
-  engineering_mechanical: "Mechanical engineering",
-  engineering_civil: "Civil engineering",
-  engineering_other: "Other engineering",
-  science_other: "Other science",
-  commerce_finance: "Commerce and finance",
-  accounting: "Accounting",
-  economics: "Economics",
-  business_management: "Business and management",
-  law: "Law",
-};
-
-const DEGREE_LABELS: Readonly<Record<DegreeLevel, string>> = {
-  undergraduate: "Undergraduate",
-  honours: "Honours",
-  masters_coursework: "Masters (coursework)",
-  masters_research: "Masters (research)",
-  phd: "PhD",
-};
-
-const CITIZENSHIP_LABELS: Readonly<Record<Citizenship, string>> = {
-  au_citizen: "Australian citizen",
-  au_pr: "Australian permanent resident",
-  nz_citizen: "New Zealand citizen",
-  intl_student: "International student",
-  other: "Other",
-};
-
 const MAX_DISCIPLINES = 6;
 const YEARS_AHEAD = 8;
 
@@ -76,12 +39,17 @@ interface ProfileFormProps {
   readonly initial: ProfileInput;
   /** Passed in, not read from the clock, so the list of years is the same on server and client. */
   readonly currentYear: number;
+  /**
+   * Whether to offer the email alerts setting. Off by default: while alerts are not switched on the
+   * form says nothing about them, and a save keeps whatever is stored.
+   */
+  readonly showAlerts?: boolean;
 }
 
 type Status = "idle" | "saving" | "saved" | "signed-out";
 type Problems = Readonly<Record<string, string>>;
 
-export function ProfileForm({ initial, currentYear }: ProfileFormProps): ReactElement {
+export function ProfileForm({ initial, currentYear, showAlerts = false }: ProfileFormProps): ReactElement {
   const prefix = useId();
   const [month, setMonth] = useState(initial.expectedGraduation?.month.toString() ?? "");
   const [year, setYear] = useState(initial.expectedGraduation?.year.toString() ?? "");
@@ -301,10 +269,12 @@ export function ProfileForm({ initial, currentYear }: ProfileFormProps): ReactEl
           </p>
           {fieldProblem("citizenship")}
         </div>
-        <label className="check">
-          <input type="checkbox" checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} />
-          Email me when a program I follow opens or changes
-        </label>
+        {showAlerts && (
+          <label className="check">
+            <input type="checkbox" checked={emailAlerts} onChange={(e) => setEmailAlerts(e.target.checked)} />
+            Email me when a program I follow opens or changes
+          </label>
+        )}
       </fieldset>
 
       {formProblem !== null && (
