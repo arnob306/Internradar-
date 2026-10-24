@@ -1,0 +1,83 @@
+import Link from "next/link";
+import type { ReactElement } from "react";
+import { ProgramFeed } from "../../components/ProgramFeed";
+import { melbourneDate } from "../../features/programs/melbourne-date";
+import {
+  DEFAULT_LIMIT,
+  parseProgramsQuery,
+  type ProgramsQuery,
+} from "../../features/programs/programs-query";
+import { toSearchParams, type PageSearchParams } from "../../features/programs/search-params";
+import { sessionClientForRequest } from "../../server/auth/request-session";
+import { logFailure } from "../../server/log";
+import { listPrograms, type ProgramsPage } from "../../server/programs/list-programs";
+import { toPublicProgram } from "../../server/programs/programs-handler";
+import { viewerFor, type Viewer } from "../../server/programs/viewer";
+
+// The feed reads the database on every request, so it is always current.
+export const dynamic = "force-dynamic";
+
+const DEFAULT_QUERY: ProgramsQuery = {
+  limit: DEFAULT_LIMIT,
+  offset: 0,
+  type: undefined,
+  discipline: undefined,
+  industry: undefined,
+  openNow: false,
+};
+
+export default async function ProgramsPage({
+  searchParams,
+}: {
+  readonly searchParams: Promise<PageSearchParams>;
+}): Promise<ReactElement> {
+  const parsed = parseProgramsQuery(toSearchParams(await searchParams));
+  const query = parsed.ok ? parsed.value : DEFAULT_QUERY;
+  const today = melbourneDate(new Date());
+
+  let page: ProgramsPage | undefined;
+  let viewer: Viewer = { prompt: "sign-in" };
+  try {
+    const client = await sessionClientForRequest();
+    page = await listPrograms(client, query, today);
+    viewer = await viewerFor(client, page.items, today);
+  } catch (error) {
+    // The reason stays on the server, and only a safe summary is logged. A visitor only needs to
+    // know to try again.
+    logFailure("page.programs.list", error);
+    page = undefined;
+  }
+
+  return (
+    <main className="page home">
+      <h1 className="home-title">Graduate and internship programs, checked against you.</h1>
+      <p className="home-lede muted">
+        Every program links to the employer&apos;s own page. We show whether you&apos;re eligible,
+        and say so plainly when we can&apos;t tell.
+      </p>
+
+      {!parsed.ok && (
+        <p className="notice">
+          Some filters in that link weren&apos;t valid, so they were ignored.{" "}
+          <Link href="/programs">Clear filters</Link>
+        </p>
+      )}
+
+      {page === undefined ? (
+        <p className="notice">We couldn&apos;t load programs right now. Please try again in a moment.</p>
+      ) : (
+        <ProgramFeed
+          programs={page.items.map(toPublicProgram)}
+          total={page.total}
+          query={query}
+          prompt={viewer.prompt}
+          {...(viewer.eligibility === undefined ? {} : { eligibility: viewer.eligibility })}
+        />
+      )}
+
+      <p className="home-footnote muted">
+        Eligibility is a guide: always confirm on the employer&apos;s own page before you apply.
+      </p>
+    </main>
+  );
+}
