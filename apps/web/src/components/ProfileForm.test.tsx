@@ -117,6 +117,12 @@ describe("ProfileForm: email alerts", () => {
     expect(screen.queryByText(/alert|follow/i)).toBeNull();
   });
 
+  it("says nothing about email alerts when a page does not ask for them at all", () => {
+    render(<ProfileForm initial={EMPTY} currentYear={2026} />);
+
+    expect(screen.queryByLabelText(/Email me when/)).toBeNull();
+  });
+
   it("shows the switch, set as it was saved, once alerts are on", () => {
     show(EMPTY, true);
 
