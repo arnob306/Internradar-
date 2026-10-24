@@ -197,7 +197,10 @@ def test_verification_is_stored_as_a_melbourne_date_and_can_be_withdrawn(
     assert program_row(admin_db)["is_published"] is False
 
 
-def test_a_changed_window_is_corrected_with_a_history_event(admin_db: Connection) -> None:
+def test_a_changed_window_leaves_one_history_event_written_by_the_database(
+    admin_db: Connection,
+) -> None:
+    """The database records status and date changes itself (D28); the loader adds none."""
     load_catalog(admin_db, make_catalog())
 
     summary = load_catalog(
@@ -205,11 +208,11 @@ def test_a_changed_window_is_corrected_with_a_history_event(admin_db: Connection
     )
 
     assert summary.updated == 1
-    created, corrected = event_rows(admin_db)
+    created, changed = event_rows(admin_db)
     assert created["event_type"] == "created"
-    assert (corrected["event_type"], corrected["actor"]) == ("corrected", "seed")
-    assert corrected["before"]["closes_on"] == "2025-04-30"
-    assert corrected["after"]["closes_on"] == "2025-05-15"
+    assert (changed["event_type"], changed["actor"]) == ("dates_changed", "seed")
+    assert changed["before"]["closes_on"] == "2025-04-30"
+    assert changed["after"]["closes_on"] == "2025-05-15"
 
 
 def test_a_new_round_is_added_beside_the_existing_window(admin_db: Connection) -> None:

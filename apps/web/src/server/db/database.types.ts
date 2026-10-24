@@ -6,7 +6,32 @@ export type Database = {
   
   "public": {
           Tables: {
-            "app_admins": {
+            "alerts": {
+                  Row: {
+                    "attempts": number,"created_at": string,"dedupe_key": string,"details": NonNullable<Json>,"id": string,"kind": string,"last_error_code": string | null,"program_id": string,"program_window_id": string,"send_after": string,"sent_at": string | null,"status": string,"user_id": string
+                  }
+                  Insert: {
+                    "attempts"?: number,"created_at"?: string,"dedupe_key": string,"details"?: NonNullable<Json>,"id"?: string,"kind": string,"last_error_code"?: string | null,"program_id": string,"program_window_id": string,"send_after"?: string,"sent_at"?: string | null,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "attempts"?: number,"created_at"?: string,"dedupe_key"?: string,"details"?: NonNullable<Json>,"id"?: string,"kind"?: string,"last_error_code"?: string | null,"program_id"?: string,"program_window_id"?: string,"send_after"?: string,"sent_at"?: string | null,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "alerts_program_id_fkey"
+      columns: ["program_id"]
+isOneToOne: false
+      referencedRelation: "programs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "alerts_program_window_id_fkey"
+      columns: ["program_window_id"]
+isOneToOne: false
+      referencedRelation: "program_windows"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"app_admins": {
                   Row: {
                     "user_id": string
                   }
@@ -336,7 +361,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "is_admin":
+            "alert_recipient_email":
+{ Args: { "alert_id": string }; Returns: string
+                           },
+"is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "log_event":
