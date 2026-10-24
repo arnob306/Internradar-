@@ -39,6 +39,26 @@ export const DISCIPLINES = [
 
 export type Discipline = (typeof DISCIPLINES)[number];
 
+/**
+ * The kind of employer a program belongs to (decision D23). Matches the industry enum in the
+ * database. A program has at most one, and an untagged program has none.
+ */
+export const INDUSTRIES = [
+  "banking_finance",
+  "consulting",
+  "technology",
+  "engineering_resources",
+  "government_defence",
+  "other",
+] as const;
+export type Industry = (typeof INDUSTRIES)[number];
+
+const INDUSTRY_SET: ReadonlySet<string> = new Set(INDUSTRIES);
+
+export function isIndustry(value: string): value is Industry {
+  return INDUSTRY_SET.has(value);
+}
+
 /** Named sets a rule can use instead of listing every term. */
 export const DISCIPLINE_GROUPS = {
   stem_any: [

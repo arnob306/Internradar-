@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DISCIPLINES, expandDisciplines, isDiscipline } from "./vocabulary";
+import { DISCIPLINES, expandDisciplines, INDUSTRIES, isDiscipline, isIndustry } from "./vocabulary";
 
 // Decision D2: a frozen list of about 15 terms plus a stem_any group. Unmapped text is
 // never guessed at; it is handled at extraction time and becomes "unknown" there.
@@ -54,5 +54,29 @@ describe("expandDisciplines", () => {
 
   it("returns an empty set for an empty rule", () => {
     expect(expandDisciplines([]).size).toBe(0);
+  });
+});
+
+// Decision D23: one optional industry per program. Matches the industry enum in the database.
+describe("INDUSTRIES", () => {
+  it("lists the six industries the database allows, in order", () => {
+    expect(INDUSTRIES).toEqual([
+      "banking_finance",
+      "consulting",
+      "technology",
+      "engineering_resources",
+      "government_defence",
+      "other",
+    ]);
+  });
+});
+
+describe("isIndustry", () => {
+  it.each(["banking_finance", "consulting", "other"])("accepts %s", (value) => {
+    expect(isIndustry(value)).toBe(true);
+  });
+
+  it.each(["banking", "Consulting", "", "professional_services"])("rejects %j", (value) => {
+    expect(isIndustry(value)).toBe(false);
   });
 });
