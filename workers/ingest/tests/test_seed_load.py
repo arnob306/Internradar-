@@ -314,3 +314,25 @@ def test_changed_stages_update_the_program_in_place(admin_db: Connection) -> Non
 
     assert program_row(admin_db)["application_stages"][0]["name"] == "Assessment centre"
     assert summary.updated == 1
+
+
+def test_an_industry_is_stored_and_a_reload_leaves_it_unchanged(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(industry="consulting")))
+    second = load_catalog(admin_db, make_catalog(make_program(industry="consulting")))
+
+    assert program_row(admin_db)["industry"] == "consulting"
+    assert second == LoadSummary(inserted=0, updated=0, unchanged=3, skipped=0)
+
+
+def test_a_program_without_an_industry_stores_none(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog())
+
+    assert program_row(admin_db)["industry"] is None
+
+
+def test_a_changed_industry_updates_the_program_in_place(admin_db: Connection) -> None:
+    load_catalog(admin_db, make_catalog(make_program(industry="technology")))
+    summary = load_catalog(admin_db, make_catalog(make_program(industry="banking_finance")))
+
+    assert program_row(admin_db)["industry"] == "banking_finance"
+    assert summary.updated == 1

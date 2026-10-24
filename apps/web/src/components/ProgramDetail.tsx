@@ -132,7 +132,7 @@ export function ProgramDetail({
                 >
                   Add these dates to your calendar
                 </a>
-                <p className="muted">Only dates the employer gives to the day are included.</p>
+                <p className="muted">Only dates the employer gives to the day are included, with a day to start preparing four weeks before an opening.</p>
               </>
             )}
           </section>

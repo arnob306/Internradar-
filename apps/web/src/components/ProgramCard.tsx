@@ -33,14 +33,14 @@ export function ProgramCard({ program, eligibility, prompt = "sign-in" }: Progra
       <div className="program-card-head">
         <div>
           <div className="program-card-company">{program.company.name}</div>
-          <h3 className="program-card-title">
+          <h2 className="program-card-title">
             <Link
               className="program-card-link"
               href={`/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`}
             >
               {program.name}
             </Link>
-          </h3>
+          </h2>
         </div>
         <span className="program-card-type">{PROGRAM_TYPE_LABELS[program.programType]}</span>
       </div>

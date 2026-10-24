@@ -13,6 +13,7 @@ export interface PublicProgram {
   readonly programType: ProgramListItem["programType"];
   readonly cities: readonly string[];
   readonly disciplines: readonly string[];
+  readonly industry: ProgramListItem["industry"];
   readonly sourceUrl: string;
   readonly company: ProgramListItem["company"];
   readonly status: ProgramListItem["status"];
@@ -57,6 +58,7 @@ export function toPublicProgram(item: ProgramListItem): PublicProgram {
     programType: item.programType,
     cities: item.cities,
     disciplines: item.disciplines,
+    industry: item.industry,
     sourceUrl: item.sourceUrl,
     company: item.company,
     status: item.status,

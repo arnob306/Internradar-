@@ -22,6 +22,7 @@ const DEFAULT_QUERY: ProgramsQuery = {
   offset: 0,
   type: undefined,
   discipline: undefined,
+  industry: undefined,
   openNow: false,
 };
 

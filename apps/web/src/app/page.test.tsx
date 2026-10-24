@@ -33,6 +33,7 @@ function item(slug: string, overrides: Partial<ProgramListItem> = {}): ProgramLi
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://example.com/p",
     company: { slug: `co-${slug}`, name: `Company ${slug}`, careersUrl: "https://example.com" },
     status: "unknown",
@@ -217,6 +218,86 @@ describe("the home page", () => {
 
     expect(screen.getByText(/no vacationer programs to show/i)).toBeTruthy();
     expect(screen.getAllByRole("link", { name: "Show all programs" })[0]?.getAttribute("href")).toBe("/");
+  });
+
+  it("filters to one industry when the address asks for it", async () => {
+    render(await home({ industry: "consulting" }));
+
+    expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      expect.objectContaining({ industry: "consulting", type: undefined, limit: 100, offset: 0 }),
+      "2026-10-04",
+    );
+  });
+
+  it("offers each industry as a plain link, with the current one marked and the chosen type kept", async () => {
+    render(await home({ type: "graduate", industry: "consulting" }));
+
+    const filters = screen.getByRole("navigation", { name: "Filter by industry" });
+    const links = within(filters).getAllByRole("link");
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["All industries", "/?type=graduate"],
+      ["Banking and finance", "/?type=graduate&industry=banking_finance"],
+      ["Consulting", "/?type=graduate&industry=consulting"],
+      ["Technology", "/?type=graduate&industry=technology"],
+      ["Engineering and resources", "/?type=graduate&industry=engineering_resources"],
+      ["Government and defence", "/?type=graduate&industry=government_defence"],
+      ["Other", "/?type=graduate&industry=other"],
+    ]);
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual([null, null, "true", null, null, null, null]);
+  });
+
+  it("keeps the chosen industry when the type changes", async () => {
+    render(await home({ industry: "consulting" }));
+
+    const filters = screen.getByRole("navigation", { name: "Filter the timeline" });
+    expect(within(filters).getByRole("link", { name: "Graduate" }).getAttribute("href")).toBe(
+      "/?type=graduate&industry=consulting",
+    );
+    expect(within(filters).getByRole("link", { name: "All programs" }).getAttribute("href")).toBe("/?industry=consulting");
+  });
+
+  it("marks All industries as current when no industry is chosen", async () => {
+    render(await home());
+
+    const filters = screen.getByRole("navigation", { name: "Filter by industry" });
+    expect(within(filters).getByRole("link", { name: "All industries" }).getAttribute("aria-current")).toBe("true");
+  });
+
+  it("ignores an industry it does not offer, and says so", async () => {
+    render(await home({ industry: "mining" }));
+
+    expect(screen.getByText(/filter in that link wasn't valid/i)).toBeTruthy();
+    expect(listPrograms).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      expect.objectContaining({ industry: undefined }),
+      "2026-10-04",
+    );
+  });
+
+  it("says plainly when an industry leaves no programs, naming the industry", async () => {
+    listPrograms.mockResolvedValue({ items: [], total: 0 });
+
+    render(await home({ industry: "technology" }));
+
+    expect(screen.getByText("No programs in Technology to show yet.")).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: "Show all programs" })[0]?.getAttribute("href")).toBe("/");
+  });
+
+  it("names both the type and the industry when together they leave no programs", async () => {
+    listPrograms.mockResolvedValue({ items: [], total: 0 });
+
+    render(await home({ type: "vacationer", industry: "consulting" }));
+
+    expect(screen.getByText("No vacationer programs in Consulting to show yet.")).toBeTruthy();
+  });
+
+  it("puts the industry filter in the same toolbar as the type filter", async () => {
+    render(await home());
+
+    const type = screen.getByRole("navigation", { name: "Filter the timeline" });
+    const industry = screen.getByRole("navigation", { name: "Filter by industry" });
+    expect(industry.parentElement).toBe(type.parentElement);
   });
 
   it("keeps the opening text to a sentence or two, so the chart stays near the top of the page", async () => {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { DISCIPLINES } from "@internradar/domain";
+import { DISCIPLINES, INDUSTRIES } from "@internradar/domain";
 import { parse } from "yaml";
 import { describe, expect, it, vi } from "vitest";
 import type { ApplicationStage } from "../../features/programs/application-stages";
@@ -71,6 +71,7 @@ const item: ProgramListItem = {
   programType: "graduate",
   cities: ["melbourne"],
   disciplines: [],
+  industry: null,
   sourceUrl: "https://careers.example.com.au/graduates",
   company: { slug: "example-co", name: "Example Co", careersUrl: "https://careers.example.com.au" },
   status: "open",
@@ -143,9 +144,16 @@ describe("openapi.yaml: the request", () => {
 
   it("documents every query parameter the list route accepts, and the server accepts each one", () => {
     const documented = parameters().map((parameter) => String(parameter["name"]));
-    expect(documented.sort()).toEqual(["discipline", "limit", "offset", "openNow", "type"]);
+    expect(documented.sort()).toEqual(["discipline", "industry", "limit", "offset", "openNow", "type"]);
 
-    const sample: Record<string, string> = { discipline: "law", limit: "10", offset: "0", openNow: "true", type: "graduate" };
+    const sample: Record<string, string> = {
+      discipline: "law",
+      industry: "consulting",
+      limit: "10",
+      offset: "0",
+      openNow: "true",
+      type: "graduate",
+    };
     for (const name of documented) {
       expect(parseProgramsQuery(new URLSearchParams({ [name]: sample[name] ?? "" })).ok).toBe(true);
     }
@@ -157,6 +165,7 @@ describe("openapi.yaml: the request", () => {
 
     expect(byName("type")["enum"]).toEqual([...PROGRAM_TYPES]);
     expect(byName("discipline")["enum"]).toEqual([...DISCIPLINES]);
+    expect(byName("industry")["enum"]).toEqual([...INDUSTRIES]);
     expect(byName("limit")).toMatchObject({ default: DEFAULT_LIMIT, minimum: 1, maximum: MAX_LIMIT });
     expect(byName("openNow")["type"]).toBe("boolean");
   });

@@ -171,3 +171,31 @@ def test_commbanks_summer_intern_uses_the_how_to_apply_page_it_shares_with_gradu
         assert stage.source_url == (
             "https://www.commbank.com.au/about-us/careers/graduate-intern-programs/how-to-apply.html"
         )
+
+
+# D23: the author's tagging of each employer's industry. A new company has to be added here on
+# purpose, so a program is never left untagged by accident.
+INDUSTRY_OF_COMPANY = {
+    "commbank": "banking_finance",
+    "nab": "banking_finance",
+    "anz": "banking_finance",
+    "westpac": "banking_finance",
+    "deloitte-australia": "consulting",
+    "pwc-australia": "consulting",
+    "ey-australia": "consulting",
+    "kpmg-australia": "consulting",
+    "atlassian": "technology",
+    "australian-public-service": "government_defence",
+}
+
+
+def test_every_program_carries_its_employers_industry() -> None:
+    catalog = parse_catalog(CATALOG.read_text(encoding="utf-8"), rules_schema=RULES_SCHEMA)
+
+    assert {company.slug for company in catalog.companies} == set(INDUSTRY_OF_COMPANY)
+    for company in catalog.companies:
+        for program in company.programs:
+            assert program.industry == INDUSTRY_OF_COMPANY[company.slug], (
+                company.slug,
+                program.slug,
+            )

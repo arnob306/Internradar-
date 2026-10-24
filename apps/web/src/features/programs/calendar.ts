@@ -1,5 +1,5 @@
 import type { PublicProgram } from "../../server/programs/programs-handler";
-import { daysBefore } from "../timeline/next-action";
+import { daysBefore, PREP_LEAD_DAYS } from "../timeline/next-action";
 import { melbourneDate } from "./melbourne-date";
 
 /** What a calendar file needs from a program: its name, who runs it, and its windows. */
@@ -52,22 +52,37 @@ function stamp(instant: Date): string {
   return `${date}T${pad(instant.getUTCHours())}${pad(instant.getUTCMinutes())}${pad(instant.getUTCSeconds())}Z`;
 }
 
-/** A date the source proves to the day, and that has not passed. Month-only and estimated dates are not events. */
+type EventKind = "prepare" | "opens" | "closes";
+
+const SUMMARY_ENDING: Record<EventKind, string> = {
+  prepare: "start preparing",
+  opens: "applications open",
+  closes: "applications close",
+};
+
+/**
+ * A date the source proves to the day, and that has not passed. Month-only and estimated dates are
+ * not events. The preparing day is the proven opening day minus the 4-week lead (D22).
+ */
 function eventFor(
   program: CalendarProgram,
   window: CalendarWindow,
-  kind: "opens" | "closes",
+  kind: EventKind,
   today: string,
 ): CalendarEvent | null {
-  const date = kind === "opens" ? window.opensOn : window.closesOn;
-  const precision = kind === "opens" ? window.opensPrecision : window.closesPrecision;
-  if (date === null || precision !== "day" || date < today) {
+  const proven = kind === "closes" ? window.closesOn : window.opensOn;
+  const precision = kind === "closes" ? window.closesPrecision : window.opensPrecision;
+  if (proven === null || precision !== "day") {
+    return null;
+  }
+  const date = kind === "prepare" ? daysBefore(proven, PREP_LEAD_DAYS) : proven;
+  if (date < today) {
     return null;
   }
   return {
     uid: `${program.id}-${window.cycleYear}-${window.windowSeq}-${kind}@internradar`,
     date,
-    summary: `${program.name}: applications ${kind === "opens" ? "open" : "close"}`,
+    summary: `${program.name}: ${SUMMARY_ENDING[kind]}`,
     description: `Dates can change. Confirm on the employer's page before you plan around this date.\nSource: ${window.sourceUrl}`,
   };
 }
@@ -93,7 +108,7 @@ function eventLines(event: CalendarEvent, stampedAt: string): string[] {
 export function buildCalendar(program: CalendarProgram, now: Date): string | null {
   const today = melbourneDate(now);
   const events = program.windows.flatMap((window) =>
-    (["opens", "closes"] as const).flatMap((kind) => eventFor(program, window, kind, today) ?? []),
+    (["prepare", "opens", "closes"] as const).flatMap((kind) => eventFor(program, window, kind, today) ?? []),
   );
   if (events.length === 0) {
     return null;

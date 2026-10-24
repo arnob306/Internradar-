@@ -12,6 +12,7 @@ function program(overrides: Partial<PublicProgram> = {}): PublicProgram {
     programType: "graduate",
     cities: ["melbourne", "sydney"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities",
     company: { slug: "ey-australia", name: "EY Australia", careersUrl: "https://www.ey.com" },
     status: "open",
@@ -275,7 +276,7 @@ describe("ProgramDetail: add the dates to a calendar", () => {
     const href = link.getAttribute("href") ?? "";
     expect(href.startsWith("data:text/calendar;charset=utf-8,")).toBe(true);
     expect(decodeURIComponent(href)).toContain("SUMMARY:EY Graduate Program: applications open");
-    expect(screen.getByText("Only dates the employer gives to the day are included.")).toBeTruthy();
+    expect(screen.getByText("Only dates the employer gives to the day are included, with a day to start preparing four weeks before an opening.")).toBeTruthy();
   });
 
   it("offers nothing when no date is known to the day, rather than a calendar with guesses in it", () => {

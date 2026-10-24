@@ -3,7 +3,7 @@ import { feedHref } from "./feed-href";
 import type { ProgramsQuery } from "./programs-query";
 
 function query(overrides: Partial<ProgramsQuery> = {}): ProgramsQuery {
-  return { limit: 20, offset: 0, type: undefined, discipline: undefined, openNow: false, ...overrides };
+  return { limit: 20, offset: 0, type: undefined, discipline: undefined, industry: undefined, openNow: false, ...overrides };
 }
 
 describe("feedHref", () => {
@@ -42,5 +42,26 @@ describe("feedHref", () => {
   it("keeps a non-default page size, and drops the default one", () => {
     expect(feedHref(query({ limit: 50 }), { type: "graduate" })).toBe("/programs?type=graduate&limit=50");
     expect(feedHref(query({ limit: 20 }), { type: "graduate" })).toBe("/programs?type=graduate");
+  });
+});
+
+describe("feedHref: industry", () => {
+  it("adds an industry, after the type and discipline and before open now", () => {
+    expect(feedHref(query(), { industry: "consulting" })).toBe("/programs?industry=consulting");
+    expect(feedHref(query({ type: "graduate", openNow: true }), { industry: "consulting" })).toBe(
+      "/programs?type=graduate&industry=consulting&openNow=true",
+    );
+  });
+
+  it("keeps the industry when another filter changes, and removes it when cleared", () => {
+    expect(feedHref(query({ industry: "technology" }), { type: "graduate" })).toBe(
+      "/programs?type=graduate&industry=technology",
+    );
+    expect(feedHref(query({ industry: "technology" }), { industry: undefined })).toBe("/programs");
+  });
+
+  it("goes back to the first page when the industry changes, and keeps it when only the page changes", () => {
+    expect(feedHref(query({ offset: 40 }), { industry: "other" })).toBe("/programs?industry=other");
+    expect(feedHref(query({ industry: "other" }), { offset: 20 })).toBe("/programs?industry=other&offset=20");
   });
 });

@@ -56,6 +56,8 @@ paths:
 
         **Filters.** `type` matches a program's type. `discipline` returns programs that name that degree
         area; a program open to any degree names none, so it is not returned by a `discipline` filter.
+        `industry` returns programs tagged with that industry; a program that has not been tagged is not
+        returned by an `industry` filter, but is still listed without one.
         `openNow=true` returns programs whose applications are open on today's date in Melbourne.
 
         **Pages.** `limit` is the page size and `offset` where the page starts. `offset` must be a
@@ -108,6 +110,12 @@ paths:
               - economics
               - business_management
               - law
+        - name: industry
+          in: query
+          description: Only programs tagged with this industry.
+          schema:
+            type: string
+            enum: [banking_finance, consulting, technology, engineering_resources, government_defence, other]
         - name: openNow
           in: query
           description: When `true`, only programs open today. `false` is the same as leaving it out.
@@ -359,6 +367,7 @@ components:
         - programType
         - cities
         - disciplines
+        - industry
         - sourceUrl
         - company
         - status
@@ -386,6 +395,10 @@ components:
           items:
             type: string
           description: Degree areas the program names. Empty means any degree.
+        industry:
+          type: [string, "null"]
+          enum: [banking_finance, consulting, technology, engineering_resources, government_defence, other, null]
+          description: The kind of employer. Null means the program has not been tagged.
         sourceUrl:
           type: string
           format: uri
@@ -524,6 +537,7 @@ components:
             programType: graduate
             cities: [melbourne]
             disciplines: []
+            industry: null
             sourceUrl: https://careers.example.com.au/graduates
             company:
               slug: example-co

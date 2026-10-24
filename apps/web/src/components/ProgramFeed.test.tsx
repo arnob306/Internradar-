@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { ProgramsQuery } from "../features/programs/programs-query";
 import type { PublicProgram } from "../server/programs/programs-handler";
@@ -13,6 +13,7 @@ function program(name: string): PublicProgram {
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://example.com/x",
     company: { slug: "example-co", name: "Example Co", careersUrl: "https://example.com" },
     status: "open",
@@ -23,7 +24,7 @@ function program(name: string): PublicProgram {
 }
 
 function query(overrides: Partial<ProgramsQuery> = {}): ProgramsQuery {
-  return { limit: 20, offset: 0, type: undefined, discipline: undefined, openNow: false, ...overrides };
+  return { limit: 20, offset: 0, type: undefined, discipline: undefined, industry: undefined, openNow: false, ...overrides };
 }
 
 function hrefOf(name: string | RegExp): string | null {
@@ -144,5 +145,51 @@ describe("ProgramFeed", () => {
     render(<ProgramFeed programs={[program("Alpha")]} total={45} query={query({ offset: 40 })} />);
     expect(screen.getByText("Page 3 of 3")).toBeTruthy();
     expect(screen.queryByRole("link", { name: /next/i })).toBeNull();
+  });
+});
+
+describe("ProgramFeed: industry", () => {
+  const industries = () => screen.getByRole("navigation", { name: "Filter programs by industry" });
+
+  it("offers each industry as a plain link, keeping the other filters", () => {
+    render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query({ type: "graduate" })} />);
+
+    const links = within(industries()).getAllByRole("link");
+    expect(links.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["All industries", "/programs?type=graduate"],
+      ["Banking and finance", "/programs?type=graduate&industry=banking_finance"],
+      ["Consulting", "/programs?type=graduate&industry=consulting"],
+      ["Technology", "/programs?type=graduate&industry=technology"],
+      ["Engineering and resources", "/programs?type=graduate&industry=engineering_resources"],
+      ["Government and defence", "/programs?type=graduate&industry=government_defence"],
+      ["Other", "/programs?type=graduate&industry=other"],
+    ]);
+  });
+
+  it("marks the chosen industry for screen readers, and All industries when none is chosen", () => {
+    const { unmount } = render(
+      <ProgramFeed programs={[program("Alpha")]} total={1} query={query({ industry: "consulting" })} />,
+    );
+    expect(within(industries()).getByRole("link", { name: "Consulting" }).getAttribute("aria-current")).toBe("true");
+    expect(within(industries()).getByRole("link", { name: "All industries" }).getAttribute("aria-current")).toBeNull();
+    unmount();
+
+    render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query()} />);
+    expect(within(industries()).getByRole("link", { name: "All industries" }).getAttribute("aria-current")).toBe("true");
+  });
+
+  it("clicking the current industry again switches it off", () => {
+    render(<ProgramFeed programs={[program("Alpha")]} total={1} query={query({ industry: "consulting" })} />);
+
+    expect(within(industries()).getByRole("link", { name: "Consulting" }).getAttribute("href")).toBe("/programs");
+  });
+});
+
+describe("ProgramFeed: headings", () => {
+  it("titles each card with a level 2 heading, so the page goes from its h1 straight to them", () => {
+    render(<ProgramFeed programs={[program("Alpha"), program("Beta")]} total={2} query={query()} />);
+
+    const headings = screen.getAllByRole("heading");
+    expect(headings.map((heading) => heading.tagName)).toEqual(["H2", "H2"]);
   });
 });

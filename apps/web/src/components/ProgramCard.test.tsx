@@ -12,6 +12,7 @@ function program(overrides: Partial<PublicProgram> = {}): PublicProgram {
     programType: "graduate",
     cities: ["melbourne"],
     disciplines: [],
+    industry: null,
     sourceUrl: "https://www.ey.com/en_au/careers/2027-graduate-program-student-opportunities",
     company: { slug: "ey-australia", name: "EY Australia", careersUrl: "https://www.ey.com" },
     status: "open",
