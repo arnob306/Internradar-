@@ -1,12 +1,13 @@
 import type { WindowStatus } from "../../components/StatusChip";
+import type { DatePrecision } from "./window-vocabulary";
 
 /** The columns of program_windows that decide a status. Dates are ISO `YYYY-MM-DD` strings. */
 export interface StatusWindow {
   readonly status: WindowStatus;
   readonly opens_on: string | null;
-  readonly opens_precision: "day" | "month" | "estimated" | null;
+  readonly opens_precision: DatePrecision | null;
   readonly closes_on: string | null;
-  readonly closes_precision: "day" | "month" | "estimated" | null;
+  readonly closes_precision: DatePrecision | null;
 }
 
 /** The earliest and latest day a date could really mean, given how precisely it is known. */

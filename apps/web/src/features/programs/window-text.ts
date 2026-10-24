@@ -1,7 +1,8 @@
 import type { WindowStatus } from "../../components/StatusChip";
 import { headlineWindow } from "./headline-window";
+import type { DatePrecision } from "./window-vocabulary";
 
-type Precision = "day" | "month" | "estimated" | null;
+type Precision = DatePrecision | null;
 
 /** The parts of an application window that decide how it is worded. */
 export interface TextWindow {
