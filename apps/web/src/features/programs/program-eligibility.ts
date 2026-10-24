@@ -24,6 +24,7 @@ export interface EligibilityInput {
   /** Read straight from the database, so untrusted: the engine parses it before using it. */
   readonly eligibilityRules: unknown;
   readonly rulesVerified: boolean;
+  readonly rulesVersion: number;
 }
 
 function toYearMonth(isoDate: string | null): YearMonth | null {
@@ -52,6 +53,6 @@ export function evaluateProgram(
     programStart: toYearMonth(window?.programStartsOn ?? null),
     programEnd: toYearMonth(window?.programEndsOn ?? null),
     rulesVerified: program.rulesVerified,
-    rulesVersion: 1,
+    rulesVersion: program.rulesVersion,
   });
 }

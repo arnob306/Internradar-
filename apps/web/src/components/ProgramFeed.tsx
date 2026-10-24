@@ -2,6 +2,7 @@ import type { ProgramType } from "@internradar/domain";
 import Link from "next/link";
 import type { ReactElement } from "react";
 import { feedHref } from "../features/programs/feed-href";
+import { INDUSTRY_FILTERS } from "../features/timeline/timeline-filter";
 import type { ProgramsQuery } from "../features/programs/programs-query";
 import type { PublicProgram } from "../server/programs/programs-handler";
 import { ProgramCard, type CardEligibility } from "./ProgramCard";
@@ -69,6 +70,17 @@ export function ProgramFeed({ programs, total, query, eligibility, prompt }: Pro
           Open now
         </FilterLink>
       </nav>
+      <nav className="filters" aria-label="Filter programs by industry">
+        {INDUSTRY_FILTERS.map(({ industry, label }) => (
+          <FilterLink
+            key={label}
+            href={feedHref(query, { industry: query.industry === industry ? undefined : industry })}
+            current={query.industry === industry}
+          >
+            {label}
+          </FilterLink>
+        ))}
+      </nav>
 
       <p className="feed-count muted" aria-live="polite">
         {total} {total === 1 ? "program" : "programs"}
@@ -77,7 +89,7 @@ export function ProgramFeed({ programs, total, query, eligibility, prompt }: Pro
       {programs.length === 0 ? (
         <div className="feed-empty">
           <p>No programs match these filters.</p>
-          <Link href="/">Clear filters</Link>
+          <Link href="/programs">Clear filters</Link>
         </div>
       ) : (
         <div className="program-grid">
