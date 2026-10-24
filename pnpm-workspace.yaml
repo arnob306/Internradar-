@@ -4,3 +4,7 @@ packages:
   - "tests/*"
 allowBuilds:
   esbuild: true
+# Do not resolve a package version published in the last 3 days (the value is in minutes). A
+# hijacked release is usually found and pulled within that time, so it never reaches this repo.
+# Versions already in the lockfile are not affected.
+minimumReleaseAge: 4320

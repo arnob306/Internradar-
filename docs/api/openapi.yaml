@@ -1,0 +1,602 @@
+openapi: 3.1.0
+
+info:
+  title: InternRadar public program API
+  version: 1.0.0
+  summary: Graduate and internship programs for Australian university students, and when their applications open.
+  description: |
+    Read-only access to the programs InternRadar has published. No sign-in is needed.
+
+    **Status.** This API is not hosted anywhere yet. It runs locally, against a draft catalogue that a
+    person is still checking against each employer's own page. Nothing it returns should be treated as
+    confirmed until the catalogue is published.
+
+    **What it will and will not tell you.**
+    - Only published programs are returned. A program that is still a draft looks the same as one that
+      does not exist (a `404`).
+    - A date is never shown more precisely than the employer's page proves. See `precision` on a window.
+    - Application stages are the steps an employer's own page describes. Each one carries the address of
+      the page that describes it. A program with no sourced stages returns an empty list.
+    - The program's eligibility rules are not part of this API.
+
+    **Answers.** Every answer, good or bad, uses one envelope: `success`, `data`, `error`, `meta`.
+    Errors carry a safe `code` and a plain `message`, never database or server detail.
+
+    **Rate limit.** One client may make 60 requests a minute across both routes together. See `x-rate-limit`.
+  contact:
+    name: InternRadar (a student project)
+    url: https://github.com/arnob306/Internradar-
+
+servers:
+  - url: http://localhost:3000
+    description: Local development. There is no hosted server yet.
+
+x-rate-limit:
+  requests: 60
+  windowSeconds: 60
+  sharedAcrossRoutes: true
+  keyedBy: The client address the hosting proxy reports (`x-real-ip`, or the first `x-forwarded-for`). Callers with neither share one bucket.
+  note: Counted in each server's own memory, so it guards against one caller hammering the API. It is not a guarantee across several servers.
+
+tags:
+  - name: Programs
+    description: Published graduate and internship programs.
+
+paths:
+  /api/v1/programs:
+    get:
+      tags: [Programs]
+      operationId: listPrograms
+      summary: List published programs
+      description: |
+        Programs matching the filters, one page at a time.
+
+        **Order.** Open programs first, then upcoming, then those with no dates, then closed. Within each
+        group, by employer name and then program name, in Australian English with numbers in numeric order.
+
+        **Filters.** `type` matches a program's type. `discipline` returns programs that name that degree
+        area; a program open to any degree names none, so it is not returned by a `discipline` filter.
+        `industry` returns programs tagged with that industry; a program that has not been tagged is not
+        returned by an `industry` filter, but is still listed without one.
+        `openNow=true` returns programs whose applications are open on today's date in Melbourne.
+
+        **Pages.** `limit` is the page size and `offset` where the page starts. `offset` must be a
+        multiple of `limit`. `meta.page` counts from 1.
+
+        An unknown query parameter, a repeated one, or a value that is not allowed is refused with a
+        `400`, so a typo such as `limt=5` never silently does nothing.
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          description: How many programs to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: How many programs to skip. A whole number, 0 or more, and a multiple of `limit`.
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: type
+          in: query
+          description: Only programs of this type.
+          schema:
+            type: string
+            enum: [internship, vacationer, graduate, cadetship, discovery]
+        - name: discipline
+          in: query
+          description: Only programs that name this degree area.
+          schema:
+            type: string
+            enum:
+              - computer_science
+              - software_engineering
+              - information_systems
+              - data_science
+              - mathematics_statistics
+              - physics
+              - engineering_electrical
+              - engineering_mechanical
+              - engineering_civil
+              - engineering_other
+              - science_other
+              - commerce_finance
+              - accounting
+              - economics
+              - business_management
+              - law
+        - name: industry
+          in: query
+          description: Only programs tagged with this industry.
+          schema:
+            type: string
+            enum: [banking_finance, consulting, technology, engineering_resources, government_defence, other]
+        - name: openNow
+          in: query
+          description: When `true`, only programs open today. `false` is the same as leaving it out.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: A page of programs. Empty `data` means nothing matched, not an error.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramListEnvelope"
+              examples:
+                list:
+                  $ref: "#/components/examples/ProgramList"
+        "400":
+          description: A query parameter was not valid. `error.fields` names each one.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                validation:
+                  $ref: "#/components/examples/ValidationError"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/programs/{company}/{program}:
+    get:
+      tags: [Programs]
+      operationId: getProgram
+      summary: Get one published program
+      description: |
+        One program, found by its employer's slug and its own slug. A program's slug is only unique within
+        its employer (many employers have a `graduate-program`), so both are needed.
+
+        A slug that could not exist, a draft program and a program that is missing all get the same `404`,
+        so a caller cannot tell them apart.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/CompanySlug"
+        - $ref: "#/components/parameters/ProgramSlug"
+      responses:
+        "200":
+          description: The program.
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/CacheControl"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramEnvelope"
+        "404":
+          description: There is no published program with those slugs.
+          headers:
+            Cache-Control:
+              description: |
+                A real-looking pair of slugs that is not found is remembered for 30 seconds
+                (`public, s-maxage=30`), so a short wait after publishing is enough. A malformed
+                slug is `no-store`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+              examples:
+                notFound:
+                  $ref: "#/components/examples/ProgramNotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  parameters:
+    CompanySlug:
+      name: company
+      in: path
+      required: true
+      description: The employer's slug, such as `commbank`. Letters, digits and single hyphens, up to 80 characters.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 80
+        pattern: "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$"
+    ProgramSlug:
+      name: program
+      in: path
+      required: true
+      description: The program's slug within that employer, such as `graduate-program`. Same rules as `company`.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 80
+        pattern: "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$"
+
+  headers:
+    CacheControl:
+      description: |
+        A good answer may be held by a shared cache for 60 seconds, and served stale for up to 5 minutes
+        while it is refreshed (`public, s-maxage=60, stale-while-revalidate=300`).
+      schema:
+        type: string
+    NoStore:
+      description: This answer must not be cached (`no-store`).
+      schema:
+        type: string
+    RetryAfter:
+      description: How many whole seconds to wait before asking again.
+      schema:
+        type: integer
+        minimum: 0
+
+  responses:
+    RateLimited:
+      description: This client has made too many requests. Wait for `Retry-After` seconds.
+      headers:
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+        Cache-Control:
+          $ref: "#/components/headers/NoStore"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            rateLimited:
+              $ref: "#/components/examples/RateLimited"
+    InternalError:
+      description: Something went wrong on the server. The detail is kept in the server's logs, not returned.
+      headers:
+        Cache-Control:
+          $ref: "#/components/headers/NoStore"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            internal:
+              $ref: "#/components/examples/InternalError"
+
+  schemas:
+    ProgramEnvelope:
+      type: object
+      description: One program, in the standard envelope.
+      required: [success, data, error, meta]
+      properties:
+        success:
+          const: true
+        data:
+          $ref: "#/components/schemas/Program"
+        error:
+          type: "null"
+        meta:
+          type: "null"
+
+    ProgramListEnvelope:
+      type: object
+      description: A page of programs, in the standard envelope.
+      required: [success, data, error, meta]
+      properties:
+        success:
+          const: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Program"
+        error:
+          type: "null"
+        meta:
+          $ref: "#/components/schemas/PageMeta"
+
+    ErrorEnvelope:
+      type: object
+      description: Any failure, in the standard envelope.
+      required: [success, data, error, meta]
+      properties:
+        success:
+          const: false
+        data:
+          type: "null"
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+        meta:
+          type: "null"
+
+    ErrorBody:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: A safe, stable code to branch on. The `message` is for people and may change.
+          enum: [VALIDATION_ERROR, RATE_LIMITED, PROGRAM_NOT_FOUND, INTERNAL_ERROR]
+        message:
+          type: string
+          description: What happened, in plain words.
+        fields:
+          type: array
+          description: "Present for `VALIDATION_ERROR`: each query parameter that was refused, and why."
+          items:
+            $ref: "#/components/schemas/FieldError"
+
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+
+    PageMeta:
+      type: object
+      description: Where this page sits in the full list.
+      required: [total, page, limit]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: How many programs match the filters across every page.
+        page:
+          type: integer
+          minimum: 1
+          description: This page's number, counting from 1.
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: The page size used.
+
+    Program:
+      type: object
+      description: One published program. Every field is always present.
+      required:
+        - id
+        - slug
+        - name
+        - programType
+        - cities
+        - disciplines
+        - industry
+        - sourceUrl
+        - company
+        - status
+        - windows
+        - rulesVerified
+        - applicationStages
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+          description: Unique within its employer, not across employers.
+        name:
+          type: string
+        programType:
+          $ref: "#/components/schemas/ProgramType"
+        cities:
+          type: array
+          items:
+            type: string
+          description: Lower-case city names, such as `melbourne`.
+        disciplines:
+          type: array
+          items:
+            type: string
+          description: Degree areas the program names. Empty means any degree.
+        industry:
+          type: [string, "null"]
+          enum: [banking_finance, consulting, technology, engineering_resources, government_defence, other, null]
+          description: The kind of employer. Null means the program has not been tagged.
+        sourceUrl:
+          type: string
+          format: uri
+          description: The employer's own page for this program. Also where "apply" points.
+        company:
+          $ref: "#/components/schemas/Company"
+        status:
+          $ref: "#/components/schemas/WindowStatus"
+        windows:
+          type: array
+          description: Application windows, newest cycle first, then in the order the cycle runs.
+          items:
+            $ref: "#/components/schemas/Window"
+        rulesVerified:
+          type: boolean
+          description: |
+            Whether a person has compared the program's eligibility rules with the employer's page.
+            False means the rules have not been checked. The rules themselves are not returned.
+        applicationStages:
+          type: array
+          maxItems: 12
+          description: |
+            The steps the employer's own page describes, in their order. Each stage carries the page that
+            describes it. Empty when none are published, which is not the same as "there are no steps".
+          items:
+            $ref: "#/components/schemas/ApplicationStage"
+
+    ProgramType:
+      type: string
+      enum: [internship, vacationer, graduate, cadetship, discovery]
+
+    WindowStatus:
+      type: string
+      description: |
+        Whether applications are open, as far as the dates prove it. `unknown` means the dates do not
+        say, which is not the same as closed.
+      enum: [upcoming, open, closed, unknown]
+
+    Company:
+      type: object
+      required: [slug, name, careersUrl]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        careersUrl:
+          type: string
+          format: uri
+
+    Window:
+      type: object
+      description: One application window, with how sure each date is.
+      required:
+        - cycleYear
+        - windowSeq
+        - opensOn
+        - opensPrecision
+        - closesOn
+        - closesPrecision
+        - programStartsOn
+        - programEndsOn
+        - status
+        - sourceUrl
+      properties:
+        cycleYear:
+          type: integer
+          description: The intake year this window is for.
+        windowSeq:
+          type: integer
+          minimum: 1
+          description: 1 for the first window in a cycle, 2 for a second, and so on.
+        opensOn:
+          type: [string, "null"]
+          format: date
+          description: A Melbourne calendar day, `YYYY-MM-DD`. Read it with `opensPrecision`. Null when not published.
+        opensPrecision:
+          type: [string, "null"]
+          enum: [day, month, estimated, null]
+          description: |
+            How precisely `opensOn` is known. `day`: the employer gave a day. `month`: only the month is
+            known and the day shown is the 1st. `estimated`: the employer did not state it, and the date is
+            a guess, so never show it as a stated date. Null when `opensOn` is null.
+        closesOn:
+          type: [string, "null"]
+          format: date
+          description: As `opensOn`. Null when no closing date is published.
+        closesPrecision:
+          type: [string, "null"]
+          enum: [day, month, estimated, null]
+          description: As `opensPrecision`, for `closesOn`.
+        programStartsOn:
+          type: [string, "null"]
+          format: date
+          description: When the program itself starts, if published.
+        programEndsOn:
+          type: [string, "null"]
+          format: date
+          description: When the program itself ends, if published.
+        status:
+          $ref: "#/components/schemas/WindowStatus"
+        sourceUrl:
+          type: string
+          format: uri
+          description: The page this window's dates came from.
+
+    ApplicationStage:
+      type: object
+      description: One step of the employer's application process.
+      required: [name, description, sourceUrl]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: The step's name, such as `Online assessment`.
+        description:
+          type: [string, "null"]
+          maxLength: 600
+          description: A short plain description. Null when there is none.
+        sourceUrl:
+          type: string
+          format: uri
+          description: |
+            The employer's own page that describes this step. Always present and always an https address
+            on the employer's side: a step with no safe source is never returned.
+
+  examples:
+    ProgramList:
+      summary: One page with one program (illustrative values)
+      value:
+        success: true
+        data:
+          - id: 7f0e6a3e-0000-4000-8000-000000000001
+            slug: graduate-program
+            name: Example Graduate Program
+            programType: graduate
+            cities: [melbourne]
+            disciplines: []
+            industry: null
+            sourceUrl: https://careers.example.com.au/graduates
+            company:
+              slug: example-co
+              name: Example Co
+              careersUrl: https://careers.example.com.au
+            status: upcoming
+            windows:
+              - cycleYear: 2027
+                windowSeq: 1
+                opensOn: "2027-02-01"
+                opensPrecision: month
+                closesOn: "2027-03-01"
+                closesPrecision: month
+                programStartsOn: null
+                programEndsOn: null
+                status: upcoming
+                sourceUrl: https://careers.example.com.au/graduates
+            rulesVerified: false
+            applicationStages:
+              - name: Online application
+                description: A short form. Have your resume and latest transcript ready.
+                sourceUrl: https://careers.example.com.au/graduates/how-to-apply
+        error: null
+        meta:
+          total: 1
+          page: 1
+          limit: 20
+    ValidationError:
+      value:
+        success: false
+        data: null
+        error:
+          code: VALIDATION_ERROR
+          message: Some query parameters are not valid.
+          fields:
+            - field: limit
+              message: limit must be a whole number from 1 to 100.
+        meta: null
+    ProgramNotFound:
+      value:
+        success: false
+        data: null
+        error:
+          code: PROGRAM_NOT_FOUND
+          message: We couldn't find that program.
+        meta: null
+    RateLimited:
+      value:
+        success: false
+        data: null
+        error:
+          code: RATE_LIMITED
+          message: Too many requests. Please wait a moment and try again.
+        meta: null
+    InternalError:
+      value:
+        success: false
+        data: null
+        error:
+          code: INTERNAL_ERROR
+          message: Something went wrong. Please try again.
+        meta: null

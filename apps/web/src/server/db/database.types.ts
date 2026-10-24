@@ -6,7 +6,32 @@ export type Database = {
   
   "public": {
           Tables: {
-            "app_admins": {
+            "alerts": {
+                  Row: {
+                    "attempts": number,"created_at": string,"dedupe_key": string,"details": NonNullable<Json>,"id": string,"kind": string,"last_error_code": string | null,"program_id": string,"program_window_id": string,"send_after": string,"sent_at": string | null,"status": string,"user_id": string
+                  }
+                  Insert: {
+                    "attempts"?: number,"created_at"?: string,"dedupe_key": string,"details"?: NonNullable<Json>,"id"?: string,"kind": string,"last_error_code"?: string | null,"program_id": string,"program_window_id": string,"send_after"?: string,"sent_at"?: string | null,"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "attempts"?: number,"created_at"?: string,"dedupe_key"?: string,"details"?: NonNullable<Json>,"id"?: string,"kind"?: string,"last_error_code"?: string | null,"program_id"?: string,"program_window_id"?: string,"send_after"?: string,"sent_at"?: string | null,"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "alerts_program_id_fkey"
+      columns: ["program_id"]
+isOneToOne: false
+      referencedRelation: "programs"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "alerts_program_window_id_fkey"
+      columns: ["program_window_id"]
+isOneToOne: false
+      referencedRelation: "program_windows"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"app_admins": {
                   Row: {
                     "user_id": string
                   }
@@ -287,13 +312,13 @@ isOneToOne: false
                   ]
                 },"programs": {
                   Row: {
-                    "cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
+                    "application_stages": NonNullable<Json>,"cities": (string)[],"company_id": string,"created_at": string,"disciplines": (string)[],"eligibility_rules": NonNullable<Json>,"eligibility_rules_version": number,"eligibility_verified_at": string | null,"id": string,"industry": Database["public"]['Enums']["industry"] | null,"is_published": boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at": string
                   }
                   Insert: {
-                    "cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id": string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"] | null,"is_published"?: boolean,"name": string,"program_type": Database["public"]['Enums']["program_type"],"slug": string,"source_url": string,"updated_at"?: string
                   }
                   Update: {
-                    "cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
+                    "application_stages"?: NonNullable<Json>,"cities"?: (string)[],"company_id"?: string,"created_at"?: string,"disciplines"?: (string)[],"eligibility_rules"?: NonNullable<Json>,"eligibility_rules_version"?: number,"eligibility_verified_at"?: string | null,"id"?: string,"industry"?: Database["public"]['Enums']["industry"] | null,"is_published"?: boolean,"name"?: string,"program_type"?: Database["public"]['Enums']["program_type"],"slug"?: string,"source_url"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -336,7 +361,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "is_admin":
+            "alert_recipient_email":
+{ Args: { "alert_id": string }; Returns: string
+                           },
+"is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "log_event":
@@ -347,10 +375,13 @@ isOneToOne: false
                            },
 "rate_limit_hit":
 { Args: { "bucket": string,"max_hits": number,"window_len": string }; Returns: boolean
+                           },
+"unsubscribe_from_alert":
+{ Args: { "alert_id": string }; Returns: undefined
                            }
           }
           Enums: {
-            "app_status": "saved"|"applied"|"online_assessment"|"interview"|"offer"|"rejected","ats_kind": "greenhouse"|"lever"|"workday","citizenship": "au_citizen"|"au_pr"|"nz_citizen"|"intl_student"|"other","date_precision": "day"|"month"|"estimated","degree_level": "undergraduate"|"honours"|"masters_coursework"|"masters_research"|"phd","program_type": "internship"|"vacationer"|"graduate"|"cadetship"|"discovery","provenance": "seed"|"ats"|"monitor"|"admin","window_status": "upcoming"|"open"|"closed"|"unknown"
+            "app_status": "saved"|"applied"|"online_assessment"|"interview"|"offer"|"rejected","ats_kind": "greenhouse"|"lever"|"workday","citizenship": "au_citizen"|"au_pr"|"nz_citizen"|"intl_student"|"other","date_precision": "day"|"month"|"estimated","degree_level": "undergraduate"|"honours"|"masters_coursework"|"masters_research"|"phd","industry": "banking_finance"|"consulting"|"technology"|"engineering_resources"|"government_defence"|"other","program_type": "internship"|"vacationer"|"graduate"|"cadetship"|"discovery","provenance": "seed"|"ats"|"monitor"|"admin","window_status": "upcoming"|"open"|"closed"|"unknown"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -466,7 +497,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "app_status": ["saved", "applied", "online_assessment", "interview", "offer", "rejected"],"ats_kind": ["greenhouse", "lever", "workday"],"citizenship": ["au_citizen", "au_pr", "nz_citizen", "intl_student", "other"],"date_precision": ["day", "month", "estimated"],"degree_level": ["undergraduate", "honours", "masters_coursework", "masters_research", "phd"],"program_type": ["internship", "vacationer", "graduate", "cadetship", "discovery"],"provenance": ["seed", "ats", "monitor", "admin"],"window_status": ["upcoming", "open", "closed", "unknown"]
+            "app_status": ["saved", "applied", "online_assessment", "interview", "offer", "rejected"],"ats_kind": ["greenhouse", "lever", "workday"],"citizenship": ["au_citizen", "au_pr", "nz_citizen", "intl_student", "other"],"date_precision": ["day", "month", "estimated"],"degree_level": ["undergraduate", "honours", "masters_coursework", "masters_research", "phd"],"industry": ["banking_finance", "consulting", "technology", "engineering_resources", "government_defence", "other"],"program_type": ["internship", "vacationer", "graduate", "cadetship", "discovery"],"provenance": ["seed", "ats", "monitor", "admin"],"window_status": ["upcoming", "open", "closed", "unknown"]
           }
         }
 } as const

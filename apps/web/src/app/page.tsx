@@ -1,140 +1,145 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactElement } from "react";
-import { ProgramFeed } from "../components/ProgramFeed";
-import type { CardEligibility } from "../components/ProgramCard";
-import { eligibilityForFeed } from "../features/programs/feed-eligibility";
+import { IndustryFilters } from "../components/IndustryFilters";
+import { TimelineChart } from "../components/TimelineChart";
+import { TimelineFilters } from "../components/TimelineFilters";
+import { INDUSTRY_LABELS } from "../features/vocabulary-labels";
 import { melbourneDate } from "../features/programs/melbourne-date";
-import {
-  DEFAULT_LIMIT,
-  parseProgramsQuery,
-  type ProgramsQuery,
-} from "../features/programs/programs-query";
+import { MAX_LIMIT } from "../features/programs/programs-query";
+import { toSearchParams, type PageSearchParams } from "../features/programs/search-params";
+import { buildTimeline } from "../features/timeline/build-timeline";
+import { summariseTimeline } from "../features/timeline/summarise";
+import { chartFor } from "../features/timeline/timeline-bars";
+import { parseTimelineFilter, type TimelineFilter } from "../features/timeline/timeline-filter";
+import { listApplications } from "../server/applications/applications-repo";
 import { sessionClientForRequest } from "../server/auth/request-session";
-import type { Database } from "../server/db/database.types";
 import { logFailure } from "../server/log";
-import { listPrograms, type ProgramListItem, type ProgramsPage } from "../server/programs/list-programs";
+import { listPrograms, type ProgramsPage } from "../server/programs/list-programs";
 import { toPublicProgram } from "../server/programs/programs-handler";
-import { loadProfile } from "../server/profile/profile-repo";
-import { toStudentProfile } from "../server/profile/profile-row";
 
-// The feed reads the database on every request, so it is always current.
+export const metadata: Metadata = { title: "When applications open" };
+
+// Built from the visitor's session on every request: the dates and the saved badges are current.
 export const dynamic = "force-dynamic";
 
-type SearchParams = Record<string, string | string[] | undefined>;
+type Client = Awaited<ReturnType<typeof sessionClientForRequest>>;
 
-const DEFAULT_QUERY: ProgramsQuery = {
-  limit: DEFAULT_LIMIT,
-  offset: 0,
-  type: undefined,
-  discipline: undefined,
-  openNow: false,
-};
+const HEADLINE = "Never miss an application window.";
 
-function toParams(raw: SearchParams): URLSearchParams {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(raw)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (item !== undefined) {
-        params.append(key, item);
-      }
-    }
-  }
-  return params;
-}
-
-interface Viewer {
-  /** An answer for each program, once the student is signed in and has a profile. */
-  readonly eligibility?: Record<string, CardEligibility>;
-  /** What each card asks for while it has no answer. */
-  readonly prompt: "sign-in" | "profile";
-}
-
-/**
- * What this visitor can be told about each program. A visitor is asked to sign in; a student with
- * no profile is asked to add one; one with a profile gets the engine's answer. If the session or
- * the profile cannot be read, the programs still show and the card simply asks again: a lookup
- * that fails must never take the feed down, or be mistaken for an answer.
- */
-async function viewerFor(
-  client: SupabaseClient<Database>,
-  items: readonly ProgramListItem[],
-  today: string,
-): Promise<Viewer> {
+/** The programs this student saved. A visitor, or any failure, simply has none: the page still works. */
+async function savedProgramIds(client: Client): Promise<string[]> {
   let signedIn = false;
   try {
     signedIn = (await client.auth.getUser()).data.user !== null;
   } catch (error) {
-    logFailure("page.home.session", error);
+    logFailure("page.timeline.session", error);
   }
   if (!signedIn) {
-    return { prompt: "sign-in" };
+    return [];
   }
-
   try {
-    const profile = await loadProfile(client);
-    if (profile === null) {
-      return { prompt: "profile" };
-    }
-    return { prompt: "profile", eligibility: eligibilityForFeed(items, toStudentProfile(profile), today) };
+    return (await listApplications(client)).map((application) => application.programId);
   } catch (error) {
-    logFailure("page.home.profile", error);
-    return { prompt: "profile" };
+    logFailure("page.timeline.saved", error);
+    return [];
   }
+}
+
+const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+
+/** What to say when the chosen filters leave nothing, naming each filter that is on. */
+function nothingToShow({ type, industry }: TimelineFilter): string {
+  const kind = type === undefined ? "programs" : `${type} programs`;
+  return industry === undefined
+    ? `No ${kind} to show yet.`
+    : `No ${kind} in ${INDUSTRY_LABELS[industry]} to show yet.`;
+}
+
+/** The headline, the summary, the filters and the chart for one page of programs. */
+function TimelineView({
+  filter,
+  page,
+  today,
+  saved,
+}: {
+  readonly filter: TimelineFilter;
+  readonly page: ProgramsPage;
+  readonly today: string;
+  readonly saved: readonly string[];
+}): ReactElement {
+  const timeline = buildTimeline(page.items.map(toPublicProgram), today, saved);
+  const summary = summariseTimeline(timeline);
+  return (
+    <main className="page timeline-page">
+      <h1 className="home-title">{HEADLINE}</h1>
+      <p className="home-lede muted">
+        Large employers rarely announce when they open. See each program&apos;s window and when to start preparing.
+      </p>
+      <ul className="summary" aria-label="Programs at a glance">
+        <li>{count(summary.total, "program", "programs")}</li>
+        <li>{summary.openNow} open now</li>
+        <li>{summary.openingSoon} opening soon</li>
+        <li>{summary.estimated} estimated from earlier years</li>
+        <li>{summary.notAnnounced} with no dates announced</li>
+      </ul>
+      <div className="timeline-toolbar">
+        <TimelineFilters current={filter.type} industry={filter.industry} />
+        <IndustryFilters current={filter.industry} type={filter.type} />
+        <Link href="/programs">Browse all programs</Link>
+      </div>
+      {!filter.isValid && (
+        <p className="notice">
+          The filter in that link wasn&apos;t valid, so it was ignored. <Link href="/">Show all programs</Link>
+        </p>
+      )}
+      {page.items.length < page.total && (
+        <p className="notice">
+          Showing the first {page.items.length} of {page.total} programs.
+        </p>
+      )}
+      {(filter.type !== undefined || filter.industry !== undefined) && page.items.length === 0 ? (
+        <p className="notice">
+          {nothingToShow(filter)} <Link href="/">Show all programs</Link>
+        </p>
+      ) : (
+        <TimelineChart chart={chartFor(timeline, today)} />
+      )}
+      <p className="home-footnote muted">
+        Dates change: always confirm on the employer&apos;s own page before you plan around one.
+      </p>
+    </main>
+  );
 }
 
 export default async function HomePage({
   searchParams,
 }: {
-  readonly searchParams: Promise<SearchParams>;
+  readonly searchParams: Promise<PageSearchParams>;
 }): Promise<ReactElement> {
-  const parsed = parseProgramsQuery(toParams(await searchParams));
-  const query = parsed.ok ? parsed.value : DEFAULT_QUERY;
+  const filter = parseTimelineFilter(toSearchParams(await searchParams));
   const today = melbourneDate(new Date());
 
-  let page: ProgramsPage | undefined;
-  let viewer: Viewer = { prompt: "sign-in" };
+  let page: ProgramsPage;
+  let saved: string[];
   try {
     const client = await sessionClientForRequest();
-    page = await listPrograms(client, query, today);
-    viewer = await viewerFor(client, page.items, today);
+    page = await listPrograms(
+      client,
+      { limit: MAX_LIMIT, offset: 0, type: filter.type, discipline: undefined, industry: filter.industry, openNow: false },
+      today,
+    );
+    saved = await savedProgramIds(client);
   } catch (error) {
-    // The reason stays on the server, and only a safe summary is logged. A visitor only needs to
-    // know to try again.
-    logFailure("page.home.list", error);
-    page = undefined;
+    // Only a safe summary is logged. A visitor needs to know to try again, not why.
+    logFailure("page.timeline.load", error);
+    return (
+      <main className="page timeline-page">
+        <h1 className="home-title">{HEADLINE}</h1>
+        <p className="notice">We couldn&apos;t load the timeline right now. Please try again in a moment.</p>
+      </main>
+    );
   }
 
-  return (
-    <main className="page home">
-      <h1 className="home-title">Graduate and internship programs, checked against you.</h1>
-      <p className="home-lede muted">
-        Every program links to the employer&apos;s own page. We show whether you&apos;re eligible,
-        and say so plainly when we can&apos;t tell.
-      </p>
-
-      {!parsed.ok && (
-        <p className="notice">
-          Some filters in that link weren&apos;t valid, so they were ignored.{" "}
-          <Link href="/">Clear filters</Link>
-        </p>
-      )}
-
-      {page === undefined ? (
-        <p className="notice">We couldn&apos;t load programs right now. Please try again in a moment.</p>
-      ) : (
-        <ProgramFeed
-          programs={page.items.map(toPublicProgram)}
-          total={page.total}
-          query={query}
-          prompt={viewer.prompt}
-          {...(viewer.eligibility === undefined ? {} : { eligibility: viewer.eligibility })}
-        />
-      )}
-
-      <p className="home-footnote muted">
-        Eligibility is a guide: always confirm on the employer&apos;s own page before you apply.
-      </p>
-    </main>
-  );
+  return <TimelineView filter={filter} page={page} today={today} saved={saved} />;
 }

@@ -117,9 +117,11 @@ def test_a_non_local_database_is_refused_before_any_connection(
     monkeypatch.setattr(testing_db, "ADMIN_URL", url)
     # As if an earlier local connection had already set the worker password in this process:
     # the worker connection must still check the host itself.
-    monkeypatch.setattr(testing_db, "_password_set", True)
+    monkeypatch.setattr(testing_db, "_roles_with_password", {"ingest_worker", "notify_worker"})
 
     with pytest.raises(RuntimeError, match="non-local"):
         testing_db.admin_connection()
     with pytest.raises(RuntimeError, match="non-local"):
         testing_db.worker_connection()
+    with pytest.raises(RuntimeError, match="non-local"):
+        testing_db.notify_connection()
