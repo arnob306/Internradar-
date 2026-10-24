@@ -27,7 +27,13 @@ from internradar_monitor.alerts.plan import (
     alerts_for_event,
     closing_soon_alerts,
 )
-from internradar_monitor.alerts.send import Delivery, Notifier, OutgoingEmail, deliver
+from internradar_monitor.alerts.send import (
+    Delivery,
+    Notifier,
+    OutgoingEmail,
+    UnsubscribeLinks,
+    deliver,
+)
 
 Connection = psycopg.Connection[tuple[Any, ...]]
 
@@ -175,7 +181,7 @@ def send_due(
     notifier: Notifier,
     *,
     now: datetime,
-    unsubscribe_url_for: Callable[[str], str],
+    unsubscribe_links_for: Callable[[str], UnsubscribeLinks],
     limit: int = BATCH_SIZE,
 ) -> SendSummary:
     """Send the alerts that are due, one at a time, and record each outcome."""
@@ -200,14 +206,14 @@ def send_due(
                 _skip(db, alert_id, now)
                 counts["skipped"] += 1
                 continue
-            unsubscribe_url = unsubscribe_url_for(str(alert_id))
-            content = compose_email(kind, details, unsubscribe_url)
+            links = unsubscribe_links_for(str(alert_id))
+            content = compose_email(kind, details, links.page)
             email = OutgoingEmail(
                 to=address,
                 subject=content.subject,
                 body=content.body,
                 idempotency_key=str(alert_id),
-                unsubscribe_url=unsubscribe_url,
+                unsubscribe_url=links.one_click,
             )
             outcome = deliver(email, attempts, notifier, now)
             _record(db, alert_id, outcome)

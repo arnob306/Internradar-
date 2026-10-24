@@ -13,18 +13,21 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 from internradar_common.clock import Clock, SystemClock
 from internradar_common.database import connect_worker
 from internradar_common.melbourne import melbourne_day
 
-from internradar_monitor.alerts.send import Notifier
+from internradar_monitor.alerts.send import Notifier, UnsubscribeLinks
 from internradar_monitor.alerts.smtp import SmtpNotifier
 from internradar_monitor.alerts.store import SendSummary, create_alerts, send_due
 
 DEFAULT_SMTP_PORT = 1025
 SMTP_TIMEOUT_SECONDS = 20
 _TRUE = frozenset({"1", "true", "yes"})
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+_SPACE = 32  # anything below this is a control character
 
 
 class SettingsError(Exception):
@@ -35,7 +38,7 @@ class SettingsError(Exception):
 class Settings:
     database_url: str
     sender: str
-    unsubscribe_base_url: str
+    site_url: str
     smtp_host: str
     smtp_port: int
     starttls: bool
@@ -56,6 +59,30 @@ def _required(env: Mapping[str, str], name: str) -> str:
     return value
 
 
+def _site_url(env: Mapping[str, str]) -> str:
+    """The address alert links are built from. It must keep the alert id out of clear text.
+
+    https, or http for a local test. No login, query or fragment (the link adds its own `?alert=`),
+    and no whitespace or control characters, which could split a mail header. The message names the
+    setting and never repeats the value.
+    """
+    value = _required(env, "SITE_URL")
+    problem = "SITE_URL must be an https address (http is allowed only for localhost)"
+    if any(char.isspace() or ord(char) < _SPACE for char in value):
+        raise SettingsError(problem)
+    try:
+        parts = urlsplit(value)
+        host = parts.hostname
+        parts.port  # noqa: B018 - reading it raises ValueError for a bad port
+    except ValueError:
+        raise SettingsError(problem) from None
+    if parts.query or parts.fragment or parts.username is not None or parts.password is not None:
+        raise SettingsError(problem)
+    if (parts.scheme == "https" and host) or (parts.scheme == "http" and host in _LOCAL_HOSTS):
+        return value
+    raise SettingsError(problem)
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     user = env.get("SMTP_USER", "").strip()
     password = env.get("SMTP_PASSWORD", "").strip()
@@ -68,7 +95,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
     return Settings(
         database_url=_required(env, "NOTIFY_DATABASE_URL"),
         sender=_required(env, "ALERT_SENDER"),
-        unsubscribe_base_url=_required(env, "UNSUBSCRIBE_BASE_URL"),
+        site_url=_site_url(env),
         smtp_host=_required(env, "SMTP_HOST"),
         smtp_port=int(env.get("SMTP_PORT", "").strip() or DEFAULT_SMTP_PORT),
         starttls=env.get("SMTP_STARTTLS", "").strip().lower() in _TRUE,
@@ -76,20 +103,24 @@ def load_settings(env: Mapping[str, str]) -> Settings:
     )
 
 
-def unsubscribe_link(base_url: str, alert_id: str) -> str:
-    # Interim: the unsubscribe page and its signed token arrive with the web half of alerts.
-    return f"{base_url}?alert={alert_id}"
+def unsubscribe_links(site_url: str, alert_id: str) -> UnsubscribeLinks:
+    """The alert id is the capability: a random uuid that only appears in the owner's email."""
+    site = site_url.rstrip("/")
+    return UnsubscribeLinks(
+        page=f"{site}/unsubscribe?alert={alert_id}",
+        one_click=f"{site}/api/v1/alerts/unsubscribe?alert={alert_id}",
+    )
 
 
 def run_once(
-    db: Any, notifier: Notifier, *, now: datetime, today: date, unsubscribe_base: str
+    db: Any, notifier: Notifier, *, now: datetime, today: date, site_url: str
 ) -> RunSummary:
     created = create_alerts(db, now=now, today=today)
     sent = send_due(
         db,
         notifier,
         now=now,
-        unsubscribe_url_for=lambda alert_id: unsubscribe_link(unsubscribe_base, alert_id),
+        unsubscribe_links_for=lambda alert_id: unsubscribe_links(site_url, alert_id),
     )
     return RunSummary(created, sent)
 
@@ -116,7 +147,7 @@ def main(
             open_notifier(settings),
             now=now,
             today=melbourne_day(now),
-            unsubscribe_base=settings.unsubscribe_base_url,
+            site_url=settings.site_url,
         )
     except Exception as error:  # noqa: BLE001 - reported by type only: the text could hold secrets
         print(f"alert run crashed: {type(error).__name__}", file=sys.stderr)

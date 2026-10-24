@@ -22,7 +22,16 @@ class OutgoingEmail:
     body: str
     # the alert's id, so a provider that sees the same one twice sends one email
     idempotency_key: str
+    # the one-click address for the List-Unsubscribe header (RFC 8058)
     unsubscribe_url: str
+
+
+@dataclass(frozen=True)
+class UnsubscribeLinks:
+    """The two ways out of one alert: a page that asks first, and the one-click address."""
+
+    page: str
+    one_click: str
 
 
 class SendError(Exception):

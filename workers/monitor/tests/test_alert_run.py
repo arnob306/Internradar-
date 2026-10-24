@@ -7,13 +7,13 @@ from typing import Any
 import pytest
 from internradar_common.clock import FixedClock
 from internradar_monitor.alerts import run as run_module
-from internradar_monitor.alerts.run import SettingsError, load_settings, main, unsubscribe_link
+from internradar_monitor.alerts.run import SettingsError, load_settings, main, unsubscribe_links
 from internradar_monitor.alerts.store import SendSummary
 
 ENV = {
     "NOTIFY_DATABASE_URL": "postgresql://notify_worker:s3cret@127.0.0.1:54322/postgres",
     "ALERT_SENDER": "InternRadar <alerts@internradar.example>",
-    "UNSUBSCRIBE_BASE_URL": "https://internradar.example/unsubscribe",
+    "SITE_URL": "https://internradar.example",
     "SMTP_HOST": "127.0.0.1",
 }
 CLOCK = FixedClock(datetime(2026, 10, 21, 20, 0, tzinfo=UTC))
@@ -42,10 +42,55 @@ def test_a_missing_setting_is_named(name: str) -> None:
         load_settings(env)
 
 
-def test_an_unsubscribe_link_names_the_alert() -> None:
-    link = unsubscribe_link("https://internradar.example/unsubscribe", "alert-1")
+@pytest.mark.parametrize(
+    "site_url",
+    [
+        "https://internradar.example",
+        "https://internradar.example/",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://[::1]:3000",
+    ],
+)
+def test_a_site_address_that_keeps_alert_links_private_is_accepted(site_url: str) -> None:
+    assert load_settings({**ENV, "SITE_URL": site_url}).site_url == site_url
 
-    assert link == "https://internradar.example/unsubscribe?alert=alert-1"
+
+@pytest.mark.parametrize(
+    "site_url",
+    [
+        "http://internradar.example",  # alert ids would travel in clear text
+        "internradar.example",  # no scheme
+        "ftp://internradar.example",
+        "https://",
+        "https://internradar.example?x=1",  # would break the ?alert= link
+        "https://internradar.example#top",
+        "https://internradar.example/\r\nBcc: someone@example.com",
+        "https://internradar .example",
+        "http://localhost.evil.example",  # looks local, is not
+        "http://user@localhost:3000",
+    ],
+)
+def test_an_unsafe_site_address_stops_the_run_and_is_never_printed(site_url: str) -> None:
+    with pytest.raises(SettingsError, match="SITE_URL") as error:
+        load_settings({**ENV, "SITE_URL": site_url})
+
+    assert site_url not in str(error.value)
+
+
+def test_the_unsubscribe_links_name_the_alert() -> None:
+    links = unsubscribe_links("https://internradar.example", "alert-1")
+
+    # the email's footer opens a page that asks first; the header is the one-click address
+    assert links.page == "https://internradar.example/unsubscribe?alert=alert-1"
+    assert links.one_click == "https://internradar.example/api/v1/alerts/unsubscribe?alert=alert-1"
+
+
+def test_a_trailing_slash_on_the_site_address_makes_no_double_slash() -> None:
+    links = unsubscribe_links("https://internradar.example/", "a")
+
+    assert links.page == "https://internradar.example/unsubscribe?alert=a"
+    assert links.one_click == "https://internradar.example/api/v1/alerts/unsubscribe?alert=a"
 
 
 def run_main(env: Mapping[str, str], **fakes: Any) -> int:

@@ -11,7 +11,7 @@ from uuid import UUID
 import psycopg
 import pytest
 from internradar_common.clock import SystemClock
-from internradar_monitor.alerts.send import OutgoingEmail, SendError
+from internradar_monitor.alerts.send import OutgoingEmail, SendError, UnsubscribeLinks
 from internradar_monitor.alerts.store import create_alerts, send_due
 
 pytestmark = pytest.mark.db
@@ -33,8 +33,11 @@ class FakeNotifier:
         self.sent.append(email)
 
 
-def unsubscribe_url(alert_id: str) -> str:
-    return f"https://internradar.example/unsubscribe?alert={alert_id}"
+def unsubscribe_links(alert_id: str) -> UnsubscribeLinks:
+    return UnsubscribeLinks(
+        page=f"https://internradar.example/unsubscribe?alert={alert_id}",
+        one_click=f"https://internradar.example/api/v1/alerts/unsubscribe?alert={alert_id}",
+    )
 
 
 def alert_rows(db: Connection, user_id: UUID) -> list[tuple[Any, ...]]:
@@ -130,7 +133,7 @@ def test_a_due_alert_is_emailed_and_marked_sent(
     create_alerts(notify_db, now=NOW, today=TODAY)
     notifier = FakeNotifier()
 
-    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     ((_, status, attempts, error, sent_at, *_rest),) = alert_rows(admin_db, world.user_id)
     (email,) = notifier.sent
@@ -138,7 +141,11 @@ def test_a_due_alert_is_emailed_and_marked_sent(
     assert sent_at is not None
     assert email.to == world.email
     assert "now open" in email.subject
-    assert email.unsubscribe_url.startswith("https://internradar.example/unsubscribe?alert=")
+    # the header gets the one-click address, the footer the page that asks first
+    assert email.unsubscribe_url.startswith(
+        "https://internradar.example/api/v1/alerts/unsubscribe?alert="
+    )
+    assert "https://internradar.example/unsubscribe?alert=" in email.body
 
 
 def test_a_sent_alert_is_never_sent_again(
@@ -146,10 +153,10 @@ def test_a_sent_alert_is_never_sent_again(
 ) -> None:
     open_window()
     create_alerts(notify_db, now=NOW, today=TODAY)
-    send_due(notify_db, FakeNotifier(), now=NOW, unsubscribe_url_for=unsubscribe_url)
+    send_due(notify_db, FakeNotifier(), now=NOW, unsubscribe_links_for=unsubscribe_links)
     notifier = FakeNotifier()
 
-    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     assert (summary.sent, notifier.sent) == (0, [])
 
@@ -162,7 +169,7 @@ def test_an_alert_that_is_not_due_yet_waits(
     admin_db.execute("update public.alerts set send_after = %s", (NOW + timedelta(hours=1),))
     notifier = FakeNotifier()
 
-    send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     assert notifier.sent == []
 
@@ -174,7 +181,7 @@ def test_a_temporary_failure_is_kept_to_try_again_with_only_a_safe_code(
     create_alerts(notify_db, now=NOW, today=TODAY)
     notifier = FakeNotifier(SendError("TEMPORARY_FAILURE", retryable=True))
 
-    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     ((_, status, attempts, error, sent_at, send_after, _),) = alert_rows(admin_db, world.user_id)
     assert (summary.retrying, status, attempts, error, sent_at) == (
@@ -194,7 +201,7 @@ def test_a_permanent_failure_gives_up(
     create_alerts(notify_db, now=NOW, today=TODAY)
     notifier = FakeNotifier(SendError("BAD_ADDRESS", retryable=False))
 
-    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     ((_, status, _, error, *_rest),) = alert_rows(admin_db, world.user_id)
     assert (summary.failed, status, error) == (1, "failed", "BAD_ADDRESS")
@@ -208,7 +215,7 @@ def test_a_student_who_turned_email_off_after_the_alert_was_made_is_not_emailed(
     admin_db.execute("update public.profiles set email_alerts = false")
     notifier = FakeNotifier()
 
-    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     ((_, status, *_rest),) = alert_rows(admin_db, world.user_id)
     assert (summary.skipped, status, notifier.sent) == (1, "skipped", [])
@@ -223,8 +230,8 @@ def test_an_alert_another_worker_is_sending_is_left_alone(
 
     with admin_db.transaction():
         admin_db.execute("select id from public.alerts for update")
-        summary = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+        summary = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
 
     assert (summary.sent, notifier.sent) == (0, [])
-    again = send_due(notify_db, notifier, now=NOW, unsubscribe_url_for=unsubscribe_url)
+    again = send_due(notify_db, notifier, now=NOW, unsubscribe_links_for=unsubscribe_links)
     assert again.sent == 1

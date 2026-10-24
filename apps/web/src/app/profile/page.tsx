@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { ProfileForm } from "../../components/ProfileForm";
 import { melbourneDate } from "../../features/programs/melbourne-date";
 import { parseProfileInput, type ProfileInput } from "../../features/profile/profile-input";
+import { alertsEnabled } from "../../server/alerts-switch";
 import { sessionClientForRequest } from "../../server/auth/request-session";
 import { logFailure } from "../../server/log";
 import { loadProfile } from "../../server/profile/profile-repo";
@@ -52,6 +53,7 @@ export default async function ProfilePage(): Promise<ReactElement> {
         <ProfileForm
           initial={profile ?? emptyProfile()}
           currentYear={Number(melbourneDate(new Date()).slice(0, 4))}
+          showAlerts={alertsEnabled()}
         />
       )}
     </main>

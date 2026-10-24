@@ -7,6 +7,7 @@ import { safeExternalUrl } from "../features/programs/detail-guards";
 import { describeWindows } from "../features/programs/window-text";
 import { DISCIPLINE_LABELS, PROGRAM_TYPE_LABELS } from "../features/vocabulary-labels";
 import type { PublicProgram } from "../server/programs/programs-handler";
+import { FollowProgramButton } from "./FollowProgramButton";
 import type { CardEligibility } from "./ProgramCard";
 import { SaveProgramButton } from "./SaveProgramButton";
 import { StatusChip } from "./StatusChip";
@@ -19,6 +20,11 @@ interface ProgramDetailProps {
   readonly prompt?: "sign-in" | "profile";
   /** Whether this student already has the program in their tracker. */
   readonly saved?: boolean;
+  /**
+   * Whether this student follows the program for email updates. Left out while alerts are off,
+   * which also keeps every mention of following off the page.
+   */
+  readonly following?: boolean;
   /** The moment the page is shown, which decides which dates are still ahead. Defaults to now. */
   readonly now?: Date;
 }
@@ -47,6 +53,7 @@ export function ProgramDetail({
   eligibility,
   prompt = "sign-in",
   saved = false,
+  following,
   now = new Date(),
 }: ProgramDetailProps): ReactElement {
   const path = `/programs/${encodeURIComponent(program.company.slug)}/${encodeURIComponent(program.slug)}`;
@@ -181,6 +188,11 @@ export function ProgramDetail({
               <SaveProgramButton programId={program.id} initiallySaved={saved} />
             )}
           </div>
+          {prompt !== "sign-in" && following !== undefined && (
+            <div className="detail-panel">
+              <FollowProgramButton programId={program.id} initiallyFollowing={following} />
+            </div>
+          )}
           <div className="detail-panel">
             <p className="detail-trust">{program.rulesVerified ? "Checked by a person" : "Not checked yet"}</p>
             <p className="muted">

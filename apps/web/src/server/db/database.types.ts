@@ -375,6 +375,9 @@ isOneToOne: false
                            },
 "rate_limit_hit":
 { Args: { "bucket": string,"max_hits": number,"window_len": string }; Returns: boolean
+                           },
+"unsubscribe_from_alert":
+{ Args: { "alert_id": string }; Returns: undefined
                            }
           }
           Enums: {
