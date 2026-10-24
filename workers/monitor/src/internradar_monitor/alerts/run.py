@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 from internradar_common.clock import Clock, SystemClock
 from internradar_common.database import connect_worker
@@ -25,6 +26,8 @@ from internradar_monitor.alerts.store import SendSummary, create_alerts, send_du
 DEFAULT_SMTP_PORT = 1025
 SMTP_TIMEOUT_SECONDS = 20
 _TRUE = frozenset({"1", "true", "yes"})
+_LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+_SPACE = 32  # anything below this is a control character
 
 
 class SettingsError(Exception):
@@ -56,6 +59,30 @@ def _required(env: Mapping[str, str], name: str) -> str:
     return value
 
 
+def _site_url(env: Mapping[str, str]) -> str:
+    """The address alert links are built from. It must keep the alert id out of clear text.
+
+    https, or http for a local test. No login, query or fragment (the link adds its own `?alert=`),
+    and no whitespace or control characters, which could split a mail header. The message names the
+    setting and never repeats the value.
+    """
+    value = _required(env, "SITE_URL")
+    problem = "SITE_URL must be an https address (http is allowed only for localhost)"
+    if any(char.isspace() or ord(char) < _SPACE for char in value):
+        raise SettingsError(problem)
+    try:
+        parts = urlsplit(value)
+        host = parts.hostname
+        parts.port  # noqa: B018 - reading it raises ValueError for a bad port
+    except ValueError:
+        raise SettingsError(problem) from None
+    if parts.query or parts.fragment or parts.username is not None or parts.password is not None:
+        raise SettingsError(problem)
+    if (parts.scheme == "https" and host) or (parts.scheme == "http" and host in _LOCAL_HOSTS):
+        return value
+    raise SettingsError(problem)
+
+
 def load_settings(env: Mapping[str, str]) -> Settings:
     user = env.get("SMTP_USER", "").strip()
     password = env.get("SMTP_PASSWORD", "").strip()
@@ -68,7 +95,7 @@ def load_settings(env: Mapping[str, str]) -> Settings:
     return Settings(
         database_url=_required(env, "NOTIFY_DATABASE_URL"),
         sender=_required(env, "ALERT_SENDER"),
-        site_url=_required(env, "SITE_URL"),
+        site_url=_site_url(env),
         smtp_host=_required(env, "SMTP_HOST"),
         smtp_port=int(env.get("SMTP_PORT", "").strip() or DEFAULT_SMTP_PORT),
         starttls=env.get("SMTP_STARTTLS", "").strip().lower() in _TRUE,
