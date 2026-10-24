@@ -42,6 +42,42 @@ def test_a_missing_setting_is_named(name: str) -> None:
         load_settings(env)
 
 
+@pytest.mark.parametrize(
+    "site_url",
+    [
+        "https://internradar.example",
+        "https://internradar.example/",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://[::1]:3000",
+    ],
+)
+def test_a_site_address_that_keeps_alert_links_private_is_accepted(site_url: str) -> None:
+    assert load_settings({**ENV, "SITE_URL": site_url}).site_url == site_url
+
+
+@pytest.mark.parametrize(
+    "site_url",
+    [
+        "http://internradar.example",  # alert ids would travel in clear text
+        "internradar.example",  # no scheme
+        "ftp://internradar.example",
+        "https://",
+        "https://internradar.example?x=1",  # would break the ?alert= link
+        "https://internradar.example#top",
+        "https://internradar.example/\r\nBcc: someone@example.com",
+        "https://internradar .example",
+        "http://localhost.evil.example",  # looks local, is not
+        "http://user@localhost:3000",
+    ],
+)
+def test_an_unsafe_site_address_stops_the_run_and_is_never_printed(site_url: str) -> None:
+    with pytest.raises(SettingsError, match="SITE_URL") as error:
+        load_settings({**ENV, "SITE_URL": site_url})
+
+    assert site_url not in str(error.value)
+
+
 def test_the_unsubscribe_links_name_the_alert() -> None:
     links = unsubscribe_links("https://internradar.example", "alert-1")
 
